@@ -124,6 +124,16 @@ prop_int64 =
            (nonNullRenderer Rendering.int64)
            (nonNullParser Parsing.integral)
 
+prop_word =
+  mappingP (PTI.oidOf PTI.int8) 
+           (nonNullRenderer Rendering.word)
+           (nonNullParser Parsing.integral)
+
+prop_word64 =
+  mappingP (PTI.oidOf PTI.int8) 
+           (nonNullRenderer Rendering.word64)
+           (nonNullParser Parsing.integral)
+
 prop_day =
   mappingP (PTI.oidOf PTI.date) 
            (nonNullRenderer Rendering.day)

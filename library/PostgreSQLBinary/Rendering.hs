@@ -32,6 +32,14 @@ int64 :: R Int64
 int64 = 
   Builder.run . BB.int64BE
 
+word :: R Word
+word = 
+  Builder.run . BB.word64BE . fromIntegral
+
+word64 :: R Word64
+word64 = 
+  Builder.run . BB.word64BE
+
 arrayData :: R Array.Data
 arrayData = 
   Builder.run . Builder.arrayData
