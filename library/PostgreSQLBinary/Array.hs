@@ -7,9 +7,9 @@
 -- * <http://libpqtypes.esilo.com/man3/pqt-specs.html>
 -- 
 -- * <http://libpqtypes.esilo.com/browse_source.html?file=array.c>
-module LibpqBinary.Array where
+module PostgreSQLBinary.Array where
 
-import LibpqBinary.Prelude hiding (Data)
+import PostgreSQLBinary.Prelude hiding (Data)
 import qualified Data.Vector as V
 
 

@@ -1,5 +1,5 @@
 name:
-  libpq-binary
+  postgresql-binary
 version:
   0.1.0
 synopsis:
@@ -7,9 +7,9 @@ description:
 category:
   Database
 homepage:
-  https://github.com/nikita-volkov/libpq-binary 
+  https://github.com/nikita-volkov/postgresql-binary 
 bug-reports:
-  https://github.com/nikita-volkov/libpq-binary/issues 
+  https://github.com/nikita-volkov/postgresql-binary/issues 
 author:
   Nikita Volkov <nikita.y.volkov@mail.ru>
 maintainer:
@@ -30,7 +30,7 @@ source-repository head
   type:
     git
   location:
-    git://github.com/nikita-volkov/libpq-binary.git
+    git://github.com/nikita-volkov/postgresql-binary.git
 
 
 library
@@ -43,14 +43,14 @@ library
   default-language:
     Haskell2010
   other-modules:
-    LibpqBinary.Prelude
-    LibpqBinary.Rendering.Builder
-    LibpqBinary.Parsing.Atto
-    LibpqBinary.Parsing.Numeric
+    PostgreSQLBinary.Prelude
+    PostgreSQLBinary.Rendering.Builder
+    PostgreSQLBinary.Parsing.Atto
+    PostgreSQLBinary.Parsing.Numeric
   exposed-modules:
-    LibpqBinary.Array
-    LibpqBinary.Rendering
-    LibpqBinary.Parsing
+    PostgreSQLBinary.Array
+    PostgreSQLBinary.Rendering
+    PostgreSQLBinary.Parsing
   build-depends:
     -- template haskell:
     template-haskell == 2.*,
@@ -90,7 +90,7 @@ test-suite tests
     Haskell2010
   build-depends:
     -- testing:
-    libpq-binary,
+    postgresql-binary,
     HTF == 0.12.*,
     quickcheck-instances == 0.3.*,
     QuickCheck == 2.7.*,

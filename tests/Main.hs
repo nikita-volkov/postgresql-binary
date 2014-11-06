@@ -14,10 +14,10 @@ import qualified Data.ByteString.Lazy.Char8
 import qualified Data.Scientific as Scientific
 import qualified Data.Vector as Vector
 import qualified Database.PostgreSQL.LibPQ as PQ
-import qualified LibpqBinary.PTI as PTI
-import qualified LibpqBinary.Rendering as Rendering
-import qualified LibpqBinary.Parsing as Parsing
-import qualified LibpqBinary.Array as Array
+import qualified PostgreSQLBinary.PTI as PTI
+import qualified PostgreSQLBinary.Rendering as Rendering
+import qualified PostgreSQLBinary.Parsing as Parsing
+import qualified PostgreSQLBinary.Array as Array
 
 
 type Text = Data.Text.Text

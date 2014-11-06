@@ -1,4 +1,4 @@
-module LibpqBinary.Prelude
+module PostgreSQLBinary.Prelude
 ( 
   module Exports,
   LazyByteString,
@@ -58,7 +58,7 @@ type LazyText = Data.Text.Lazy.Text
 
 bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
   where
-    msg = "A \"libpq-binary\" package bug: " :: String
+    msg = "A \"postgresql-binary\" package bug: " :: String
 
 bottom = [e| $bug "Bottom evaluated" |]
 

@@ -1,8 +1,8 @@
 -- |
 -- Final specialized but uncomposable parsers.
-module LibpqBinary.Parsing where
+module PostgreSQLBinary.Parsing where
 
-import LibpqBinary.Prelude hiding (bool)
+import PostgreSQLBinary.Prelude hiding (bool)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as BL
@@ -12,10 +12,10 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
-import qualified LibpqBinary.Parsing.Atto as Atto
+import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
-import qualified LibpqBinary.Array as Array
+import qualified PostgreSQLBinary.Array as Array
 
 
 type P a = ByteString -> Either Text a

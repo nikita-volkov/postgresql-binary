@@ -1,6 +1,6 @@
-module LibpqBinary.Rendering.Builder where
+module PostgreSQLBinary.Rendering.Builder where
 
-import LibpqBinary.Prelude hiding (bool)
+import PostgreSQLBinary.Prelude hiding (bool)
 import Data.ByteString.Builder
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
@@ -12,7 +12,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
-import qualified LibpqBinary.Array as Array
+import qualified PostgreSQLBinary.Array as Array
 
 
 {-# INLINE run #-}

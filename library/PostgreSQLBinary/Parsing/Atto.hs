@@ -1,8 +1,8 @@
 -- |
 -- Composable Attoparsec parsers.
-module LibpqBinary.Parsing.Atto where
+module PostgreSQLBinary.Parsing.Atto where
 
-import LibpqBinary.Prelude hiding (take, bool)
+import PostgreSQLBinary.Prelude hiding (take, bool)
 import Data.Attoparsec.ByteString
 import Data.Attoparsec.ByteString.Char8 hiding (double)
 import qualified Data.ByteString
@@ -14,8 +14,8 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
-import qualified LibpqBinary.Parsing.Numeric as Numeric
-import qualified LibpqBinary.Array as Array
+import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
+import qualified PostgreSQLBinary.Array as Array
 
 
 run :: ByteString -> Parser a -> Either Text a

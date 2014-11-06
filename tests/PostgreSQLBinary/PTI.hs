@@ -1,4 +1,4 @@
-module LibpqBinary.PTI where
+module PostgreSQLBinary.PTI where
 
 import BasePrelude
 

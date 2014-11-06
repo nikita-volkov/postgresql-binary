@@ -1,6 +1,6 @@
-module LibpqBinary.Rendering where
+module PostgreSQLBinary.Rendering where
 
-import LibpqBinary.Prelude
+import PostgreSQLBinary.Prelude
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Builder as BB
@@ -12,8 +12,8 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
-import qualified LibpqBinary.Rendering.Builder as Builder
-import qualified LibpqBinary.Array as Array
+import qualified PostgreSQLBinary.Rendering.Builder as Builder
+import qualified PostgreSQLBinary.Array as Array
 
 
 type R a = a -> ByteString

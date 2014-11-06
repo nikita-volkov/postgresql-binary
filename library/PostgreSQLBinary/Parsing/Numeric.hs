@@ -1,8 +1,8 @@
 -- |
 -- Utils for dealing with numbers.
-module LibpqBinary.Parsing.Numeric where
+module PostgreSQLBinary.Parsing.Numeric where
 
-import LibpqBinary.Prelude
+import PostgreSQLBinary.Prelude
 import qualified Data.ByteString as B
 
 
