@@ -5,8 +5,8 @@ import BasePrelude hiding (assert)
 import Test.Framework
 import Test.QuickCheck.Instances
 import Data.Time
-import qualified Data.Text
-import qualified Data.Text.Lazy
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy as BL
@@ -20,8 +20,8 @@ import qualified PostgreSQLBinary.Parsing as Parsing
 import qualified PostgreSQLBinary.Array as Array
 
 
-type Text = Data.Text.Text
-type LazyText = Data.Text.Lazy.Text
+type Text = T.Text
+type LazyText = TL.Text
 type ByteString = B.ByteString
 type LazyByteString = BL.ByteString
 type Scientific = Scientific.Scientific
@@ -102,6 +102,13 @@ nonNullRenderer r =
 -- * Properties
 -------------------------
 
+prop_text v =
+  (isNothing $ T.find (== '\NUL') v) ==>
+    mappingP (PTI.oidOf PTI.text) 
+             (nonNullRenderer Rendering.text)
+             (nonNullParser Parsing.text)
+             (v)
+
 prop_bool =
   mappingP (PTI.oidOf PTI.bool) 
            (nonNullRenderer Rendering.bool)
@@ -128,11 +135,10 @@ prop_dayText =
                (Just . fromString . show)
 
 prop_arrayData =
-  forAll arrayDataGen $ \(oid, v) ->
+  forAll arrayDataGen $ uncurry $ \oid ->
     mappingP (oid)
              (nonNullRenderer Rendering.arrayData)
              (nonNullParser Parsing.arrayData)
-             (v)
 
 -- * Gens
 -------------------------

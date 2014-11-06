@@ -7,9 +7,9 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Encoding as TL
+import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Rendering.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
@@ -39,5 +39,9 @@ arrayData =
 day :: R Day
 day =
   Builder.run . BB.int32BE . fromIntegral . Time.dayToPostgresJulian
+
+text :: R Text
+text =
+  TE.encodeUtf8 . T.filter (/= '\0')
 
 

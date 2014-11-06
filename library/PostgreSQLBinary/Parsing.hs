@@ -45,3 +45,7 @@ arrayData =
 day :: P Day
 day =
   fmap (Time.postgresJulianToDay . fromIntegral) . flip Atto.run Atto.int32
+
+text :: P Text
+text =
+  either (Left . fromString . show) Right . Data.Text.Encoding.decodeUtf8'
