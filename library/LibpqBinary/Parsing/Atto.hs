@@ -14,14 +14,11 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
+import qualified LibpqBinary.Parsing.Numeric as Numeric
 
 
-type P = Parser
-
-{-# INLINE run #-}
-run :: ByteString -> P a -> Either Text a
+run :: ByteString -> Parser a -> Either Text a
 run input parser =
-  {-# SCC "run" #-} 
   onResult $ parse (parser <* endOfInput) input    
   where
     onResult =
@@ -34,3 +31,8 @@ run input parser =
           onResult $ c mempty
         Done _ result ->
           Right result
+
+{-# INLINE integral #-}
+integral :: forall a. (Integral a, Bits a) => Parser a
+integral =
+  Numeric.pack <$> take (Numeric.byteSize (undefined :: a))

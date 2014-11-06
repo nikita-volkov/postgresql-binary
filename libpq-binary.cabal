@@ -44,10 +44,12 @@ library
     Haskell2010
   other-modules:
     LibpqBinary.Prelude
+    LibpqBinary.Rendering.Builder
+    LibpqBinary.Parsing.Atto
+    LibpqBinary.Parsing.Numeric
   exposed-modules:
     LibpqBinary.Rendering
     LibpqBinary.Parsing
-    LibpqBinary.Parsing.Atto
   build-depends:
     -- template haskell:
     template-haskell == 2.*,

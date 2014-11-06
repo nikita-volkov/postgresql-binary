@@ -32,6 +32,7 @@ mappingP ::
   (Show a, Eq a, Arbitrary a) => 
   (PQ.Oid, a -> Maybe ByteString, Maybe ByteString -> Either Text a) -> a -> Property
 mappingP (oid, encode, decode) v =
+  counterexample ("Encoded: " <> show (encode v)) $
   Right v === do
     unsafePerformIO $ do
       c <- connect
@@ -71,6 +72,21 @@ mappingP (oid, encode, decode) v =
           "SET client_min_messages TO WARNING",
           "SET bytea_output = 'hex'" ]
 
+nonNullParser p =
+  fromMaybe (Left "Unexpected NULL") . fmap p
 
-prop_boolMapping =
-  mappingP ((PTI.oidOf PTI.bool), Rendering.bool, Parsing.bool)
+nonNullRenderer r =
+  return . r
+
+-- * Properties
+-------------------------
+
+prop_bool =
+  mappingP ((PTI.oidOf PTI.bool), nonNullRenderer Rendering.bool, nonNullParser Parsing.bool)
+
+prop_int =
+  mappingP ((PTI.oidOf PTI.int8), nonNullRenderer Rendering.int, nonNullParser Parsing.integral)
+
+prop_int64 =
+  mappingP ((PTI.oidOf PTI.int8), nonNullRenderer Rendering.int64, nonNullParser Parsing.integral)
+
