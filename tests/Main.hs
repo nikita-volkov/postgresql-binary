@@ -4,7 +4,6 @@ module Main where
 import BasePrelude hiding (assert)
 import Test.Framework
 import Test.QuickCheck.Instances
-import Test.QuickCheck.Monadic
 import Data.Time
 import qualified Data.Text
 import qualified Data.Text.Lazy
@@ -31,25 +30,18 @@ main =
 
 mappingP :: 
   (Show a, Eq a, Arbitrary a) => 
-  (PQ.Oid, a -> Maybe ByteString, Maybe ByteString -> Either Text a) -> Property
-mappingP (oid, encode, decode) =
-  monadicIO $ do
-    c <- 
-      run $ do
-        c <- connect
-        initConnection c
-        return c
-    replicateM_ 100 $ do
-      v <- pick arbitrary
-      binaryResult <- 
-        run $ do
-          Just result <-
-            let param = (,,) <$> pure oid <*> encode v <*> pure PQ.Binary
-                in PQ.execParams c "SELECT $1" [param] PQ.Binary
-          PQ.getvalue result 0 0
-      assert $ Right v == decode binaryResult
-    run $ do
+  (PQ.Oid, a -> Maybe ByteString, Maybe ByteString -> Either Text a) -> a -> Property
+mappingP (oid, encode, decode) v =
+  Right v === do
+    unsafePerformIO $ do
+      c <- connect
+      initConnection c
+      Just result <-
+        let param = (,,) <$> pure oid <*> encode v <*> pure PQ.Binary
+            in PQ.execParams c "SELECT $1" [param] PQ.Binary
+      binaryResult <- PQ.getvalue result 0 0
       PQ.finish c
+      return $ decode binaryResult
   where
     connect =
       PQ.connectdb bs
