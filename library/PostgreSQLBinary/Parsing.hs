@@ -17,6 +17,7 @@ import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
+import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
 
 
 type P a = ByteString -> Either Text a
@@ -34,8 +35,8 @@ bool b =
 
 {-# INLINE integral #-}
 integral :: (Integral a, Bits a) => P a
-integral b =
-  Atto.run b Atto.integral
+integral =
+  Right . Numeric.pack
 
 {-# INLINE arrayData #-}
 arrayData :: P Array.Data
