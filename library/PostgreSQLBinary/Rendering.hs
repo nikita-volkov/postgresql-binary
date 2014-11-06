@@ -28,6 +28,14 @@ int :: R Int
 int = 
   Builder.run . BB.int64BE . fromIntegral
 
+int16 :: R Int16
+int16 = 
+  Builder.run . BB.int16BE
+
+int32 :: R Int32
+int32 = 
+  Builder.run . BB.int32BE
+
 int64 :: R Int64
 int64 = 
   Builder.run . BB.int64BE
@@ -35,6 +43,14 @@ int64 =
 word :: R Word
 word = 
   Builder.run . BB.word64BE . fromIntegral
+
+word16 :: R Word16
+word16 = 
+  Builder.run . BB.word16BE
+
+word32 :: R Word32
+word32 = 
+  Builder.run . BB.word32BE
 
 word64 :: R Word64
 word64 = 

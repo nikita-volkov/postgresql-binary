@@ -119,6 +119,16 @@ prop_int =
            (nonNullRenderer Rendering.int)
            (nonNullParser Parsing.integral)
 
+prop_int16 =
+  mappingP (PTI.oidOf PTI.int2) 
+           (nonNullRenderer Rendering.int16)
+           (nonNullParser Parsing.integral)
+
+prop_int32 =
+  mappingP (PTI.oidOf PTI.int4) 
+           (nonNullRenderer Rendering.int32)
+           (nonNullParser Parsing.integral)
+
 prop_int64 =
   mappingP (PTI.oidOf PTI.int8) 
            (nonNullRenderer Rendering.int64)
@@ -127,6 +137,16 @@ prop_int64 =
 prop_word =
   mappingP (PTI.oidOf PTI.int8) 
            (nonNullRenderer Rendering.word)
+           (nonNullParser Parsing.integral)
+
+prop_word16 =
+  mappingP (PTI.oidOf PTI.int2) 
+           (nonNullRenderer Rendering.word16)
+           (nonNullParser Parsing.integral)
+
+prop_word32 =
+  mappingP (PTI.oidOf PTI.int4) 
+           (nonNullRenderer Rendering.word32)
            (nonNullParser Parsing.integral)
 
 prop_word64 =
