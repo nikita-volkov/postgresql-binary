@@ -1,0 +1,105 @@
+name:
+  libpq-binary
+version:
+  0.1.0
+synopsis:
+description:
+category:
+  Database
+homepage:
+  https://github.com/nikita-volkov/libpq-binary 
+bug-reports:
+  https://github.com/nikita-volkov/libpq-binary/issues 
+author:
+  Nikita Volkov <nikita.y.volkov@mail.ru>
+maintainer:
+  Nikita Volkov <nikita.y.volkov@mail.ru>
+copyright:
+  (c) 2014, Nikita Volkov
+license:
+  MIT
+license-file:
+  LICENSE
+build-type:
+  Simple
+cabal-version:
+  >=1.10
+
+
+source-repository head
+  type:
+    git
+  location:
+    git://github.com/nikita-volkov/libpq-binary.git
+
+
+library
+  hs-source-dirs:
+    library
+  ghc-options:
+    -funbox-strict-fields
+  default-extensions:
+    Arrows, BangPatterns, ConstraintKinds, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFunctor, DeriveGeneric, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, ImpredicativeTypes, LambdaCase, LiberalTypeSynonyms, MagicHash, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeFamilies, TypeOperators, UnboxedTuples
+  default-language:
+    Haskell2010
+  other-modules:
+    LibpqBinary.Prelude
+  exposed-modules:
+    LibpqBinary.Rendering
+    LibpqBinary.Parsing
+    LibpqBinary.Parsing.Atto
+  build-depends:
+    -- template haskell:
+    template-haskell == 2.*,
+    -- parsers:
+    attoparsec == 0.12.*,
+    -- data:
+    vector == 0.10.*,
+    time == 1.4.*,
+    hashtables == 1.1.*,
+    scientific == 0.3.*,
+    text >= 1 && < 1.3,
+    bytestring >= 0.10.4.0 && < 0.11,
+    hashable == 1.2.*,
+    -- errors:
+    loch-th == 0.2.*,
+    placeholders == 0.1.*,
+    -- general:
+    mtl-prelude == 2.0.*,
+    base-prelude >= 0.1.3 && < 0.2,
+    base >= 4.5 && < 4.8
+
+
+test-suite tests
+  type:             
+    exitcode-stdio-1.0
+  hs-source-dirs:   
+    tests
+  main-is:          
+    Main.hs
+  ghc-options:
+    -threaded
+    "-with-rtsopts=-N"
+    -funbox-strict-fields
+  default-extensions:
+    Arrows, BangPatterns, ConstraintKinds, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFunctor, DeriveGeneric, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, ImpredicativeTypes, LambdaCase, LiberalTypeSynonyms, MagicHash, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeFamilies, TypeOperators, UnboxedTuples
+  default-language:
+    Haskell2010
+  build-depends:
+    -- testing:
+    libpq-binary,
+    HTF == 0.12.*,
+    quickcheck-instances == 0.3.*,
+    QuickCheck == 2.7.*,
+    -- database:
+    postgresql-libpq == 0.9.*,
+    -- data:
+    vector == 0.10.*,
+    time == 1.4.*,
+    scientific == 0.3.*,
+    text >= 1 && < 1.3,
+    bytestring >= 0.10.4.0 && < 0.11,
+    hashable == 1.2.*,
+    -- general:
+    base-prelude >= 0.1.3 && < 0.2,
+    base >= 4.5 && < 4.8
