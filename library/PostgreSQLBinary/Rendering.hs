@@ -10,10 +10,10 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
-import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Rendering.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.Time as Time
 
 
 type R a = a -> ByteString
@@ -35,4 +35,9 @@ int64 =
 arrayData :: R Array.Data
 arrayData = 
   Builder.run . Builder.arrayData
+
+day :: R Day
+day =
+  Builder.run . BB.int32BE . fromIntegral . Time.dayToPostgresJulian
+
 

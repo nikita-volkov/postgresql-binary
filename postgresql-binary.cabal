@@ -47,6 +47,7 @@ library
     PostgreSQLBinary.Rendering.Builder
     PostgreSQLBinary.Parsing.Atto
     PostgreSQLBinary.Parsing.Numeric
+    PostgreSQLBinary.Time
   exposed-modules:
     PostgreSQLBinary.Array
     PostgreSQLBinary.Rendering

@@ -44,6 +44,24 @@ mappingP oid encode decode v =
       PQ.finish c
       return $ decode binaryResult
 
+mappingTextP ::
+  (Show a, Eq a, Arbitrary a) => 
+  Word32 -> (a -> Maybe ByteString) -> (a -> Maybe ByteString) -> a -> Property
+mappingTextP oid encode render value =
+  render value === do unsafePerformIO $ checkText oid (encode value)
+
+checkText :: Word32 -> Maybe ByteString -> IO (Maybe ByteString)
+checkText oid v =
+  do
+    c <- connect
+    initConnection c
+    Just result <-
+      let param = (,,) <$> pure (PQ.Oid $ fromIntegral oid) <*> v <*> pure PQ.Binary
+          in PQ.execParams c "SELECT $1" [param] PQ.Text
+    encodedResult <- PQ.getvalue result 0 0
+    PQ.finish c
+    return $ encodedResult
+
 connect :: IO PQ.Connection
 connect =
   PQ.connectdb bs
@@ -99,6 +117,16 @@ prop_int64 =
            (nonNullRenderer Rendering.int64)
            (nonNullParser Parsing.integral)
 
+prop_day =
+  mappingP (PTI.oidOf PTI.date) 
+           (nonNullRenderer Rendering.day)
+           (nonNullParser Parsing.day)
+
+prop_dayText =
+  mappingTextP (PTI.oidOf PTI.date) 
+               (nonNullRenderer Rendering.day) 
+               (Just . fromString . show)
+
 prop_arrayData =
   forAll arrayDataGen $ \(oid, v) ->
     mappingP (oid)
@@ -124,7 +152,8 @@ arrayDataGen =
     valueGen =
       do
         (pti, gen) <- elements [(PTI.int8, mkGen Rendering.int64),
-                                (PTI.bool, mkGen Rendering.bool)]
+                                (PTI.bool, mkGen Rendering.bool),
+                                (PTI.date, mkGen Rendering.day)]
         return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
       where
         mkGen renderer =

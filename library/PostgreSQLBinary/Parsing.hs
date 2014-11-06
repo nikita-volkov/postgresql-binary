@@ -16,6 +16,7 @@ import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
 import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.Time as Time
 
 
 type P a = ByteString -> Either Text a
@@ -40,3 +41,7 @@ integral b =
 arrayData :: P Array.Data
 arrayData =
   flip Atto.run Atto.arrayData
+
+day :: P Day
+day =
+  fmap (Time.postgresJulianToDay . fromIntegral) . flip Atto.run Atto.int32

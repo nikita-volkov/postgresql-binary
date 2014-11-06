@@ -42,6 +42,10 @@ word32 :: Parser Word32
 word32 =
   Numeric.pack <$> take 4
 
+int32 :: Parser Int32
+int32 =
+  Numeric.pack <$> take 4
+
 bool :: Parser Bool
 bool =
   (word8 0 *> pure False) <|> (word8 1 *> pure True)
