@@ -17,6 +17,7 @@ import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified LibpqBinary.PTI as PTI
 import qualified LibpqBinary.Rendering as Rendering
 import qualified LibpqBinary.Parsing as Parsing
+import qualified LibpqBinary.Array as Array
 
 
 type Text = Data.Text.Text
@@ -30,47 +31,49 @@ main =
 
 mappingP :: 
   (Show a, Eq a, Arbitrary a) => 
-  (PQ.Oid, a -> Maybe ByteString, Maybe ByteString -> Either Text a) -> a -> Property
-mappingP (oid, encode, decode) v =
-  counterexample ("Encoded: " <> show (encode v)) $
+  Word32 -> (a -> Maybe ByteString) -> (Maybe ByteString -> Either Text a) -> a -> Property
+mappingP oid encode decode v =
   Right v === do
     unsafePerformIO $ do
       c <- connect
       initConnection c
       Just result <-
-        let param = (,,) <$> pure oid <*> encode v <*> pure PQ.Binary
+        let param = (,,) <$> pure (PQ.Oid $ fromIntegral oid) <*> encode v <*> pure PQ.Binary
             in PQ.execParams c "SELECT $1" [param] PQ.Binary
       binaryResult <- PQ.getvalue result 0 0
       PQ.finish c
       return $ decode binaryResult
+
+connect :: IO PQ.Connection
+connect =
+  PQ.connectdb bs
   where
-    connect =
-      PQ.connectdb bs
+    bs = 
+      B.intercalate " " components
       where
-        bs = 
-          B.intercalate " " components
+        components = 
+          [
+            "host=" <> host,
+            "port=" <> (fromString . show) port,
+            "user=" <> user,
+            "password=" <> password,
+            "dbname=" <> db
+          ]
           where
-            components = 
-              [
-                "host=" <> host,
-                "port=" <> (fromString . show) port,
-                "user=" <> user,
-                "password=" <> password,
-                "dbname=" <> db
-              ]
-              where
-                host = "localhost"
-                port = 5432
-                user = "postgres"
-                password = ""
-                db = "postgres"
-    initConnection c =
-      PQ.exec c $ mconcat $ map (<> ";") $ 
-        [ "SET standard_conforming_strings TO on",
-          "SET datestyle TO ISO",
-          "SET client_encoding = 'UTF8'",
-          "SET client_min_messages TO WARNING",
-          "SET bytea_output = 'hex'" ]
+            host = "localhost"
+            port = 5432
+            user = "postgres"
+            password = ""
+            db = "postgres"
+
+initConnection :: PQ.Connection -> IO ()
+initConnection c =
+  void $ PQ.exec c $ mconcat $ map (<> ";") $ 
+    [ "SET standard_conforming_strings TO on",
+      "SET datestyle TO ISO",
+      "SET client_encoding = 'UTF8'",
+      "SET client_min_messages TO WARNING",
+      "SET bytea_output = 'hex'" ]
 
 nonNullParser p =
   fromMaybe (Left "Unexpected NULL") . fmap p
@@ -82,11 +85,53 @@ nonNullRenderer r =
 -------------------------
 
 prop_bool =
-  mappingP ((PTI.oidOf PTI.bool), nonNullRenderer Rendering.bool, nonNullParser Parsing.bool)
+  mappingP (PTI.oidOf PTI.bool) 
+           (nonNullRenderer Rendering.bool)
+           (nonNullParser Parsing.bool)
 
 prop_int =
-  mappingP ((PTI.oidOf PTI.int8), nonNullRenderer Rendering.int, nonNullParser Parsing.integral)
+  mappingP (PTI.oidOf PTI.int8) 
+           (nonNullRenderer Rendering.int)
+           (nonNullParser Parsing.integral)
 
 prop_int64 =
-  mappingP ((PTI.oidOf PTI.int8), nonNullRenderer Rendering.int64, nonNullParser Parsing.integral)
+  mappingP (PTI.oidOf PTI.int8) 
+           (nonNullRenderer Rendering.int64)
+           (nonNullParser Parsing.integral)
+
+prop_arrayData =
+  forAll arrayDataGen $ \(oid, v) ->
+    mappingP (oid)
+             (nonNullRenderer Rendering.arrayData)
+             (nonNullParser Parsing.arrayData)
+             (v)
+
+-- * Gens
+-------------------------
+
+arrayDataGen :: Gen (Word32, Array.Data)
+arrayDataGen =
+  do
+    ndims <- choose (1, 4)
+    dims <- replicateM ndims dimGen
+    (valueGen', oid, arrayOID) <- valueGen
+    values <- replicateM (dimsToNValues dims) valueGen'
+    let nulls = elem Nothing values
+    return (arrayOID, (dims, values, nulls, oid))
+  where
+    dimGen =
+      (,) <$> choose (1, 7) <*> pure 1
+    valueGen =
+      do
+        (pti, gen) <- elements [(PTI.int8, mkGen Rendering.int64),
+                                (PTI.bool, mkGen Rendering.bool)]
+        return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
+      where
+        mkGen renderer =
+          fmap (fmap renderer) arbitrary
+    dimsToNValues =
+      product . map dimensionWidth
+      where
+        dimensionWidth (x, _) = fromIntegral x
+
 

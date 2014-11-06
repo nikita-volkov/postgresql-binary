@@ -15,17 +15,7 @@ import qualified Data.Vector
 import qualified LibpqBinary.Parsing.Atto as Atto
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
-
-
-class Parsable a where
-  parse :: Maybe ByteString -> Either Text a
-
-instance Parsable Bool where
-  parse = parseFromP bool
-
-parseFromP :: P a -> Maybe ByteString -> Either Text a
-parseFromP p =
-  fromMaybe (Left "Unexpected NULL") . fmap p
+import qualified LibpqBinary.Array as Array
 
 
 type P a = ByteString -> Either Text a
@@ -46,4 +36,7 @@ integral :: (Integral a, Bits a) => P a
 integral b =
   Atto.run b Atto.integral
 
-
+{-# INLINE arrayData #-}
+arrayData :: P Array.Data
+arrayData =
+  flip Atto.run Atto.arrayData

@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified LibpqBinary.Rendering.Builder as Builder
+import qualified LibpqBinary.Array as Array
 
 
 type R a = a -> ByteString
@@ -24,7 +25,14 @@ bool =
     True  -> B.singleton 1
 
 int :: R Int
-int = Builder.run . BB.int64BE . fromIntegral
+int = 
+  Builder.run . BB.int64BE . fromIntegral
 
 int64 :: R Int64
-int64 = Builder.run . BB.int64BE
+int64 = 
+  Builder.run . BB.int64BE
+
+arrayData :: R Array.Data
+arrayData = 
+  Builder.run . Builder.arrayData
+
