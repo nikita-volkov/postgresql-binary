@@ -15,5 +15,11 @@ import qualified Data.ByteString.Builder.Scientific as Scientific
 
 
 run :: Builder -> B.ByteString
-run =
-  BL.toStrict . toLazyByteString
+run = BL.toStrict . toLazyByteString
+
+int4 :: Int32 -> Builder
+int4 = int32BE . fromIntegral
+
+bool :: Bool -> Builder
+bool = \case True -> word8 1; False -> word8 0
+
