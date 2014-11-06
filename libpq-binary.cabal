@@ -45,6 +45,7 @@ library
   other-modules:
     LibpqBinary.Prelude
     LibpqBinary.Rendering.Builder
+    LibpqBinary.Rendering.Builder.Array
     LibpqBinary.Parsing.Atto
     LibpqBinary.Parsing.Numeric
   exposed-modules:
