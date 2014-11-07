@@ -50,3 +50,8 @@ day =
 text :: P Text
 text =
   either (Left . fromString . show) Right . Data.Text.Encoding.decodeUtf8'
+
+{-# INLINE byteString #-}
+byteString :: P ByteString
+byteString =
+  Right

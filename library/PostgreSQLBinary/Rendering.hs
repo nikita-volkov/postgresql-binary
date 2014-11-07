@@ -60,4 +60,7 @@ text :: R Text
 text =
   TE.encodeUtf8 . T.filter (/= '\0')
 
+byteString :: R ByteString
+byteString =
+  id
 

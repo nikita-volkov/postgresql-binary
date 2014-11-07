@@ -102,6 +102,11 @@ nonNullRenderer r =
 -- * Properties
 -------------------------
 
+prop_byteString =
+  mappingP (PTI.oidOf PTI.bytea)
+           (nonNullRenderer Rendering.byteString)
+           (nonNullParser Parsing.byteString)
+
 prop_text v =
   (isNothing $ T.find (== '\NUL') v) ==>
     mappingP (PTI.oidOf PTI.text) 
@@ -199,7 +204,9 @@ arrayDataGen =
       do
         (pti, gen) <- elements [(PTI.int8, mkGen Rendering.int64),
                                 (PTI.bool, mkGen Rendering.bool),
-                                (PTI.date, mkGen Rendering.day)]
+                                (PTI.date, mkGen Rendering.day),
+                                (PTI.text, mkGen Rendering.text),
+                                (PTI.bytea, mkGen Rendering.byteString)]
         return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
       where
         mkGen renderer =
