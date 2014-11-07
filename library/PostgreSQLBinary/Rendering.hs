@@ -68,3 +68,7 @@ lazyByteString :: R BL.ByteString
 lazyByteString =
   BL.toStrict
 
+utf8Char :: R Char
+utf8Char = 
+  text . T.singleton
+

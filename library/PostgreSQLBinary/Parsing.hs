@@ -6,12 +6,10 @@ import PostgreSQLBinary.Prelude hiding (bool)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text
-import qualified Data.Text.Encoding
-import qualified Data.Text.Lazy
-import qualified Data.Text.Lazy.Encoding
-import qualified Data.Text.Lazy.Builder
-import qualified Data.Vector
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
@@ -22,9 +20,9 @@ import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
 
 type P a = ByteString -> Either Text a
 
-char :: P Char
-char =
-  $notImplemented
+utf8Char :: P Char
+utf8Char x =
+  maybe (Left "Empty input") (return . fst) . T.uncons =<< text x 
 
 bool :: P Bool
 bool b =
@@ -49,7 +47,7 @@ day =
 
 text :: P Text
 text =
-  either (Left . fromString . show) Right . Data.Text.Encoding.decodeUtf8'
+  either (Left . fromString . show) Right . TE.decodeUtf8'
 
 {-# INLINE byteString #-}
 byteString :: P ByteString

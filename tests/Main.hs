@@ -6,6 +6,7 @@ import Test.Framework
 import Test.QuickCheck.Instances
 import Data.Time
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8
@@ -101,6 +102,20 @@ nonNullRenderer r =
 
 -- * Properties
 -------------------------
+
+prop_utf8Char x =
+  (x /= '\NUL') ==>
+  mappingP (PTI.oidOf PTI.text) 
+           (nonNullRenderer Rendering.utf8Char)
+           (nonNullParser Parsing.utf8Char)
+           (x)
+
+prop_utf8CharText x =
+  (x /= '\NUL') ==>
+  mappingTextP (PTI.oidOf PTI.text) 
+               (nonNullRenderer Rendering.utf8Char) 
+               (Just . TE.encodeUtf8 . T.singleton)
+               (x)
 
 test_emptyArrayElements =
   assertEqual [] (ArrayData.elements ([], [], False, 0))
