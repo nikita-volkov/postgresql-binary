@@ -54,11 +54,17 @@ asArray =
       Nothing
 
 -- |
--- Create from a list,
+-- Construct from a list,
 -- taking the common parameters from the first element.
 fromListUnsafe :: [Data] -> Data
-fromListUnsafe =
-  $notImplemented
+fromListUnsafe list =
+  case list of
+    (dimensions, values, nulls, oid) : tail ->
+      ((fromIntegral $ length list, 1) : dimensions, values <> foldMap valuesOf tail, nulls, oid)
+      where
+        valuesOf (_, x, _, _) = x
+    _ ->
+      ([(0, 1)], [], False, 705)
 
 fromSingleton :: Value -> Bool -> Word32 -> Data
 fromSingleton value nullable oid =
