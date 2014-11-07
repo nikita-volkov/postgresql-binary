@@ -49,6 +49,10 @@ text :: P Text
 text =
   either (Left . fromString . show) Right . TE.decodeUtf8'
 
+lazyText :: P TL.Text
+lazyText =
+  fmap TL.fromStrict . text
+
 {-# INLINE byteString #-}
 byteString :: P ByteString
 byteString =

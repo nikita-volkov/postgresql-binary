@@ -147,6 +147,13 @@ prop_text v =
              (nonNullParser Parsing.text)
              (v)
 
+prop_lazyText v =
+  (isNothing $ TL.find (== '\NUL') v) ==>
+    mappingP (PTI.oidOf PTI.text) 
+             (nonNullRenderer Rendering.lazyText)
+             (nonNullParser Parsing.lazyText)
+             (v)
+
 prop_bool =
   mappingP (PTI.oidOf PTI.bool) 
            (nonNullRenderer Rendering.bool)

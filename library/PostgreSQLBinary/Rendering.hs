@@ -60,6 +60,10 @@ text :: R Text
 text =
   TE.encodeUtf8 . T.filter (/= '\0')
 
+lazyText :: R TL.Text
+lazyText =
+  BL.toStrict . TLE.encodeUtf8 . TL.filter (/= '\0')
+
 byteString :: R ByteString
 byteString =
   id
