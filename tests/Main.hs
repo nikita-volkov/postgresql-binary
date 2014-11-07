@@ -116,7 +116,12 @@ prop_bool =
 
 prop_int =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer Rendering.int)
+           (nonNullRenderer Rendering.int64 . (fromIntegral :: Int -> Int64))
+           (nonNullParser Parsing.integral)
+
+prop_int8 =
+  mappingP (PTI.oidOf PTI.int2) 
+           (nonNullRenderer Rendering.int16 . (fromIntegral :: Int8 -> Int16))
            (nonNullParser Parsing.integral)
 
 prop_int16 =
@@ -136,7 +141,12 @@ prop_int64 =
 
 prop_word =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer Rendering.word)
+           (nonNullRenderer Rendering.word64 . (fromIntegral :: Word -> Word64))
+           (nonNullParser Parsing.integral)
+
+prop_word8 =
+  mappingP (PTI.oidOf PTI.int2) 
+           (nonNullRenderer Rendering.word16 . (fromIntegral :: Word8 -> Word16))
            (nonNullParser Parsing.integral)
 
 prop_word16 =

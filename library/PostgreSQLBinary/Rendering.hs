@@ -24,10 +24,6 @@ bool =
     False -> B.singleton 0
     True  -> B.singleton 1
 
-int :: R Int
-int = 
-  Builder.run . BB.int64BE . fromIntegral
-
 int16 :: R Int16
 int16 = 
   Builder.run . BB.int16BE
@@ -39,10 +35,6 @@ int32 =
 int64 :: R Int64
 int64 = 
   Builder.run . BB.int64BE
-
-word :: R Word
-word = 
-  Builder.run . BB.word64BE . fromIntegral
 
 word16 :: R Word16
 word16 = 
