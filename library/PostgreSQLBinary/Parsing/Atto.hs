@@ -14,7 +14,7 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
-import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
+import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified Data.Scientific as Scientific
 
@@ -37,12 +37,12 @@ run input parser =
 {-# INLINE integral #-}
 integral :: forall a. (Integral a, Bits a) => Parser a
 integral =
-  sizedIntegral (Numeric.byteSize (undefined :: a))
+  sizedIntegral (Integral.byteSize (undefined :: a))
 
 {-# INLINE sizedIntegral #-}
 sizedIntegral :: (Integral a, Bits a) => Int -> Parser a
 sizedIntegral x =
-  Numeric.pack <$> take x
+  Integral.pack <$> take x
 
 word16 :: Parser Word16
 word16 =
@@ -76,7 +76,7 @@ arrayData =
       nothing <|> just
       where
         nothing =
-          string (Numeric.unpack (-1 :: Word32)) *> pure Nothing
+          string (Integral.unpack (-1 :: Word32)) *> pure Nothing
         just =
           do
             length <- word32

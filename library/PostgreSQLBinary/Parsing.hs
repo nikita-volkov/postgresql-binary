@@ -13,7 +13,7 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
-import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
+import qualified PostgreSQLBinary.Integral as Integral
 
 
 type P a = ByteString -> Either Text a
@@ -32,7 +32,7 @@ bool b =
 {-# INLINE integral #-}
 integral :: (Integral a, Bits a) => P a
 integral =
-  Right . Numeric.pack
+  Right . Integral.pack
 
 float :: P Float
 float =

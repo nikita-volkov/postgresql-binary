@@ -1,6 +1,6 @@
 -- |
 -- Utils for dealing with numbers.
-module PostgreSQLBinary.Parsing.Numeric where
+module PostgreSQLBinary.Integral where
 
 import PostgreSQLBinary.Prelude
 import qualified Data.ByteString as B
