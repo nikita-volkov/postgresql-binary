@@ -49,7 +49,7 @@ library
     PostgreSQLBinary.Parsing.Numeric
     PostgreSQLBinary.Time
   exposed-modules:
-    PostgreSQLBinary.Array
+    PostgreSQLBinary.ArrayData
     PostgreSQLBinary.Rendering
     PostgreSQLBinary.Parsing
   build-depends:

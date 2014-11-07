@@ -17,7 +17,7 @@ import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified PostgreSQLBinary.PTI as PTI
 import qualified PostgreSQLBinary.Rendering as Rendering
 import qualified PostgreSQLBinary.Parsing as Parsing
-import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.ArrayData as ArrayData
 
 
 type Text = T.Text
@@ -188,7 +188,7 @@ prop_arrayData =
 -- * Gens
 -------------------------
 
-arrayDataGen :: Gen (Word32, Array.Data)
+arrayDataGen :: Gen (Word32, ArrayData.Data)
 arrayDataGen =
   do
     ndims <- choose (1, 4)

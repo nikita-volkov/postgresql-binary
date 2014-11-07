@@ -12,7 +12,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Rendering.Builder as Builder
-import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
 
 
@@ -48,7 +48,7 @@ word64 :: R Word64
 word64 = 
   Builder.run . BB.word64BE
 
-arrayData :: R Array.Data
+arrayData :: R ArrayData.Data
 arrayData = 
   Builder.run . Builder.arrayData
 

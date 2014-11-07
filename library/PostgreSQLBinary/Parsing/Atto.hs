@@ -15,7 +15,7 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
 import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
-import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.ArrayData as ArrayData
 
 
 run :: ByteString -> Parser a -> Either Text a
@@ -50,7 +50,7 @@ bool :: Parser Bool
 bool =
   (word8 0 *> pure False) <|> (word8 1 *> pure True)
 
-arrayData :: Parser Array.Data
+arrayData :: Parser ArrayData.Data
 arrayData =
   do
     dimensionsAmountV <- word32

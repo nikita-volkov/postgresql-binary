@@ -12,7 +12,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
-import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.ArrayData as ArrayData
 
 
 {-# INLINE run #-}
@@ -24,7 +24,7 @@ bool :: Bool -> Builder
 bool = 
   \case True -> word8 1; False -> word8 0
 
-arrayData :: Array.Data -> Builder
+arrayData :: ArrayData.Data -> Builder
 arrayData (dimensionsV, valuesV, nullsV, oidV) =
   dimensionsLength <> nulls <> oid <> dimensions <> values
   where
@@ -39,11 +39,11 @@ arrayData (dimensionsV, valuesV, nullsV, oidV) =
     values = 
       foldMap arrayValue valuesV
 
-arrayDimension :: Array.Dimension -> Builder
+arrayDimension :: ArrayData.Dimension -> Builder
 arrayDimension (w, l) = 
   word32BE w <> word32BE l
 
-arrayValue :: Array.Value -> Builder
+arrayValue :: ArrayData.Value -> Builder
 arrayValue =
   \case
     Nothing -> word32BE (-1)

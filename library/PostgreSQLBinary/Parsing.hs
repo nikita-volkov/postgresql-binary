@@ -15,7 +15,7 @@ import qualified Data.Vector
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
-import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
 
@@ -39,7 +39,7 @@ integral =
   Right . Numeric.pack
 
 {-# INLINE arrayData #-}
-arrayData :: P Array.Data
+arrayData :: P ArrayData.Data
 arrayData =
   flip Atto.run Atto.arrayData
 
