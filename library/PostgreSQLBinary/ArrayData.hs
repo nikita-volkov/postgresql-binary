@@ -90,4 +90,4 @@ arrayElements (Array (width, lowerBound) (subdimensions, values, nulls, oid)) =
         dimensionWidth (x, _) = fromIntegral x
     slice = 
       foldr (\f g l -> case f l of (a, b) -> a : g b) return $ 
-      replicate (fromIntegral width) (splitAt chunkSize)
+      replicate (fromIntegral width - 1) (splitAt chunkSize)
