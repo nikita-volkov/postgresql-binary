@@ -54,8 +54,8 @@ asArray =
       Nothing
 
 -- |
--- Construct from a list,
--- taking the common parameters from the first element.
+-- Construct from a non-empty list,
+-- taking the shared parameters from the first element.
 fromListUnsafe :: [Data] -> Data
 fromListUnsafe list =
   case list of
@@ -64,7 +64,7 @@ fromListUnsafe list =
       where
         valuesOf (_, x, _, _) = x
     _ ->
-      ([(0, 1)], [], False, 705)
+      error "Empty list"
 
 fromSingleton :: Value -> Bool -> Word32 -> Data
 fromSingleton value nullable oid =
