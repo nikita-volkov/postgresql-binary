@@ -102,16 +102,18 @@ nonNullRenderer r =
 -- * Properties
 -------------------------
 
+test_emptyArrayElements =
+  assertEqual [] (ArrayData.elements ([], [], False, 0))
+
 test_arrayElements =
-  assertEqual result ((fmap ArrayData.arrayElements . ArrayData.asArray) arrayData)
+  assertEqual result (ArrayData.elements arrayData)
   where
     arrayData = ([(3, 1)], [Just "1", Just "2", Just "3"], False, 0)
-    result = Just [([], [Just "1"], False, 0), ([], [Just "2"], False, 0), ([], [Just "3"], False, 0)]
+    result = [([], [Just "1"], False, 0), ([], [Just "2"], False, 0), ([], [Just "3"], False, 0)]
 
 prop_arrayDataFromAndToListIsomporphism =
   forAll arrayDataGen $ \(oid, x) ->
-    Just x === 
-      (fmap (ArrayData.fromListUnsafe . ArrayData.arrayElements) . ArrayData.asArray) x
+    x === (ArrayData.fromListUnsafe . ArrayData.elements) x
 
 prop_lazyByteString =
   mappingP (PTI.oidOf PTI.bytea)

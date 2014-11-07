@@ -38,21 +38,6 @@ asSingleton (dimensions, elements, nulls, oid) =
       l -> $bug $ "Unexpected amount of elements: " <> show l
     else mzero
 
-asSingletonUnsafe :: Data -> Value
-asSingletonUnsafe (_, elements, _, _) =
-  head elements
-
--- |
--- Access an array API over data, if the data represents an array.
-{-# INLINE asArray #-}
-asArray :: Data -> Maybe Array
-asArray =
-  \case
-    (dimension : subdimensions, values, nulls, oid) ->
-      Just $ Array dimension (subdimensions, values, nulls, oid)
-    _ ->
-      Nothing
-
 -- |
 -- Construct from a non-empty list,
 -- taking the shared parameters from the first element.
@@ -70,18 +55,18 @@ fromSingleton :: Value -> Bool -> Word32 -> Data
 fromSingleton value nullable oid =
   ([], [value], nullable, oid)
 
-
-
-data Array = Array !Dimension !Data
-
 -- |
--- Convert an array into a list of its elements.
-arrayElements :: Array -> [Data]
-arrayElements (Array (width, lowerBound) (subdimensions, values, nulls, oid)) =
+-- Get a list of elements.
+elements :: Data -> [Data]
+elements (dimensions, values, nulls, oid) =
   do
     subvalues <- slice values
     return (subdimensions, subvalues, nulls, oid)
   where
+    ((width, lowerBound), subdimensions) =
+      case dimensions of
+        h : t -> (h, t)
+        _ -> ((0, 1), [])
     chunkSize =
       if null subdimensions
         then 1
