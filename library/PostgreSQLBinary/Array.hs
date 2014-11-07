@@ -47,7 +47,11 @@ asSingletonUnsafe (_, elements, _, _) =
 {-# INLINE asArray #-}
 asArray :: Data -> Maybe Array
 asArray =
-  $notImplemented
+  \case
+    (dimension : subdimensions, values, nulls, oid) ->
+      Just $ Array dimension (subdimensions, values, nulls, oid)
+    _ ->
+      Nothing
 
 -- |
 -- Create from a list,
