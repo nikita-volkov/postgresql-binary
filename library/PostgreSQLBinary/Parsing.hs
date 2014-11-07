@@ -36,6 +36,14 @@ integral :: (Integral a, Bits a) => P a
 integral =
   Right . Numeric.pack
 
+float :: P Float
+float =
+  unsafeCoerce . (integral :: P Word32)
+
+double :: P Double
+double =
+  unsafeCoerce . (integral :: P Word64)
+
 {-# INLINE arrayData #-}
 arrayData :: P ArrayData.Data
 arrayData =

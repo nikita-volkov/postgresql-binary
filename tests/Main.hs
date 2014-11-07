@@ -9,9 +9,9 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Lazy.Char8
+import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Scientific as Scientific
 import qualified Data.Vector as Vector
 import qualified Database.PostgreSQL.LibPQ as PQ
@@ -29,6 +29,13 @@ type Scientific = Scientific.Scientific
 
 main = 
   htfMain $ htf_thisModulesTests
+
+floatEqProp :: RealFrac a => Show a => a -> a -> Property
+floatEqProp a b =
+  counterexample (show a ++ " /~ " ++ show b) $
+    a + error >= b && a - error <= b
+  where
+    error = max (abs a) 1 / 10^3
 
 mappingP :: 
   (Show a, Eq a, Arbitrary a) => 
@@ -102,6 +109,34 @@ nonNullRenderer r =
 
 -- * Properties
 -------------------------
+
+prop_float =
+  mappingP (PTI.oidOf PTI.float4) 
+           (nonNullRenderer Rendering.float)
+           (nonNullParser Parsing.float)
+
+prop_floatText =
+  \x -> 
+    floatEqProp x $ do
+      fromJust $ unsafePerformIO $ (fmap . fmap) reader $ checkText (PTI.oidOf pti) (encoder x)
+  where
+    pti = PTI.float4
+    reader = read . BC.unpack
+    encoder = nonNullRenderer Rendering.float
+
+prop_double =
+  mappingP (PTI.oidOf PTI.float8) 
+           (nonNullRenderer Rendering.double)
+           (nonNullParser Parsing.double)
+
+prop_doubleText =
+  \x -> 
+    floatEqProp x $ do
+      fromJust $ unsafePerformIO $ (fmap . fmap) reader $ checkText (PTI.oidOf pti) (encoder x)
+  where
+    pti = PTI.float8
+    reader = read . BC.unpack
+    encoder = nonNullRenderer Rendering.double
 
 prop_utf8Char x =
   (x /= '\NUL') ==>

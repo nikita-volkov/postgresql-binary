@@ -48,6 +48,14 @@ word64 :: R Word64
 word64 = 
   Builder.run . BB.word64BE
 
+float :: R Float
+float =
+  word32 . unsafeCoerce
+
+double :: R Double
+double =
+  word64 . unsafeCoerce
+
 arrayData :: R ArrayData.Data
 arrayData = 
   Builder.run . Builder.arrayData
