@@ -55,3 +55,8 @@ text =
 byteString :: P ByteString
 byteString =
   Right
+
+{-# INLINE lazyByteString #-}
+lazyByteString :: P BL.ByteString
+lazyByteString =
+  Right . BL.fromStrict

@@ -64,3 +64,7 @@ byteString :: R ByteString
 byteString =
   id
 
+lazyByteString :: R BL.ByteString
+lazyByteString =
+  BL.toStrict
+

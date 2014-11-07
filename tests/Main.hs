@@ -102,6 +102,11 @@ nonNullRenderer r =
 -- * Properties
 -------------------------
 
+prop_lazyByteString =
+  mappingP (PTI.oidOf PTI.bytea)
+           (nonNullRenderer Rendering.lazyByteString)
+           (nonNullParser Parsing.lazyByteString)
+
 prop_byteString =
   mappingP (PTI.oidOf PTI.bytea)
            (nonNullRenderer Rendering.byteString)
