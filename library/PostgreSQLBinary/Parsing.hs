@@ -11,8 +11,6 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
-import qualified Data.Attoparsec.ByteString as Atto
-import qualified Data.Attoparsec.ByteString.Char8 as Atto
 import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Parsing.Numeric as Numeric
@@ -43,6 +41,10 @@ float =
 double :: P Double
 double =
   unsafeCoerce . (integral :: P Word64)
+
+scientific :: P Scientific
+scientific x =
+  flip Atto.run Atto.scientific x
 
 {-# INLINE arrayData #-}
 arrayData :: P ArrayData.Data

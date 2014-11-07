@@ -70,6 +70,16 @@ checkText oid v =
     PQ.finish c
     return $ encodedResult
 
+query :: ByteString -> [Maybe (PQ.Oid, ByteString, PQ.Format)] -> PQ.Format -> IO (Maybe ByteString)
+query statement params outFormat =
+  do
+    connection <- connect
+    initConnection connection
+    Just result <- PQ.execParams connection statement params outFormat
+    encodedResult <- PQ.getvalue result 0 0
+    PQ.finish connection
+    return $ encodedResult
+
 connect :: IO PQ.Connection
 connect =
   PQ.connectdb bs
@@ -109,6 +119,10 @@ nonNullRenderer r =
 
 -- * Properties
 -------------------------
+
+test_scientificParsing =
+  assertEqual (Right (read "-1234560.789" :: Scientific)) =<< do
+    fmap (Parsing.scientific . fromJust) $ query "SELECT -1234560.789 :: numeric" [] PQ.Binary
 
 prop_float =
   mappingP (PTI.oidOf PTI.float4) 
