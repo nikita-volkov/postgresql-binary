@@ -87,7 +87,7 @@ bytea =
 
 date :: E Day
 date =
-  Builder.run . BB.int32BE . fromIntegral . Date.dayToPostgresJulian
+  Builder.run . Builder.date
 
 time :: E TimeOfDay
 time =
@@ -96,6 +96,10 @@ time =
 timetz :: E (TimeOfDay, TimeZone)
 timetz =
   Builder.run . Builder.timetz
+
+timestamp :: E LocalTime
+timestamp =
+  Builder.run . Builder.timestamp
 
 
 -- * Misc

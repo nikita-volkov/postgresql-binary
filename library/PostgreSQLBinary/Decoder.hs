@@ -83,7 +83,19 @@ timetz =
   where
     tz =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
-  
+
+timestamp :: D LocalTime
+timestamp =
+  fmap fromMicros . (int :: D Int64)
+  where
+    fromMicros =
+      evalState $ do
+        days <- state $ (`divMod` (10^6 * 60 * 60 * 24))
+        micros <- get
+        return $
+          LocalTime 
+            (Date.postgresJulianToDay . fromIntegral $ days)
+            (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
 
 -- * Misc
 -------------------------

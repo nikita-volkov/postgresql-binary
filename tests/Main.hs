@@ -172,6 +172,22 @@ arrayGen =
 -- * Properties
 -------------------------
 
+prop_timestamp =
+  forAll microsLocalTimeGen $ 
+    mappingP (PTI.oidOf PTI.timestamp) 
+             (nonNullRenderer Encoder.timestamp)
+             (nonNullParser Decoder.timestamp)
+
+test_timestampParsing1 =
+  assertEqual (Right (read "2000-01-19 10:41:06" :: LocalTime)) =<< do
+    fmap (Decoder.timestamp . fromJust) $ 
+      query "SELECT '2000-01-19 10:41:06' :: timestamp" [] PQ.Binary
+
+test_timestampParsing2 =
+  assertEqual (Right (read "1864-05-09 22:48:34.254242" :: LocalTime)) =<< do
+    fmap (Decoder.timestamp . fromJust) $ 
+      query "SELECT '1864-05-09 22:48:34.254242' :: timestamp" [] PQ.Binary
+
 prop_timetz =
   forAll ((,) <$> microsTimeOfDayGen <*> timeZoneGen) $ 
     mappingP (PTI.oidOf PTI.timetz) 

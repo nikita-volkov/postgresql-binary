@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.Date as Date
 
 
 {-# INLINE run #-}
@@ -45,6 +46,10 @@ array (dimensionsV, valuesV, nullsV, oidV) =
         Nothing -> word32BE (-1)
         Just b -> word32BE (fromIntegral (B.length b)) <> byteString b
 
+date :: Day -> Builder
+date =
+  int32BE . fromIntegral . Date.dayToPostgresJulian
+
 time :: TimeOfDay -> Builder
 time =
   word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
@@ -56,3 +61,10 @@ timetz (timeX, tzX) =
 tz :: TimeZone -> Builder
 tz =
   int32BE . fromIntegral . (*60) . negate . timeZoneMinutes
+
+timestamp :: LocalTime -> Builder
+timestamp (LocalTime dayX timeX) =
+  let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
+      time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
+      in int64BE $ fromIntegral $ days + time
+
