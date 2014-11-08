@@ -1,6 +1,6 @@
 -- |
 -- Composable Attoparsec parsers.
-module PostgreSQLBinary.Parsing.Atto where
+module PostgreSQLBinary.Decoder.Atto where
 
 import PostgreSQLBinary.Prelude hiding (take, bool)
 import Data.Attoparsec.ByteString

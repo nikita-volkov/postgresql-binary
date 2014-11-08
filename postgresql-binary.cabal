@@ -44,15 +44,15 @@ library
     Haskell2010
   other-modules:
     PostgreSQLBinary.Prelude
-    PostgreSQLBinary.Rendering.Builder
-    PostgreSQLBinary.Parsing.Atto
+    PostgreSQLBinary.Encoder.Builder
+    PostgreSQLBinary.Decoder.Atto
     PostgreSQLBinary.Integral
     PostgreSQLBinary.Numeric
     PostgreSQLBinary.Date
   exposed-modules:
     PostgreSQLBinary.Array
-    PostgreSQLBinary.Rendering
-    PostgreSQLBinary.Parsing
+    PostgreSQLBinary.Encoder
+    PostgreSQLBinary.Decoder
   build-depends:
     -- template haskell:
     template-haskell == 2.*,

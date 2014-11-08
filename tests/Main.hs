@@ -16,8 +16,8 @@ import qualified Data.Scientific as Scientific
 import qualified Data.Vector as Vector
 import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified PostgreSQLBinary.PTI as PTI
-import qualified PostgreSQLBinary.Rendering as Rendering
-import qualified PostgreSQLBinary.Parsing as Parsing
+import qualified PostgreSQLBinary.Encoder as Encoder
+import qualified PostgreSQLBinary.Decoder as Decoder
 import qualified PostgreSQLBinary.Array as Array
 
 
@@ -150,11 +150,11 @@ arrayGen =
       (,) <$> choose (1, 7) <*> pure 1
     valueGen =
       do
-        (pti, gen) <- elements [(PTI.int8, mkGen (Rendering.int8 . Left)),
-                                (PTI.bool, mkGen Rendering.bool),
-                                (PTI.date, mkGen Rendering.date),
-                                (PTI.text, mkGen Rendering.text),
-                                (PTI.bytea, mkGen Rendering.bytea)]
+        (pti, gen) <- elements [(PTI.int8, mkGen (Encoder.int8 . Left)),
+                                (PTI.bool, mkGen Encoder.bool),
+                                (PTI.date, mkGen Encoder.date),
+                                (PTI.text, mkGen Encoder.text),
+                                (PTI.bytea, mkGen Encoder.bytea)]
         return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
       where
         mkGen renderer =
@@ -171,14 +171,14 @@ arrayGen =
 prop_timeOfDay =
   forAll microsTimeOfDayGen $ 
     mappingP (PTI.oidOf PTI.time) 
-             (nonNullRenderer Rendering.time)
-             (nonNullParser Parsing.time)
+             (nonNullRenderer Encoder.time)
+             (nonNullParser Decoder.time)
 
 prop_timeOfDayParsing =
   forAll microsTimeOfDayGen $ \x ->
     Right x === do
       unsafePerformIO $ 
-        fmap (Parsing.time . fromJust) $ 
+        fmap (Decoder.time . fromJust) $ 
           query "SELECT $1" 
                 [Just (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.time, (fromString . show) x, PQ.Text)] 
                 PQ.Binary
@@ -187,23 +187,23 @@ prop_scientific (c, e) =
   let x = Scientific.scientific c e
     in
       mappingP (PTI.oidOf PTI.numeric) 
-               (nonNullRenderer Rendering.numeric)
-               (nonNullParser Parsing.numeric)
+               (nonNullRenderer Encoder.numeric)
+               (nonNullParser Decoder.numeric)
                (x)
 
 test_scientificParsing1 =
   assertEqual (Right (read "-1234560.789" :: Scientific)) =<< do
-    fmap (Parsing.numeric . fromJust) $ 
+    fmap (Decoder.numeric . fromJust) $ 
       query "SELECT -1234560.789 :: numeric" [] PQ.Binary
 
 test_scientificParsing2 =
   assertEqual (Right (read "-0.0789" :: Scientific)) =<< do
-    fmap (Parsing.numeric . fromJust) $ 
+    fmap (Decoder.numeric . fromJust) $ 
       query "SELECT -0.0789 :: numeric" [] PQ.Binary
 
 test_scientificParsing3 =
   assertEqual (Right (read "10000" :: Scientific)) =<< do
-    fmap (Parsing.numeric . fromJust) $ 
+    fmap (Decoder.numeric . fromJust) $ 
       query "SELECT 10000 :: numeric" [] PQ.Binary
 
 prop_scientificParsing (c, e) =
@@ -211,15 +211,15 @@ prop_scientificParsing (c, e) =
     in
       Right x === do
         unsafePerformIO $ 
-          fmap (Parsing.numeric . fromJust) $ 
+          fmap (Decoder.numeric . fromJust) $ 
             query "SELECT $1 :: numeric" 
                   [Just (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.numeric, (fromString . show) x, PQ.Text)] 
                   PQ.Binary
 
 prop_float =
   mappingP (PTI.oidOf PTI.float4) 
-           (nonNullRenderer Rendering.float4)
-           (nonNullParser Parsing.float4)
+           (nonNullRenderer Encoder.float4)
+           (nonNullParser Decoder.float4)
 
 prop_floatText =
   \x -> 
@@ -228,12 +228,12 @@ prop_floatText =
   where
     pti = PTI.float4
     reader = read . BC.unpack
-    encoder = nonNullRenderer Rendering.float4
+    encoder = nonNullRenderer Encoder.float4
 
 prop_double =
   mappingP (PTI.oidOf PTI.float8) 
-           (nonNullRenderer Rendering.float8)
-           (nonNullParser Parsing.float8)
+           (nonNullRenderer Encoder.float8)
+           (nonNullParser Decoder.float8)
 
 prop_doubleText =
   \x -> 
@@ -242,19 +242,19 @@ prop_doubleText =
   where
     pti = PTI.float8
     reader = read . BC.unpack
-    encoder = nonNullRenderer Rendering.float8
+    encoder = nonNullRenderer Encoder.float8
 
 prop_char x =
   (x /= '\NUL') ==>
   mappingP (PTI.oidOf PTI.text) 
-           (nonNullRenderer Rendering.char)
-           (nonNullParser Parsing.char)
+           (nonNullRenderer Encoder.char)
+           (nonNullParser Decoder.char)
            (x)
 
 prop_charText x =
   (x /= '\NUL') ==>
   mappingTextP (PTI.oidOf PTI.text) 
-               (nonNullRenderer Rendering.char) 
+               (nonNullRenderer Encoder.char) 
                (Just . TE.encodeUtf8 . T.singleton)
                (x)
 
@@ -273,106 +273,106 @@ prop_arrayDataFromAndToListIsomporphism =
 
 prop_byteString =
   mappingP (PTI.oidOf PTI.bytea)
-           (nonNullRenderer (Rendering.bytea . Left))
-           (nonNullParser Parsing.bytea)
+           (nonNullRenderer (Encoder.bytea . Left))
+           (nonNullParser Decoder.bytea)
 
 prop_lazyByteString =
   mappingP (PTI.oidOf PTI.bytea)
-           (nonNullRenderer (Rendering.bytea . Right))
-           (nonNullParser (fmap BL.fromStrict . Parsing.bytea))
+           (nonNullRenderer (Encoder.bytea . Right))
+           (nonNullParser (fmap BL.fromStrict . Decoder.bytea))
 
 prop_text v =
   (isNothing $ T.find (== '\NUL') v) ==>
     mappingP (PTI.oidOf PTI.text) 
-             (nonNullRenderer (Rendering.text . Left))
-             (nonNullParser Parsing.text)
+             (nonNullRenderer (Encoder.text . Left))
+             (nonNullParser Decoder.text)
              (v)
 
 prop_lazyText v =
   (isNothing $ TL.find (== '\NUL') v) ==>
     mappingP (PTI.oidOf PTI.text) 
-             (nonNullRenderer (Rendering.text . Right))
-             (nonNullParser (fmap TL.fromStrict . Parsing.text))
+             (nonNullRenderer (Encoder.text . Right))
+             (nonNullParser (fmap TL.fromStrict . Decoder.text))
              (v)
 
 prop_bool =
   mappingP (PTI.oidOf PTI.bool) 
-           (nonNullRenderer Rendering.bool)
-           (nonNullParser Parsing.bool)
+           (nonNullRenderer Encoder.bool)
+           (nonNullParser Decoder.bool)
 
 prop_int =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer (Rendering.int8 . Left) . (fromIntegral :: Int -> Int64))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int8 . Left) . (fromIntegral :: Int -> Int64))
+           (nonNullParser Decoder.int)
 
 prop_int8 =
   mappingP (PTI.oidOf PTI.int2) 
-           (nonNullRenderer (Rendering.int2 . Left) . (fromIntegral :: Int8 -> Int16))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int2 . Left) . (fromIntegral :: Int8 -> Int16))
+           (nonNullParser Decoder.int)
 
 prop_int16 =
   mappingP (PTI.oidOf PTI.int2) 
-           (nonNullRenderer (Rendering.int2 . Left))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int2 . Left))
+           (nonNullParser Decoder.int)
 
 prop_int32 =
   mappingP (PTI.oidOf PTI.int4) 
-           (nonNullRenderer (Rendering.int4 . Left))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int4 . Left))
+           (nonNullParser Decoder.int)
 
 prop_int64 =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer (Rendering.int8 . Left))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int8 . Left))
+           (nonNullParser Decoder.int)
 
 prop_int64Text =
   mappingTextP (PTI.oidOf PTI.int8) 
-               (nonNullRenderer (Rendering.int8 . Left)) 
+               (nonNullRenderer (Encoder.int8 . Left)) 
                (Just . fromString . show)
 
 prop_word =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer (Rendering.int8 . Right) . (fromIntegral :: Word -> Word64))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int8 . Right) . (fromIntegral :: Word -> Word64))
+           (nonNullParser Decoder.int)
 
 prop_word8 =
   mappingP (PTI.oidOf PTI.int2) 
-           (nonNullRenderer (Rendering.int2 . Right) . (fromIntegral :: Word8 -> Word16))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int2 . Right) . (fromIntegral :: Word8 -> Word16))
+           (nonNullParser Decoder.int)
 
 prop_word16 =
   mappingP (PTI.oidOf PTI.int2) 
-           (nonNullRenderer (Rendering.int2 . Right))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int2 . Right))
+           (nonNullParser Decoder.int)
 
 prop_word32 =
   mappingP (PTI.oidOf PTI.int4) 
-           (nonNullRenderer (Rendering.int4 . Right))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int4 . Right))
+           (nonNullParser Decoder.int)
 
 prop_word64 =
   mappingP (PTI.oidOf PTI.int8) 
-           (nonNullRenderer (Rendering.int8 . Right))
-           (nonNullParser Parsing.int)
+           (nonNullRenderer (Encoder.int8 . Right))
+           (nonNullParser Decoder.int)
 
 prop_word64Text =
   mappingTextP (PTI.oidOf PTI.int8) 
-               (nonNullRenderer (Rendering.int8 . Right)) 
+               (nonNullRenderer (Encoder.int8 . Right)) 
                (Just . fromString . show)
 
 prop_day =
   mappingP (PTI.oidOf PTI.date) 
-           (nonNullRenderer Rendering.date)
-           (nonNullParser Parsing.date)
+           (nonNullRenderer Encoder.date)
+           (nonNullParser Decoder.date)
 
 prop_dayText =
   mappingTextP (PTI.oidOf PTI.date) 
-               (nonNullRenderer Rendering.date) 
+               (nonNullRenderer Encoder.date) 
                (Just . fromString . show)
 
 prop_arrayData =
   forAll arrayGen $ uncurry $ \oid ->
     mappingP (oid)
-             (nonNullRenderer Rendering.array)
-             (nonNullParser Parsing.array)
+             (nonNullRenderer Encoder.array)
+             (nonNullParser Decoder.array)
 

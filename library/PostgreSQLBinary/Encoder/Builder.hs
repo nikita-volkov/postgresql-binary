@@ -1,4 +1,4 @@
-module PostgreSQLBinary.Rendering.Builder where
+module PostgreSQLBinary.Encoder.Builder where
 
 import PostgreSQLBinary.Prelude hiding (bool)
 import Data.ByteString.Builder
