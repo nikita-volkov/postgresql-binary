@@ -1,5 +1,3 @@
--- |
--- Final specialized but uncomposable parsers.
 module PostgreSQLBinary.Parsing where
 
 import PostgreSQLBinary.Prelude hiding (bool)
@@ -11,17 +9,74 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
-import qualified PostgreSQLBinary.ArrayData as ArrayData
+import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
+-- |
+-- A function for decoding a byte string into a value.
 type P a = ByteString -> Either Text a
 
-utf8Char :: P Char
-utf8Char x =
-  maybe (Left "Empty input") (return . fst) . T.uncons =<< text x 
+
+-- * Numbers
+-------------------------
+
+-- |
+-- Any of PostgreSQL integer types.
+{-# INLINE int #-}
+int :: (Integral a, Bits a) => P a
+int =
+  Right . Integral.pack
+
+float4 :: P Float
+float4 =
+  unsafeCoerce . (int :: P Word32)
+
+float8 :: P Double
+float8 =
+  unsafeCoerce . (int :: P Word64)
+
+numeric :: P Scientific
+numeric =
+  join . fmap Numeric.toScientific . flip Atto.run Atto.numeric
+
+-- * Text
+-------------------------
+
+-- |
+-- A UTF-8-encoded char.
+char :: P Char
+char x =
+  maybe (Left "Empty input") (return . fst) . T.uncons =<< text x
+
+-- |
+-- Any of the variable-length character types:
+-- BPCHAR, VARCHAR, NAME and TEXT.
+text :: P Text
+text =
+  either (Left . fromString . show) Right . TE.decodeUtf8'
+
+{-# INLINE bytea #-}
+bytea :: P ByteString
+bytea =
+  Right
+
+-- * Date and Time
+-------------------------
+
+date :: P Day
+date =
+  fmap (Date.postgresJulianToDay . fromIntegral) . (int :: P Int32)
+
+time :: P TimeOfDay
+time =
+  fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
+  (int :: P Word64)
+
+-- * Misc
+-------------------------
 
 bool :: P Bool
 bool b =
@@ -30,55 +85,12 @@ bool b =
     Just (1, _) -> return True
     _ -> Left ("Invalid value: " <> (fromString . show) b)
 
-{-# INLINE integral #-}
-integral :: (Integral a, Bits a) => P a
-integral =
-  Right . Integral.pack
-
-float :: P Float
-float =
-  unsafeCoerce . (integral :: P Word32)
-
-double :: P Double
-double =
-  unsafeCoerce . (integral :: P Word64)
-
-numeric :: P Numeric.Numeric
-numeric =
-  flip Atto.run Atto.numeric
-
-scientific :: P Scientific
-scientific =
-  join . fmap Numeric.toScientific . numeric
-
-{-# INLINE arrayData #-}
-arrayData :: P ArrayData.Data
-arrayData =
-  flip Atto.run Atto.arrayData
-
-day :: P Day
-day =
-  fmap (Date.postgresJulianToDay . fromIntegral) . (integral :: P Int32)
-
-timeOfDay :: P TimeOfDay
-timeOfDay =
-  fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
-  (integral :: P Word64)
-
-text :: P Text
-text =
-  either (Left . fromString . show) Right . TE.decodeUtf8'
-
-lazyText :: P TL.Text
-lazyText =
-  fmap TL.fromStrict . text
-
-{-# INLINE byteString #-}
-byteString :: P ByteString
-byteString =
-  Right
-
-{-# INLINE lazyByteString #-}
-lazyByteString :: P BL.ByteString
-lazyByteString =
-  Right . BL.fromStrict
+-- |
+-- Arbitrary array.
+-- 
+-- Returns an intermediate representation,
+-- which can then be used to decode into a specific data type.
+{-# INLINE array #-}
+array :: P Array.Data
+array =
+  flip Atto.run Atto.array

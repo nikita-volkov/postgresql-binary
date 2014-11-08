@@ -47,10 +47,10 @@ library
     PostgreSQLBinary.Rendering.Builder
     PostgreSQLBinary.Parsing.Atto
     PostgreSQLBinary.Integral
+    PostgreSQLBinary.Numeric
     PostgreSQLBinary.Date
   exposed-modules:
-    PostgreSQLBinary.ArrayData
-    PostgreSQLBinary.Numeric
+    PostgreSQLBinary.Array
     PostgreSQLBinary.Rendering
     PostgreSQLBinary.Parsing
   build-depends:

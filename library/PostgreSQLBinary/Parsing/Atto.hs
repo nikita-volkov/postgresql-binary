@@ -15,7 +15,7 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
 import qualified PostgreSQLBinary.Integral as Integral
-import qualified PostgreSQLBinary.ArrayData as ArrayData
+import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
@@ -44,18 +44,6 @@ intOfSize :: (Integral a, Bits a) => Int -> Parser a
 intOfSize x =
   Integral.pack <$> take x
 
-word16 :: Parser Word16
-word16 =
-  intOfSize 2
-
-word32 :: Parser Word32
-word32 =
-  intOfSize 4
-
-int32 :: Parser Int32
-int32 =
-  intOfSize 4
-
 bool :: Parser Bool
 bool =
   (word8 0 *> pure False) <|> (word8 1 *> pure True)
@@ -64,30 +52,27 @@ double :: Parser Double
 double =
   unsafeCoerce (intOfSize 8 :: Parser Int64)
 
-arrayData :: Parser ArrayData.Data
-arrayData =
+array :: Parser Array.Data
+array =
   do
-    dimensionsAmountV <- word32
+    dimensionsAmountV <- intOfSize 4
     nullsV <- nulls
-    oidV <- word32
-    dimensionsV <- replicateM (fromIntegral dimensionsAmountV) dimension
+    oidV <- intOfSize 4
+    dimensionsV <- replicateM dimensionsAmountV dimension
     valuesV <- many value
     return (dimensionsV, valuesV, nullsV, oidV)
   where
     dimension =
-      (,) <$> word32 <*> word32
+      (,) <$> intOfSize 4 <*> intOfSize 4
     value =
       nothing <|> just
       where
         nothing =
           string (Integral.unpack (-1 :: Word32)) *> pure Nothing
         just =
-          do
-            length <- word32
-            b <- take (fromIntegral length)
-            return $ Just b
+          Just <$> (take =<< intOfSize 4)
     nulls =
-      word32 >>= \case
+      (intOfSize 4 :: Parser Word32) >>= \case
         0 -> return False
         1 -> return True
         w -> fail $ "Invalid value: " <> show w
