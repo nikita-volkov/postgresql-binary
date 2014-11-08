@@ -74,3 +74,11 @@ timestamptz (LocalTime dayX timeX) =
       time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
       in int64BE $ fromIntegral $ days + time
 
+interval :: DiffTime -> Builder
+interval x =
+  flip evalState (unsafeCoerce x :: Integer) $ do
+    u <- state (`divMod` (10 ^ 6))
+    d <- state (`divMod` (10 ^ 6 * 60 * 60 * 24))
+    m <- get
+    return $
+      int64BE (fromIntegral u) <> int32BE (fromIntegral d) <> int32BE (fromIntegral m)

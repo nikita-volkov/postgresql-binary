@@ -110,6 +110,20 @@ timestamptz =
             (Date.postgresJulianToDay . fromIntegral $ days)
             (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
 
+interval :: D DiffTime
+interval =
+  evalStateT $ do
+    ub <- state $ B.splitAt 8
+    db <- state $ B.splitAt 4
+    mb <- state $ B.splitAt 4
+    lift $ do
+      u <- int ub
+      d <- int db
+      m <- int mb
+      return $ picosecondsToDiffTime $ 
+        10 ^ 6 * (u + 10 ^ 6 * 60 * 60 * 24 * (d + 31 * m))
+
+
 -- * Misc
 -------------------------
 

@@ -176,6 +176,17 @@ arrayGen =
 -- * Properties
 -------------------------
 
+prop_interval =
+  forAll microsDiffTimeGen $ 
+    mappingP (PTI.oidOf PTI.interval) 
+             (nonNullRenderer Encoder.interval)
+             (nonNullParser Decoder.interval)
+
+test_intervalParsing =
+  assertEqual (Right (secondsToDiffTime (44 + 60 * (10 + 60 * 24 * (20 + 31 * 2))))) =<< do
+    fmap (Decoder.interval . fromJust) $ 
+      query "SELECT 'P0000-02-20T00:10:44' :: interval" [] PQ.Binary
+
 prop_timestamp =
   forAll microsUTCTimeGen $ 
     mappingP (PTI.oidOf PTI.timestamp) 

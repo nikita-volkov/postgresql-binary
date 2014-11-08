@@ -105,6 +105,9 @@ timestamptz :: E LocalTime
 timestamptz =
   Builder.run . Builder.timestamptz
 
+interval :: E DiffTime
+interval =
+  Builder.run . Builder.interval
 
 -- * Misc
 -------------------------
