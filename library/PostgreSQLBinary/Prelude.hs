@@ -18,10 +18,6 @@ import BasePrelude as Exports
 -------------------------
 import MTLPrelude as Exports hiding (shift)
 
--- hashable
--------------------------
-import Data.Hashable as Exports (Hashable(..))
-
 -- text
 -------------------------
 import Data.Text as Exports (Text)
@@ -37,10 +33,6 @@ import Data.Scientific as Exports (Scientific)
 -- time
 -------------------------
 import Data.Time as Exports
-
--- vector
--------------------------
-import Data.Vector as Exports (Vector)
 
 -- placeholders
 -------------------------

@@ -5,15 +5,6 @@ module PostgreSQLBinary.Decoder.Atto where
 import PostgreSQLBinary.Prelude hiding (take, bool)
 import Data.Attoparsec.ByteString
 import Data.Attoparsec.ByteString.Char8 hiding (double)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Builder
-import qualified Data.ByteString.Lazy
-import qualified Data.Text
-import qualified Data.Text.Encoding
-import qualified Data.Text.Lazy
-import qualified Data.Text.Lazy.Encoding
-import qualified Data.Text.Lazy.Builder
-import qualified Data.Vector
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Numeric as Numeric

@@ -13,7 +13,6 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Scientific as Scientific
-import qualified Data.Vector as Vector
 import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified PostgreSQLBinary.PTI as PTI
 import qualified PostgreSQLBinary.Encoder as Encoder

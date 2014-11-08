@@ -10,7 +10,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
-import qualified Data.Vector as Vector
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date

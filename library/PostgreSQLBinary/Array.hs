@@ -10,7 +10,6 @@
 module PostgreSQLBinary.Array where
 
 import PostgreSQLBinary.Prelude hiding (Data)
-import qualified Data.Vector as V
 
 
 -- | 
