@@ -13,7 +13,7 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Rendering.Builder as Builder
 import qualified PostgreSQLBinary.ArrayData as ArrayData
-import qualified PostgreSQLBinary.Time as Time
+import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
@@ -64,7 +64,7 @@ arrayData =
 
 day :: R Day
 day =
-  Builder.run . BB.int32BE . fromIntegral . Time.dayToPostgresJulian
+  Builder.run . BB.int32BE . fromIntegral . Date.dayToPostgresJulian
 
 text :: R Text
 text =

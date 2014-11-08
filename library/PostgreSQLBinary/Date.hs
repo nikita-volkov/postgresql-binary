@@ -1,4 +1,4 @@
-module PostgreSQLBinary.Time where
+module PostgreSQLBinary.Date where
 
 import PostgreSQLBinary.Prelude
 import Data.Time.Calendar.Julian

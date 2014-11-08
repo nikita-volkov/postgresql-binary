@@ -12,7 +12,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified PostgreSQLBinary.ArrayData as ArrayData
-import qualified PostgreSQLBinary.Time as Time
+import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 
@@ -58,7 +58,7 @@ arrayData =
 
 day :: P Day
 day =
-  fmap (Time.postgresJulianToDay . fromIntegral) . (integral :: P Int32)
+  fmap (Date.postgresJulianToDay . fromIntegral) . (integral :: P Int32)
 
 text :: P Text
 text =
