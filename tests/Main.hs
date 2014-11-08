@@ -118,8 +118,42 @@ nonNullParser p =
 nonNullRenderer r =
   return . r
 
+-- * Generators
+-------------------------
+
+scientificGen :: Gen Scientific
+scientificGen =
+  Scientific.scientific <$> arbitrary <*> arbitrary
+
+microsTimeOfDayGen :: Gen TimeOfDay
+microsTimeOfDayGen =
+  timeToTimeOfDay <$> microsDiffTimeGen
+
+microsLocalTimeGen :: Gen LocalTime
+microsLocalTimeGen = 
+  LocalTime <$> arbitrary <*> microsTimeOfDayGen
+
+microsDiffTimeGen :: Gen DiffTime
+microsDiffTimeGen = do
+  fmap picosecondsToDiffTime $ fmap (* (10^6)) $ choose (0, (10^6)*24*60*60)
+
 -- * Properties
 -------------------------
+
+prop_timeOfDay =
+  forAll microsTimeOfDayGen $ 
+    mappingP (PTI.oidOf PTI.time) 
+             (nonNullRenderer Rendering.timeOfDay)
+             (nonNullParser Parsing.timeOfDay)
+
+prop_timeOfDayParsing =
+  forAll microsTimeOfDayGen $ \x ->
+    Right x === do
+      unsafePerformIO $ 
+        fmap (Parsing.timeOfDay . fromJust) $ 
+          query "SELECT $1" 
+                [Just (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.time, (fromString . show) x, PQ.Text)] 
+                PQ.Binary
 
 prop_scientific (c, e) =
   let x = Scientific.scientific c e

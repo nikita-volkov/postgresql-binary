@@ -66,6 +66,10 @@ day :: R Day
 day =
   Builder.run . BB.int32BE . fromIntegral . Date.dayToPostgresJulian
 
+timeOfDay :: R TimeOfDay
+timeOfDay =
+  word64 . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
+
 text :: R Text
 text =
   TE.encodeUtf8 . T.filter (/= '\0')

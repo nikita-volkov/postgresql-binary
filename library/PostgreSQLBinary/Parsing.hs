@@ -60,6 +60,11 @@ day :: P Day
 day =
   fmap (Date.postgresJulianToDay . fromIntegral) . (integral :: P Int32)
 
+timeOfDay :: P TimeOfDay
+timeOfDay =
+  fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
+  (integral :: P Word64)
+
 text :: P Text
 text =
   either (Left . fromString . show) Right . TE.decodeUtf8'

@@ -60,6 +60,10 @@ bool :: Parser Bool
 bool =
   (word8 0 *> pure False) <|> (word8 1 *> pure True)
 
+double :: Parser Double
+double =
+  unsafeCoerce (intOfSize 8 :: Parser Int64)
+
 arrayData :: Parser ArrayData.Data
 arrayData =
   do
