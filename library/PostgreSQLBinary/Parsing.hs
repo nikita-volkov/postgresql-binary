@@ -58,7 +58,7 @@ arrayData =
 
 day :: P Day
 day =
-  fmap (Time.postgresJulianToDay . fromIntegral) . flip Atto.run Atto.int32
+  fmap (Time.postgresJulianToDay . fromIntegral) . (integral :: P Int32)
 
 text :: P Text
 text =

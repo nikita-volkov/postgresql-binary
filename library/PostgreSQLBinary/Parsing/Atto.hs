@@ -37,24 +37,24 @@ run input parser =
 {-# INLINE integral #-}
 integral :: forall a. (Integral a, Bits a) => Parser a
 integral =
-  sizedIntegral (Integral.byteSize (undefined :: a))
+  intOfSize (Integral.byteSize (undefined :: a))
 
-{-# INLINE sizedIntegral #-}
-sizedIntegral :: (Integral a, Bits a) => Int -> Parser a
-sizedIntegral x =
+{-# INLINE intOfSize #-}
+intOfSize :: (Integral a, Bits a) => Int -> Parser a
+intOfSize x =
   Integral.pack <$> take x
 
 word16 :: Parser Word16
 word16 =
-  sizedIntegral 2
+  intOfSize 2
 
 word32 :: Parser Word32
 word32 =
-  sizedIntegral 4
+  intOfSize 4
 
 int32 :: Parser Int32
 int32 =
-  sizedIntegral 4
+  intOfSize 4
 
 bool :: Parser Bool
 bool =
@@ -91,9 +91,9 @@ arrayData =
 numeric :: Parser Numeric.Numeric
 numeric =
   do
-    componentsAmount <- sizedIntegral 2
-    weight <- sizedIntegral 2
-    signCode <- sizedIntegral 2
-    digitsAfterPoint <- sizedIntegral 2
-    components <- replicateM (fromIntegral componentsAmount) (sizedIntegral 2)
+    componentsAmount <- intOfSize 2
+    weight <- intOfSize 2
+    signCode <- intOfSize 2
+    digitsAfterPoint <- intOfSize 2
+    components <- replicateM (fromIntegral componentsAmount) (intOfSize 2)
     return $ Numeric.Numeric componentsAmount weight signCode digitsAfterPoint components
