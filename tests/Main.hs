@@ -19,6 +19,7 @@ import qualified PostgreSQLBinary.PTI as PTI
 import qualified PostgreSQLBinary.Rendering as Rendering
 import qualified PostgreSQLBinary.Parsing as Parsing
 import qualified PostgreSQLBinary.ArrayData as ArrayData
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 type Text = T.Text
@@ -38,7 +39,7 @@ floatEqProp a b =
     error = max (abs a) 1 / 10^3
 
 mappingP :: 
-  (Show a, Eq a, Arbitrary a) => 
+  (Show a, Eq a) => 
   Word32 -> (a -> Maybe ByteString) -> (Maybe ByteString -> Either Text a) -> a -> Property
 mappingP oid encode decode v =
   Right v === do
@@ -53,7 +54,7 @@ mappingP oid encode decode v =
       return $ decode binaryResult
 
 mappingTextP ::
-  (Show a, Eq a, Arbitrary a) => 
+  (Show a, Eq a) => 
   Word32 -> (a -> Maybe ByteString) -> (a -> Maybe ByteString) -> a -> Property
 mappingTextP oid encode render value =
   render value === do unsafePerformIO $ checkText oid (encode value)
@@ -120,9 +121,38 @@ nonNullRenderer r =
 -- * Properties
 -------------------------
 
-test_scientificParsing =
+prop_scientific (c, e) =
+  let x = Scientific.scientific c e
+    in
+      mappingP (PTI.oidOf PTI.numeric) 
+               (nonNullRenderer Rendering.scientific)
+               (nonNullParser Parsing.scientific)
+               (x)
+
+test_scientificParsing1 =
   assertEqual (Right (read "-1234560.789" :: Scientific)) =<< do
-    fmap (Parsing.scientific . fromJust) $ query "SELECT -1234560.789 :: numeric" [] PQ.Binary
+    fmap (Parsing.scientific . fromJust) $ 
+      query "SELECT -1234560.789 :: numeric" [] PQ.Binary
+
+test_scientificParsing2 =
+  assertEqual (Right (read "-0.0789" :: Scientific)) =<< do
+    fmap (Parsing.scientific . fromJust) $ 
+      query "SELECT -0.0789 :: numeric" [] PQ.Binary
+
+test_scientificParsing3 =
+  assertEqual (Right (read "10000" :: Scientific)) =<< do
+    fmap (Parsing.scientific . fromJust) $ 
+      query "SELECT 10000 :: numeric" [] PQ.Binary
+
+prop_scientificParsing (c, e) =
+  let x = Scientific.scientific c e
+    in
+      Right x === do
+        unsafePerformIO $ 
+          fmap (Parsing.scientific . fromJust) $ 
+            query "SELECT $1 :: numeric" 
+                  [Just (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.numeric, (fromString . show) x, PQ.Text)] 
+                  PQ.Binary
 
 prop_float =
   mappingP (PTI.oidOf PTI.float4) 

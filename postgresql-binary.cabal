@@ -50,6 +50,7 @@ library
     PostgreSQLBinary.Time
   exposed-modules:
     PostgreSQLBinary.ArrayData
+    PostgreSQLBinary.Numeric
     PostgreSQLBinary.Rendering
     PostgreSQLBinary.Parsing
   build-depends:

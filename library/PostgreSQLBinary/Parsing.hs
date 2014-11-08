@@ -14,6 +14,7 @@ import qualified PostgreSQLBinary.Parsing.Atto as Atto
 import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 type P a = ByteString -> Either Text a
@@ -42,9 +43,13 @@ double :: P Double
 double =
   unsafeCoerce . (integral :: P Word64)
 
+numeric :: P Numeric.Numeric
+numeric =
+  flip Atto.run Atto.numeric
+
 scientific :: P Scientific
-scientific x =
-  flip Atto.run Atto.scientific x
+scientific =
+  join . fmap Numeric.toScientific . numeric
 
 {-# INLINE arrayData #-}
 arrayData :: P ArrayData.Data

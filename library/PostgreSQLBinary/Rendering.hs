@@ -14,9 +14,11 @@ import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Rendering.Builder as Builder
 import qualified PostgreSQLBinary.ArrayData as ArrayData
 import qualified PostgreSQLBinary.Time as Time
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 type R a = a -> ByteString
+
 
 bool :: R Bool
 bool =
@@ -84,3 +86,15 @@ utf8Char :: R Char
 utf8Char = 
   text . T.singleton
 
+numeric :: R Numeric.Numeric
+numeric x =
+  Builder.run $
+    BB.word16BE (Numeric.componentsAmount x) <>
+    BB.int16BE (Numeric.pointIndex x) <>
+    BB.word16BE (Numeric.signCode x) <>
+    BB.word16BE (Numeric.amountOfDigitsAfterPoint x) <>
+    foldMap BB.word16BE (Numeric.components x)
+
+scientific :: R Scientific
+scientific =
+  numeric . Numeric.fromScientific

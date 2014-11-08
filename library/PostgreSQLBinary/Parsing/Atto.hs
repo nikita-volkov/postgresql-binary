@@ -16,7 +16,7 @@ import qualified Data.Text.Lazy.Builder
 import qualified Data.Vector
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.ArrayData as ArrayData
-import qualified Data.Scientific as Scientific
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 run :: ByteString -> Parser a -> Either Text a
@@ -88,40 +88,12 @@ arrayData =
         1 -> return True
         w -> fail $ "Invalid value: " <> show w
 
-scientific :: Parser Scientific
-scientific =
+numeric :: Parser Numeric.Numeric
+numeric =
   do
-    -- Length of a components list:
     componentsAmount <- sizedIntegral 2
-    -- Index of the point in the components list:
-    weight <- take 2
-    -- A function, which signs a number:
-    signer <- do
-      -- Code of a sign:
-      code <- sizedIntegral 2
-      if 
-        | code == negSignCode -> return negate
-        | code == posSignCode -> return id
-        | code == nanSignCode -> fail "NAN sign"
-        | otherwise           -> fail $ "Unexpected sign value: " <> show code
-    -- Amount of digits after the point:
+    weight <- sizedIntegral 2
+    signCode <- sizedIntegral 2
     digitsAfterPoint <- sizedIntegral 2
-    components <- replicateM componentsAmount (sizedIntegral 2)
-    let
-      c = signer $ decodeComponents components
-      e = negate $ digitsAfterPoint
-      in 
-        return $ Scientific.scientific c e
-  where
-    posSignCode = 0x0000 :: Word16
-    negSignCode = 0x4000 :: Word16
-    nanSignCode = 0xC000 :: Word16
-    decodeComponents = 
-      foldl' (\l r -> l * 10 + r) 0 . foldMap unpackComponent
-    unpackComponent =
-      evalState $ do
-        a <- state (`divMod` 1000)
-        b <- state (`divMod` 100)
-        c <- state (`divMod` 10)
-        d <- get
-        return $ [a, b, c, d]
+    components <- replicateM (fromIntegral componentsAmount) (sizedIntegral 2)
+    return $ Numeric.Numeric componentsAmount weight signCode digitsAfterPoint components
