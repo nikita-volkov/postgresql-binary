@@ -325,6 +325,11 @@ prop_int64 =
            (nonNullRenderer (Rendering.int8 . Left))
            (nonNullParser Parsing.int)
 
+prop_int64Text =
+  mappingTextP (PTI.oidOf PTI.int8) 
+               (nonNullRenderer (Rendering.int8 . Left)) 
+               (Just . fromString . show)
+
 prop_word =
   mappingP (PTI.oidOf PTI.int8) 
            (nonNullRenderer (Rendering.int8 . Right) . (fromIntegral :: Word -> Word64))
@@ -349,6 +354,11 @@ prop_word64 =
   mappingP (PTI.oidOf PTI.int8) 
            (nonNullRenderer (Rendering.int8 . Right))
            (nonNullParser Parsing.int)
+
+prop_word64Text =
+  mappingTextP (PTI.oidOf PTI.int8) 
+               (nonNullRenderer (Rendering.int8 . Right)) 
+               (Just . fromString . show)
 
 prop_day =
   mappingP (PTI.oidOf PTI.date) 
