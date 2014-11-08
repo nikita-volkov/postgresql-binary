@@ -62,8 +62,14 @@ tz :: TimeZone -> Builder
 tz =
   int32BE . fromIntegral . (*60) . negate . timeZoneMinutes
 
-timestamp :: LocalTime -> Builder
-timestamp (LocalTime dayX timeX) =
+timestamp :: UTCTime -> Builder
+timestamp (UTCTime dayX timeX) =
+  let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
+      time = (`div` (10^6)) . unsafeCoerce $ timeX
+      in int64BE $ fromIntegral $ days + time
+
+timestamptz :: LocalTime -> Builder
+timestamptz (LocalTime dayX timeX) =
   let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
       in int64BE $ fromIntegral $ days + time

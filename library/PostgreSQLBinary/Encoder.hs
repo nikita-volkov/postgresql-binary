@@ -97,9 +97,13 @@ timetz :: E (TimeOfDay, TimeZone)
 timetz =
   Builder.run . Builder.timetz
 
-timestamp :: E LocalTime
+timestamp :: E UTCTime
 timestamp =
   Builder.run . Builder.timestamp
+
+timestamptz :: E LocalTime
+timestamptz =
+  Builder.run . Builder.timestamptz
 
 
 -- * Misc

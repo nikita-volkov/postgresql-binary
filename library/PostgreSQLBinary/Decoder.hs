@@ -84,8 +84,21 @@ timetz =
     tz =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
 
-timestamp :: D LocalTime
+timestamp :: D UTCTime
 timestamp =
+  fmap fromMicros . (int :: D Int64)
+  where
+    fromMicros =
+      evalState $ do
+        days <- state $ (`divMod` (10^6 * 60 * 60 * 24))
+        micros <- get
+        return $
+          UTCTime 
+            (Date.postgresJulianToDay . fromIntegral $ days)
+            (picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
+
+timestamptz :: D LocalTime
+timestamptz =
   fmap fromMicros . (int :: D Int64)
   where
     fromMicros =

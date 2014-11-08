@@ -132,6 +132,10 @@ microsLocalTimeGen :: Gen LocalTime
 microsLocalTimeGen = 
   LocalTime <$> arbitrary <*> microsTimeOfDayGen
 
+microsUTCTimeGen :: Gen UTCTime
+microsUTCTimeGen =
+  localTimeToUTC <$> timeZoneGen <*> microsLocalTimeGen
+
 microsDiffTimeGen :: Gen DiffTime
 microsDiffTimeGen = do
   fmap picosecondsToDiffTime $ fmap (* (10^6)) $ choose (0, (10^6)*24*60*60)
@@ -173,20 +177,21 @@ arrayGen =
 -------------------------
 
 prop_timestamp =
-  forAll microsLocalTimeGen $ 
+  forAll microsUTCTimeGen $ 
     mappingP (PTI.oidOf PTI.timestamp) 
              (nonNullRenderer Encoder.timestamp)
              (nonNullParser Decoder.timestamp)
 
 test_timestampParsing1 =
-  assertEqual (Right (read "2000-01-19 10:41:06" :: LocalTime)) =<< do
+  assertEqual (Right (read "2000-01-19 10:41:06" :: UTCTime)) =<< do
     fmap (Decoder.timestamp . fromJust) $ 
       query "SELECT '2000-01-19 10:41:06' :: timestamp" [] PQ.Binary
 
-test_timestampParsing2 =
-  assertEqual (Right (read "1864-05-09 22:48:34.254242" :: LocalTime)) =<< do
-    fmap (Decoder.timestamp . fromJust) $ 
-      query "SELECT '1864-05-09 22:48:34.254242' :: timestamp" [] PQ.Binary
+prop_timestamptz =
+  forAll microsLocalTimeGen $ 
+    mappingP (PTI.oidOf PTI.timestamptz) 
+             (nonNullRenderer Encoder.timestamptz)
+             (nonNullParser Decoder.timestamptz)
 
 prop_timetz =
   forAll ((,) <$> microsTimeOfDayGen <*> timeZoneGen) $ 
