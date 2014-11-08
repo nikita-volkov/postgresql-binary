@@ -44,3 +44,15 @@ array (dimensionsV, valuesV, nullsV, oidV) =
       \case
         Nothing -> word32BE (-1)
         Just b -> word32BE (fromIntegral (B.length b)) <> byteString b
+
+time :: TimeOfDay -> Builder
+time =
+  word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
+
+timetz :: (TimeOfDay, TimeZone) -> Builder
+timetz (timeX, tzX) =
+  time timeX <> tz tzX
+
+tz :: TimeZone -> Builder
+tz =
+  int32BE . fromIntegral . (*60) . negate . timeZoneMinutes

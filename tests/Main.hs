@@ -136,6 +136,10 @@ microsDiffTimeGen :: Gen DiffTime
 microsDiffTimeGen = do
   fmap picosecondsToDiffTime $ fmap (* (10^6)) $ choose (0, (10^6)*24*60*60)
 
+timeZoneGen :: Gen TimeZone
+timeZoneGen =
+  minutesToTimeZone <$> choose (- 60 * 12 + 1, 60 * 12)
+
 arrayGen :: Gen (Word32, Array.Data)
 arrayGen =
   do
@@ -167,6 +171,17 @@ arrayGen =
 
 -- * Properties
 -------------------------
+
+prop_timetz =
+  forAll ((,) <$> microsTimeOfDayGen <*> timeZoneGen) $ 
+    mappingP (PTI.oidOf PTI.timetz) 
+             (nonNullRenderer Encoder.timetz)
+             (nonNullParser Decoder.timetz)
+
+test_timetzParsing1 =
+  assertEqual (Right (read "(10:41:06.002897, +0500)" :: (TimeOfDay, TimeZone))) =<< do
+    fmap (Decoder.timetz . fromJust) $ 
+      query "SELECT '10:41:06.002897+05' :: timetz" [] PQ.Binary
 
 prop_timeOfDay =
   forAll microsTimeOfDayGen $ 

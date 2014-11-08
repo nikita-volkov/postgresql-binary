@@ -75,6 +75,16 @@ time =
   fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
   (int :: D Word64)
 
+timetz :: D (TimeOfDay, TimeZone)
+timetz =
+  \x -> 
+    let (timeX, zoneX) = B.splitAt 8 x
+        in (,) <$> time timeX <*> tz zoneX
+  where
+    tz =
+      fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
+  
+
 -- * Misc
 -------------------------
 

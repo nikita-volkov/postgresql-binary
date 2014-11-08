@@ -91,7 +91,12 @@ date =
 
 time :: E TimeOfDay
 time =
-  Builder.run . BB.word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
+  Builder.run . Builder.time
+
+timetz :: E (TimeOfDay, TimeZone)
+timetz =
+  Builder.run . Builder.timetz
+
 
 -- * Misc
 -------------------------
