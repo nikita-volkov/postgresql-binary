@@ -16,5 +16,9 @@ pack = B.foldl' (\n h -> (n `shiftL` 8) .|. fromIntegral h) 0
 
 {-# INLINE unpack #-}
 unpack :: (Bits a, Integral a) => a -> B.ByteString
-unpack x = B.pack $ map f $ reverse [0..byteSize x - 1]
+unpack x = unpackBySize (byteSize x) x
+
+{-# INLINE unpackBySize #-}
+unpackBySize :: (Bits a, Integral a) => Int -> a -> B.ByteString
+unpackBySize n x = B.pack $ map f $ reverse [0..n - 1]
   where f s = fromIntegral $ shiftR x (8 * s)

@@ -29,17 +29,23 @@ type E a = a -> ByteString
 {-# INLINABLE int2 #-}
 int2 :: E (Either Int16 Word16)
 int2 = 
-  either Integral.unpack Integral.unpack
+  either unpack unpack
+  where
+    unpack = Integral.unpackBySize 2
 
 {-# INLINABLE int4 #-}
 int4 :: E (Either Int32 Word32)
 int4 = 
-  either Integral.unpack Integral.unpack
+  either unpack unpack
+  where
+    unpack = Integral.unpackBySize 4
 
 {-# INLINABLE int8 #-}
 int8 :: E (Either Int64 Word64)
 int8 = 
-  either Integral.unpack Integral.unpack
+  either unpack unpack
+  where
+    unpack = Integral.unpackBySize 8
 
 {-# INLINABLE float4 #-}
 float4 :: E Float
