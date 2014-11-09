@@ -43,28 +43,3 @@ bool =
 double :: Parser Double
 double =
   unsafeCoerce (intOfSize 8 :: Parser Int64)
-
-array :: Parser Array.Data
-array =
-  do
-    dimensionsAmountV <- intOfSize 4
-    nullsV <- nulls
-    oidV <- intOfSize 4
-    dimensionsV <- replicateM dimensionsAmountV dimension
-    valuesV <- many value
-    return (dimensionsV, valuesV, nullsV, oidV)
-  where
-    dimension =
-      (,) <$> intOfSize 4 <*> intOfSize 4
-    value =
-      nothing <|> just
-      where
-        nothing =
-          string (Integral.unpack (-1 :: Word32)) *> pure Nothing
-        just =
-          Just <$> (take =<< intOfSize 4)
-    nulls =
-      (intOfSize 4 :: Parser Word32) >>= \case
-        0 -> return False
-        1 -> return True
-        w -> fail $ "Invalid value: " <> show w

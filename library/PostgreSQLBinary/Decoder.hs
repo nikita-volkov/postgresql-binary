@@ -172,7 +172,7 @@ bool b =
 -- 
 -- Returns an intermediate representation,
 -- which can then be used to decode into a specific data type.
-{-# INLINE array #-}
+{-# INLINABLE array #-}
 array :: D Array.Data
 array =
-  flip Atto.run Atto.array
+  flip Zepto.run Zepto.array
