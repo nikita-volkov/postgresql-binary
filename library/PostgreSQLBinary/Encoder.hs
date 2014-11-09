@@ -15,6 +15,7 @@ import qualified PostgreSQLBinary.Encoder.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Numeric as Numeric
+import qualified PostgreSQLBinary.Integral as Integral
 
 
 -- |
@@ -28,27 +29,27 @@ type E a = a -> ByteString
 {-# INLINABLE int2 #-}
 int2 :: E (Either Int16 Word16)
 int2 = 
-  Builder.run . either BB.int16BE BB.word16BE
+  either Integral.unpack Integral.unpack
 
 {-# INLINABLE int4 #-}
 int4 :: E (Either Int32 Word32)
 int4 = 
-  Builder.run . either BB.int32BE BB.word32BE
+  either Integral.unpack Integral.unpack
 
 {-# INLINABLE int8 #-}
 int8 :: E (Either Int64 Word64)
 int8 = 
-  Builder.run . either BB.int64BE BB.word64BE
+  either Integral.unpack Integral.unpack
 
 {-# INLINABLE float4 #-}
 float4 :: E Float
 float4 =
-  Builder.run . BB.word32BE . unsafeCoerce
+  int4 . Right . (unsafeCoerce :: Float -> Word32)
 
 {-# INLINABLE float8 #-}
 float8 :: E Double
 float8 =
-  Builder.run . BB.word64BE . unsafeCoerce
+  int8 . Right . (unsafeCoerce :: Double -> Word64)
 
 {-# INLINABLE numeric #-}
 numeric :: E Scientific
