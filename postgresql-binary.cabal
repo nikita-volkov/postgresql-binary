@@ -3,9 +3,15 @@ name:
 version:
   0.1.0
 synopsis:
+  Encoders and decoders for the PostgreSQL's binary format
 description:
+  An API for dealing with PostgreSQL's binary data format.
+  .
+  It can be used to implement high level APIs for Postgres.
+  E.g., <http://hackage.haskell.org/package/hasql-postgres "hasql-postgres">
+  is based on this library.
 category:
-  Database
+  Database, Codecs, Parsing
 homepage:
   https://github.com/nikita-volkov/postgresql-binary 
 bug-reports:
