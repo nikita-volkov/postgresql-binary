@@ -55,8 +55,6 @@ library
     PostgreSQLBinary.Encoder
     PostgreSQLBinary.Decoder
   build-depends:
-    -- template haskell:
-    template-haskell == 2.*,
     -- parsers:
     attoparsec == 0.12.*,
     -- data:
