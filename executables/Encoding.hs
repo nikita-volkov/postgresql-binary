@@ -11,6 +11,7 @@ import Data.Scientific (Scientific)
 import Data.Time
 import qualified PostgreSQLBinary.Encoder as E
 import qualified PostgreSQLBinary.Decoder as D
+import qualified PostgreSQLBinary.Array as Array
 
 
 main =
@@ -31,7 +32,10 @@ main =
       b "timetz"      E.timetz      (read "(10:41:06, +0300)"),
       b "timestamp"   E.timestamp   (read "2000-01-19 10:41:06"),
       b "timestamptz" E.timestamptz (read "2000-01-19 10:41:06"),
-      b "interval"    E.interval    (secondsToDiffTime 23472391470128374)
+      b "interval"    E.interval    (secondsToDiffTime 23472391470128374),
+      b "array"       E.array       (Array.fromListUnsafe 
+                                      [Array.fromSingleton (Just "dfs") True 0,
+                                       Array.fromSingleton Nothing True 0])
     ]
   where
     b name encoder value = 
