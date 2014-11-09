@@ -76,9 +76,9 @@ test-suite tests
   type:             
     exitcode-stdio-1.0
   hs-source-dirs:   
-    tests
+    executables
   main-is:          
-    Main.hs
+    Tests.hs
   ghc-options:
     -threaded
     "-with-rtsopts=-N"
