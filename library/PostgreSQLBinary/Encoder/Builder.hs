@@ -20,10 +20,12 @@ run :: Builder -> B.ByteString
 run = 
   BL.toStrict . toLazyByteString
 
+{-# INLINABLE bool #-}
 bool :: Bool -> Builder
 bool = 
   \case True -> word8 1; False -> word8 0
 
+{-# INLINABLE array #-}
 array :: Array.Data -> Builder
 array (dimensionsV, valuesV, nullsV, oidV) =
   dimensionsLength <> nulls <> oid <> dimensions <> values
@@ -45,34 +47,41 @@ array (dimensionsV, valuesV, nullsV, oidV) =
         Nothing -> word32BE (-1)
         Just b -> word32BE (fromIntegral (B.length b)) <> byteString b
 
+{-# INLINABLE date #-}
 date :: Day -> Builder
 date =
   int32BE . fromIntegral . Date.dayToPostgresJulian
 
+{-# INLINABLE time #-}
 time :: TimeOfDay -> Builder
 time =
   word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
 
+{-# INLINABLE timetz #-}
 timetz :: (TimeOfDay, TimeZone) -> Builder
 timetz (timeX, tzX) =
   time timeX <> tz tzX
 
+{-# INLINABLE tz #-}
 tz :: TimeZone -> Builder
 tz =
   int32BE . fromIntegral . (*60) . negate . timeZoneMinutes
 
+{-# INLINABLE timestamp #-}
 timestamp :: UTCTime -> Builder
 timestamp (UTCTime dayX timeX) =
   let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce $ timeX
       in int64BE $ fromIntegral $ days + time
 
+{-# INLINABLE timestamptz #-}
 timestamptz :: LocalTime -> Builder
 timestamptz (LocalTime dayX timeX) =
   let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
       in int64BE $ fromIntegral $ days + time
 
+{-# INLINABLE interval #-}
 interval :: DiffTime -> Builder
 interval x =
   flip evalState (unsafeCoerce x :: Integer) $ do

@@ -25,26 +25,32 @@ type E a = a -> ByteString
 -- * Numbers
 -------------------------
 
+{-# INLINABLE int2 #-}
 int2 :: E (Either Int16 Word16)
 int2 = 
   Builder.run . either BB.int16BE BB.word16BE
 
+{-# INLINABLE int4 #-}
 int4 :: E (Either Int32 Word32)
 int4 = 
   Builder.run . either BB.int32BE BB.word32BE
 
+{-# INLINABLE int8 #-}
 int8 :: E (Either Int64 Word64)
 int8 = 
   Builder.run . either BB.int64BE BB.word64BE
 
+{-# INLINABLE float4 #-}
 float4 :: E Float
 float4 =
   Builder.run . BB.word32BE . unsafeCoerce
 
+{-# INLINABLE float8 #-}
 float8 :: E Double
 float8 =
   Builder.run . BB.word64BE . unsafeCoerce
 
+{-# INLINABLE numeric #-}
 numeric :: E Scientific
 numeric =
   (. Numeric.fromScientific) $ \x ->
@@ -63,12 +69,14 @@ numeric =
 -- 
 -- Note that since it's UTF-8-encoded
 -- not a \"char\" but a \"text\" OID should be used with it.
+{-# INLINABLE char #-}
 char :: E Char
 char = 
   text . Left . T.singleton
 
 -- |
 -- Either a strict or a lazy text.
+{-# INLINABLE text #-}
 text :: E (Either Text TL.Text)
 text =
   either strict lazy
@@ -78,6 +86,7 @@ text =
 
 -- |
 -- Either a strict or a lazy bytestring.
+{-# INLINABLE bytea #-}
 bytea :: E (Either ByteString BL.ByteString)
 bytea =
   either id BL.toStrict
@@ -85,26 +94,32 @@ bytea =
 -- * Date and Time
 -------------------------
 
+{-# INLINABLE date #-}
 date :: E Day
 date =
   Builder.run . Builder.date
 
+{-# INLINABLE time #-}
 time :: E TimeOfDay
 time =
   Builder.run . Builder.time
 
+{-# INLINABLE timetz #-}
 timetz :: E (TimeOfDay, TimeZone)
 timetz =
   Builder.run . Builder.timetz
 
+{-# INLINABLE timestamp #-}
 timestamp :: E UTCTime
 timestamp =
   Builder.run . Builder.timestamp
 
+{-# INLINABLE timestamptz #-}
 timestamptz :: E LocalTime
 timestamptz =
   Builder.run . Builder.timestamptz
 
+{-# INLINABLE interval #-}
 interval :: E DiffTime
 interval =
   Builder.run . Builder.interval
@@ -112,12 +127,14 @@ interval =
 -- * Misc
 -------------------------
 
+{-# INLINABLE bool #-}
 bool :: E Bool
 bool =
   \case
     False -> B.singleton 0
     True  -> B.singleton 1
 
+{-# INLINABLE array #-}
 array :: E Array.Data
 array = 
   Builder.run . Builder.array
