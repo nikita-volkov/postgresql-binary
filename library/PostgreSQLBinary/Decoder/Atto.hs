@@ -10,6 +10,7 @@ import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
+{-# INLINABLE run #-}
 run :: ByteString -> Parser a -> Either Text a
 run input parser =
   onResult $ parse (parser <* endOfInput) input    
@@ -68,6 +69,7 @@ array =
         1 -> return True
         w -> fail $ "Invalid value: " <> show w
 
+{-# INLINABLE numeric #-}
 numeric :: Parser Numeric.Numeric
 numeric =
   do

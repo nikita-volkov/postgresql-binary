@@ -25,19 +25,22 @@ type D a = ByteString -> Either Text a
 
 -- |
 -- Any of PostgreSQL integer types.
-{-# INLINE int #-}
+{-# INLINABLE int #-}
 int :: (Integral a, Bits a) => D a
 int =
   Right . Integral.pack
 
+{-# INLINABLE float4 #-}
 float4 :: D Float
 float4 =
   unsafeCoerce . (int :: D Word32)
 
+{-# INLINABLE float8 #-}
 float8 :: D Double
 float8 =
   unsafeCoerce . (int :: D Word64)
 
+{-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
   join . fmap Numeric.toScientific . flip Atto.run Atto.numeric
@@ -47,6 +50,7 @@ numeric =
 
 -- |
 -- A UTF-8-encoded char.
+{-# INLINABLE char #-}
 char :: D Char
 char x =
   maybe (Left "Empty input") (return . fst) . T.uncons =<< text x
@@ -54,6 +58,7 @@ char x =
 -- |
 -- Any of the variable-length character types:
 -- BPCHAR, VARCHAR, NAME and TEXT.
+{-# INLINABLE text #-}
 text :: D Text
 text =
   either (Left . fromString . show) Right . TE.decodeUtf8'
@@ -66,15 +71,18 @@ bytea =
 -- * Date and Time
 -------------------------
 
+{-# INLINABLE date #-}
 date :: D Day
 date =
   fmap (Date.postgresJulianToDay . fromIntegral) . (int :: D Int32)
 
+{-# INLINABLE time #-}
 time :: D TimeOfDay
 time =
   fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
   (int :: D Word64)
 
+{-# INLINABLE timetz #-}
 timetz :: D (TimeOfDay, TimeZone)
 timetz =
   \x -> 
@@ -84,6 +92,7 @@ timetz =
     tz =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
 
+{-# INLINABLE timestamp #-}
 timestamp :: D UTCTime
 timestamp =
   fmap fromMicros . (int :: D Int64)
@@ -97,6 +106,7 @@ timestamp =
             (Date.postgresJulianToDay . fromIntegral $ days)
             (picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
 
+{-# INLINABLE timestamptz #-}
 timestamptz :: D LocalTime
 timestamptz =
   fmap fromMicros . (int :: D Int64)
@@ -110,6 +120,7 @@ timestamptz =
             (Date.postgresJulianToDay . fromIntegral $ days)
             (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
 
+{-# INLINABLE interval #-}
 interval :: D DiffTime
 interval =
   evalStateT $ do
@@ -127,6 +138,7 @@ interval =
 -- * Misc
 -------------------------
 
+{-# INLINABLE bool #-}
 bool :: D Bool
 bool b =
   case B.uncons b of

@@ -27,10 +27,12 @@ ymdToInt (y, m, d) =
           y' `div` 4 - century + century `div` 4 + 
           7834 * m' `div` 256 + d
 
+{-# INLINABLE dayToPostgresJulian #-}
 dayToPostgresJulian :: Day -> Integer
 dayToPostgresJulian =
   (+ (2400001 - 2451545)) . toModifiedJulianDay
 
+{-# INLINABLE postgresJulianToDay #-}
 postgresJulianToDay :: Integer -> Day
 postgresJulianToDay =
   ModifiedJulianDay . (subtract (2400001 - 2451545))
