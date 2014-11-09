@@ -9,6 +9,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Scientific as Scientific
+import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Decoder.Atto as Atto
 import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
 import qualified PostgreSQLBinary.Array as Array
@@ -166,6 +167,16 @@ bool b =
     Just (0, _) -> return False
     Just (1, _) -> return True
     _ -> Left ("Invalid value: " <> (fromString . show) b)
+
+{-# INLINABLE uuid #-}
+uuid :: D UUID
+uuid =
+  evalStateT $ 
+    UUID.fromWords <$> word <*> word <*> word <*> word
+  where
+    word = 
+      lift . int =<< state (B.splitAt 4)
+
 
 -- |
 -- Arbitrary array.

@@ -11,6 +11,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Scientific as Scientific
+import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Numeric as Numeric
@@ -124,5 +125,12 @@ numeric x =
         then Numeric.negSignCode
         else Numeric.posSignCode
 
-
+{-# INLINE uuid #-}
+uuid :: UUID -> Builder
+uuid =
+  UUID.toWords >>> \(a, b, c, d) -> 
+    word32BE a <> 
+    word32BE b <> 
+    word32BE c <> 
+    word32BE d
 

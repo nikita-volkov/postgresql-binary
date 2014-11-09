@@ -13,6 +13,7 @@ import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Scientific as Scientific
+import qualified Data.UUID as UUID
 import qualified Database.PostgreSQL.LibPQ as PQ
 import qualified PostgreSQLBinary.PTI as PTI
 import qualified PostgreSQLBinary.Encoder as Encoder
@@ -143,6 +144,10 @@ timeZoneGen :: Gen TimeZone
 timeZoneGen =
   minutesToTimeZone <$> choose (- 60 * 12 + 1, 60 * 12)
 
+uuidGen :: Gen UUID.UUID
+uuidGen =
+  UUID.fromWords <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+
 arrayGen :: Gen (Word32, Array.Data)
 arrayGen =
   do
@@ -174,6 +179,17 @@ arrayGen =
 
 -- * Properties
 -------------------------
+
+prop_uuid =
+  forAll uuidGen $ 
+    mappingP (PTI.oidOf PTI.uuid) 
+             (nonNullRenderer Encoder.uuid)
+             (nonNullParser Decoder.uuid)
+
+test_uuidParsing =
+  assertEqual (Right (read "550e8400-e29b-41d4-a716-446655440000" :: UUID.UUID)) =<< do
+    fmap (Decoder.uuid . fromJust) $ 
+      query "SELECT '550e8400-e29b-41d4-a716-446655440000' :: uuid" [] PQ.Binary
 
 prop_interval =
   forAll microsDiffTimeGen $ 

@@ -134,6 +134,11 @@ bool =
     False -> B.singleton 0
     True  -> B.singleton 1
 
+{-# INLINABLE uuid #-}
+uuid :: E UUID
+uuid =
+  Builder.run . Builder.uuid
+
 {-# INLINABLE array #-}
 array :: E Array.Data
 array = 

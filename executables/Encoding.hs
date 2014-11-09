@@ -33,6 +33,7 @@ main =
       b "timestamp"   E.timestamp   (read "2000-01-19 10:41:06"),
       b "timestamptz" E.timestamptz (read "2000-01-19 10:41:06"),
       b "interval"    E.interval    (secondsToDiffTime 23472391470128374),
+      b "uuid"        E.uuid        (read "550e8400-e29b-41d4-a716-446655440000"),
       b "array"       E.array       (Array.fromListUnsafe 
                                       [Array.fromSingleton (Just "dfs") True 0,
                                        Array.fromSingleton Nothing True 0])
