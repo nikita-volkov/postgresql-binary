@@ -43,7 +43,7 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
-  join . fmap Numeric.toScientific . flip Atto.run Atto.numeric
+  flip Atto.run Atto.numeric
 
 -- * Text
 -------------------------
