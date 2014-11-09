@@ -101,14 +101,12 @@ numeric x =
   word16BE (fromIntegral trimmedExponent) <>
   foldMap word16BE components
   where
-    normalized =
-      Scientific.normalize x
     componentsAmount = 
       length components
     coefficient =
-      Scientific.coefficient normalized
+      Scientific.coefficient x
     exponent = 
-      Scientific.base10Exponent normalized
+      Scientific.base10Exponent x
     components = 
       Numeric.extractComponents tunedCoefficient
     pointIndex =
