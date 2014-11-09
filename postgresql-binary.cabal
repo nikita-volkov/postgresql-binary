@@ -46,6 +46,7 @@ library
     PostgreSQLBinary.Prelude
     PostgreSQLBinary.Encoder.Builder
     PostgreSQLBinary.Decoder.Atto
+    PostgreSQLBinary.Decoder.Zepto
     PostgreSQLBinary.Integral
     PostgreSQLBinary.Numeric
     PostgreSQLBinary.Date

@@ -8,7 +8,9 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Scientific as Scientific
 import qualified PostgreSQLBinary.Decoder.Atto as Atto
+import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
 import qualified PostgreSQLBinary.Integral as Integral
@@ -43,7 +45,30 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
-  flip Atto.run Atto.numeric
+  evalStateT $ do
+    componentsAmount <- intOfSize 2
+    pointIndex :: Int16 <- intOfSize 2
+    signCode <- intOfSize 2
+    modify (B.drop 2)
+    components <- replicateM componentsAmount (intOfSize 2)
+    signer <-
+      if | signCode == negSignCode -> return negate
+         | signCode == posSignCode -> return id
+         | signCode == nanSignCode -> lift $ Left "NAN sign"
+         | otherwise -> lift $ Left $ "Unexpected sign value: " <> (fromString . show) signCode
+    let
+      c = signer $ fromIntegral $ (mergeComponents components :: Word64)
+      e = (fromIntegral (pointIndex + 1) - length components) * 4
+      in return $ Scientific.scientific c e
+  where
+    posSignCode = 0x0000 :: Word16
+    negSignCode = 0x4000 :: Word16
+    nanSignCode = 0xC000 :: Word16
+    mergeComponents = 
+      foldl' (\l r -> l * 10000 + r) 0
+    intOfSize n =
+      lift . int =<< state (B.splitAt n)
+
 
 -- * Text
 -------------------------

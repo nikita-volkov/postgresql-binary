@@ -68,29 +68,3 @@ array =
         0 -> return False
         1 -> return True
         w -> fail $ "Invalid value: " <> show w
-
-{-# INLINABLE numeric #-}
-numeric :: Parser Scientific
-numeric =
-  do
-    componentsAmount <- intOfSize 2
-    pointIndex <- (intOfSize 2 :: Parser Int16)
-    signCode <- intOfSize 2
-    _ <- take 2
-    components <- replicateM componentsAmount (intOfSize 2)
-    signer <-
-      if | signCode == negSignCode -> return negate
-         | signCode == posSignCode -> return id
-         | signCode == nanSignCode -> fail "NAN sign"
-         | otherwise -> fail $ "Unexpected sign value: " <> show signCode
-    let
-      c = signer $ fromIntegral $ (mergeComponents components :: Word64)
-      e = (fromIntegral (pointIndex + 1) - length components) * 4
-      in return $ Scientific.scientific c e
-  where
-    posSignCode = 0x0000 :: Word16
-    negSignCode = 0x4000 :: Word16
-    nanSignCode = 0xC000 :: Word16
-    mergeComponents = 
-      foldl' (\l r -> l * 10000 + r) 0
-
