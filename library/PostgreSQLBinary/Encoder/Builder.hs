@@ -10,9 +10,10 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TL
-import qualified Data.ByteString.Builder.Scientific as Scientific
+import qualified Data.Scientific as Scientific
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 {-# INLINE run #-}
@@ -90,3 +91,40 @@ interval x =
     m <- get
     return $
       int64BE (fromIntegral u) <> int32BE (fromIntegral d) <> int32BE (fromIntegral m)
+
+{-# INLINABLE numeric #-}
+numeric :: Scientific -> Builder
+numeric x =
+  word16BE (fromIntegral componentsAmount) <>
+  int16BE (fromIntegral pointIndex) <>
+  word16BE signCode <>
+  word16BE (fromIntegral trimmedExponent) <>
+  foldMap word16BE components
+  where
+    normalized =
+      Scientific.normalize x
+    componentsAmount = 
+      length components
+    coefficient =
+      Scientific.coefficient normalized
+    exponent = 
+      Scientific.base10Exponent normalized
+    components = 
+      Numeric.extractComponents tunedCoefficient
+    pointIndex =
+      componentsAmount + (tunedExponent `div` 4) - 1
+    (tunedCoefficient, tunedExponent) =
+      case mod exponent 4 of
+        0 -> (coefficient, exponent)
+        x -> (coefficient * 10 ^ x, exponent - x)
+    trimmedExponent =
+      if tunedExponent >= 0
+        then 0
+        else negate tunedExponent
+    signCode =
+      if coefficient < 0
+        then Numeric.negSignCode
+        else Numeric.posSignCode
+
+
+

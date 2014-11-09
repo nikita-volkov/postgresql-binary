@@ -52,20 +52,15 @@ numeric =
     modify (B.drop 2)
     components <- replicateM componentsAmount (intOfSize 2)
     signer <-
-      if | signCode == negSignCode -> return negate
-         | signCode == posSignCode -> return id
-         | signCode == nanSignCode -> lift $ Left "NAN sign"
+      if | signCode == Numeric.negSignCode -> return negate
+         | signCode == Numeric.posSignCode -> return id
+         | signCode == Numeric.nanSignCode -> lift $ Left "NAN sign"
          | otherwise -> lift $ Left $ "Unexpected sign value: " <> (fromString . show) signCode
     let
-      c = signer $ fromIntegral $ (mergeComponents components :: Word64)
+      c = signer $ fromIntegral $ (Numeric.mergeComponents components :: Word64)
       e = (fromIntegral (pointIndex + 1) - length components) * 4
       in return $ Scientific.scientific c e
   where
-    posSignCode = 0x0000 :: Word16
-    negSignCode = 0x4000 :: Word16
-    nanSignCode = 0xC000 :: Word16
-    mergeComponents = 
-      foldl' (\l r -> l * 10000 + r) 0
     intOfSize n =
       lift . int =<< state (B.splitAt n)
 

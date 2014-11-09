@@ -6,7 +6,6 @@ import PostgreSQLBinary.Prelude hiding (take, bool)
 import Data.Attoparsec.Zepto
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Array as Array
-import qualified PostgreSQLBinary.Numeric as Numeric
 import qualified Data.Scientific as Scientific
 
 

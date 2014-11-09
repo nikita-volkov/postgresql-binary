@@ -10,12 +10,11 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
-import qualified Data.ByteString.Builder.Scientific as Scientific
 import qualified PostgreSQLBinary.Encoder.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Date as Date
-import qualified PostgreSQLBinary.Numeric as Numeric
 import qualified PostgreSQLBinary.Integral as Integral
+import qualified PostgreSQLBinary.Numeric as Numeric
 
 
 -- |
@@ -60,13 +59,7 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: E Scientific
 numeric =
-  (. Numeric.fromScientific) $ \x ->
-    Builder.run $
-      BB.word16BE (Numeric.componentsAmount x) <>
-      BB.int16BE (Numeric.pointIndex x) <>
-      BB.word16BE (Numeric.signCode x) <>
-      BB.word16BE (Numeric.amountOfDigitsAfterPoint x) <>
-      foldMap BB.word16BE (Numeric.components x)
+  Builder.run . Builder.numeric
 
 -- * Text
 -------------------------
