@@ -21,12 +21,12 @@ run :: Builder -> B.ByteString
 run = 
   BL.toStrict . toLazyByteString
 
-{-# INLINABLE bool #-}
+{-# INLINE bool #-}
 bool :: Bool -> Builder
 bool = 
   \case True -> word8 1; False -> word8 0
 
-{-# INLINABLE array #-}
+{-# INLINE array #-}
 array :: Array.Data -> Builder
 array (dimensionsV, valuesV, nullsV, oidV) =
   dimensionsLength <> nulls <> oid <> dimensions <> values
@@ -48,41 +48,41 @@ array (dimensionsV, valuesV, nullsV, oidV) =
         Nothing -> word32BE (-1)
         Just b -> word32BE (fromIntegral (B.length b)) <> byteString b
 
-{-# INLINABLE date #-}
+{-# INLINE date #-}
 date :: Day -> Builder
 date =
   int32BE . fromIntegral . Date.dayToPostgresJulian
 
-{-# INLINABLE time #-}
+{-# INLINE time #-}
 time :: TimeOfDay -> Builder
 time =
   word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
 
-{-# INLINABLE timetz #-}
+{-# INLINE timetz #-}
 timetz :: (TimeOfDay, TimeZone) -> Builder
 timetz (timeX, tzX) =
   time timeX <> tz tzX
 
-{-# INLINABLE tz #-}
+{-# INLINE tz #-}
 tz :: TimeZone -> Builder
 tz =
   int32BE . fromIntegral . (*60) . negate . timeZoneMinutes
 
-{-# INLINABLE timestamp #-}
+{-# INLINE timestamp #-}
 timestamp :: UTCTime -> Builder
 timestamp (UTCTime dayX timeX) =
   let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce $ timeX
       in int64BE $ fromIntegral $ days + time
 
-{-# INLINABLE timestamptz #-}
+{-# INLINE timestamptz #-}
 timestamptz :: LocalTime -> Builder
 timestamptz (LocalTime dayX timeX) =
   let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
       in int64BE $ fromIntegral $ days + time
 
-{-# INLINABLE interval #-}
+{-# INLINE interval #-}
 interval :: DiffTime -> Builder
 interval x =
   flip evalState (unsafeCoerce x :: Integer) $ do
@@ -92,7 +92,7 @@ interval x =
     return $
       int64BE (fromIntegral u) <> int32BE (fromIntegral d) <> int32BE (fromIntegral m)
 
-{-# INLINABLE numeric #-}
+{-# INLINE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =
   word16BE (fromIntegral componentsAmount) <>
