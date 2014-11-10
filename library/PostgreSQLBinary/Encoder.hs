@@ -99,15 +99,31 @@ date :: E Day
 date =
   Builder.run . Builder.date
 
+-- |
+-- Encoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE time #-}
-time :: E TimeOfDay
-time =
-  Builder.run . Builder.time
+time :: Bool -> E TimeOfDay
+time integer_datetimes (TimeOfDay h m s) =
+  let
+    p = unsafeCoerce s :: Integer
+    u = p `div` (10^6)
+    in if integer_datetimes
+      then
+        Integral.unpackBySize 8 $
+          fromIntegral u + 10^6 * 60 * (m + 60 * h)
+      else
+        inline float8 $
+          fromIntegral u / 10^6 + 60 * (fromIntegral m + 60 * (fromIntegral h))
 
+-- |
+-- Encoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timetz #-}
-timetz :: E (TimeOfDay, TimeZone)
-timetz =
-  Builder.run . Builder.timetz
+timetz :: Bool -> E (TimeOfDay, TimeZone)
+timetz integer_datetimes (timeX, tzX) =
+  inline time integer_datetimes timeX <> tz tzX
+  where
+    tz =
+      Integral.unpackBySize 4 . (*60) . negate . timeZoneMinutes
 
 {-# INLINABLE timestamp #-}
 timestamp :: E UTCTime

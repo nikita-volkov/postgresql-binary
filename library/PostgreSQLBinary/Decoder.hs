@@ -97,18 +97,27 @@ date :: D Day
 date =
   fmap (Date.postgresJulianToDay . fromIntegral) . (int :: D Int32)
 
+-- |
+-- Decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE time #-}
-time :: D TimeOfDay
+time :: Bool -> D TimeOfDay
 time =
-  fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
-  (int :: D Word64)
+  \case
+    True ->
+      fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
+      (int :: D Word64)
+    False ->
+      fmap (timeToTimeOfDay . picosecondsToDiffTime . truncate . (* (10^12))) . 
+      float8
 
+-- |
+-- Decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timetz #-}
-timetz :: D (TimeOfDay, TimeZone)
-timetz =
+timetz :: Bool -> D (TimeOfDay, TimeZone)
+timetz integer_datetimes =
   \x -> 
     let (timeX, zoneX) = B.splitAt 8 x
-        in (,) <$> time timeX <*> tz zoneX
+        in (,) <$> time integer_datetimes timeX <*> tz zoneX
   where
     tz =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)

@@ -54,21 +54,6 @@ date :: Day -> Builder
 date =
   int32BE . fromIntegral . Date.dayToPostgresJulian
 
-{-# INLINE time #-}
-time :: TimeOfDay -> Builder
-time =
-  word64BE . (`div` (10^6)) . unsafeCoerce timeOfDayToTime
-
-{-# INLINE timetz #-}
-timetz :: (TimeOfDay, TimeZone) -> Builder
-timetz (timeX, tzX) =
-  time timeX <> tz tzX
-
-{-# INLINE tz #-}
-tz :: TimeZone -> Builder
-tz =
-  int32BE . fromIntegral . (*60) . negate . timeZoneMinutes
-
 {-# INLINE timestamp #-}
 timestamp :: UTCTime -> Builder
 timestamp (UTCTime dayX timeX) =
