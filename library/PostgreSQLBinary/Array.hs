@@ -1,12 +1,6 @@
 -- |
 -- An intermediate array representation
 -- and utilities for its (de)composition.
--- 
--- Inspired by the following:
--- 
--- * <http://libpqtypes.esilo.com/man3/pqt-specs.html>
--- 
--- * <http://libpqtypes.esilo.com/browse_source.html?file=array.c>
 module PostgreSQLBinary.Array where
 
 import PostgreSQLBinary.Prelude hiding (Data)
@@ -21,6 +15,8 @@ type Data = ([Dimension], [Value], Bool, Word32)
 
 -- | 
 -- A width and a lower bound.
+-- 
+-- Currently the lower bound is only allowed to have a value of @1@.
 type Dimension = (Word32, Word32)
 
 -- |
