@@ -112,10 +112,7 @@ initConnection c =
 
 getIntegerDatetimes :: PQ.Connection -> IO Bool
 getIntegerDatetimes c =
-  do
-    x <- fmap parseResult $ PQ.parameterStatus c "integer_datetimes"
-    putStrLn $ "'integer_datetimes' is " <> show x
-    return x
+  fmap parseResult $ PQ.parameterStatus c "integer_datetimes"
   where
     parseResult = 
       \case
@@ -188,8 +185,17 @@ arrayGen =
         dimensionWidth (x, _) = fromIntegral x
 
 
--- * Properties
+-- * Tests
 -------------------------
+
+-- | This is a dummy, the sole point of which is to output the value of 'integer_datetimes'
+test_integerDatetimes =
+  do
+    connection <- connect
+    initConnection connection
+    x <- getIntegerDatetimes connection
+    putStrLn $ "'integer_datetimes' is " <> show x
+    PQ.finish connection
 
 prop_uuid =
   forAll uuidGen $ 
@@ -256,7 +262,19 @@ test_timetzParsing =
     return $ 
       Decoder.timetz integerDatetimes (fromJust encodedResult)
 
-prop_timeOfDay =
+prop_timeFromIntegerIsomorphism =
+  forAll microsTimeOfDayGen $ \x ->
+    Right x === Decoder.time True (Encoder.time True x)
+
+prop_timeFromDoubleIsomorphism =
+  forAll microsTimeOfDayGen $ \x ->
+    let Right x' = Decoder.time False (Encoder.time False x)
+        in floatEqProp (toFloat x) (toFloat x')
+  where
+    toFloat (TimeOfDay h m s) =
+      s + fromIntegral (60 * (m + 60 * h))
+
+prop_time =
   forAll microsTimeOfDayGen $ \x ->
     Right x === do
       unsafePerformIO $ do
@@ -271,7 +289,7 @@ prop_timeOfDay =
         return $ 
           Decoder.time integerDatetimes (fromJust encodedResult)
 
-prop_timeOfDayParsing =
+prop_timeParsing =
   forAll microsTimeOfDayGen $ \x ->
     Right x === do
       unsafePerformIO $ do

@@ -13,7 +13,7 @@ import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Decoder.Atto as Atto
 import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
 import qualified PostgreSQLBinary.Array as Array
-import qualified PostgreSQLBinary.Date as Date
+import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 
@@ -95,7 +95,7 @@ bytea =
 {-# INLINABLE date #-}
 date :: D Day
 date =
-  fmap (Date.postgresJulianToDay . fromIntegral) . (int :: D Int32)
+  fmap (Time.postgresJulianToDay . fromIntegral) . (int :: D Int32)
 
 -- |
 -- Decoding strategy depends on whether the server supports @integer_datetimes@.
@@ -104,11 +104,9 @@ time :: Bool -> D TimeOfDay
 time =
   \case
     True ->
-      fmap (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral) . 
-      (int :: D Word64)
+      fmap Time.microsToTimeOfDay . int
     False ->
-      fmap (timeToTimeOfDay . picosecondsToDiffTime . truncate . (* (10^12))) . 
-      float8
+      fmap Time.secondsToTimeOfDay . float8
 
 -- |
 -- Decoding strategy depends on whether the server supports @integer_datetimes@.
@@ -125,7 +123,7 @@ timetz integer_datetimes =
 {-# INLINABLE timestamp #-}
 timestamp :: D UTCTime
 timestamp =
-  fmap fromMicros . (int :: D Int64)
+  fmap fromMicros . int
   where
     fromMicros =
       evalState $ do
@@ -133,13 +131,13 @@ timestamp =
         micros <- get
         return $
           UTCTime 
-            (Date.postgresJulianToDay . fromIntegral $ days)
+            (Time.postgresJulianToDay days)
             (picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
 
 {-# INLINABLE timestamptz #-}
 timestamptz :: D LocalTime
 timestamptz =
-  fmap fromMicros . (int :: D Int64)
+  fmap fromMicros . int
   where
     fromMicros =
       evalState $ do
@@ -147,8 +145,8 @@ timestamptz =
         micros <- get
         return $
           LocalTime 
-            (Date.postgresJulianToDay . fromIntegral $ days)
-            (timeToTimeOfDay . picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
+            (Time.postgresJulianToDay days)
+            (Time.microsToTimeOfDay micros)
 
 {-# INLINABLE interval #-}
 interval :: D DiffTime

@@ -55,7 +55,7 @@ library
     PostgreSQLBinary.Decoder.Zepto
     PostgreSQLBinary.Integral
     PostgreSQLBinary.Numeric
-    PostgreSQLBinary.Date
+    PostgreSQLBinary.Time
   exposed-modules:
     PostgreSQLBinary.Array
     PostgreSQLBinary.Encoder

@@ -12,7 +12,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified PostgreSQLBinary.Encoder.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
-import qualified PostgreSQLBinary.Date as Date
+import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 

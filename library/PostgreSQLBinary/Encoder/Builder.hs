@@ -13,7 +13,7 @@ import qualified Data.Text.Lazy.Encoding as TL
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Array as Array
-import qualified PostgreSQLBinary.Date as Date
+import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
@@ -52,19 +52,19 @@ array (dimensionsV, valuesV, nullsV, oidV) =
 {-# INLINE date #-}
 date :: Day -> Builder
 date =
-  int32BE . fromIntegral . Date.dayToPostgresJulian
+  int32BE . fromIntegral . Time.dayToPostgresJulian
 
 {-# INLINE timestamp #-}
 timestamp :: UTCTime -> Builder
 timestamp (UTCTime dayX timeX) =
-  let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
+  let days = Time.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce $ timeX
       in int64BE $ fromIntegral $ days + time
 
 {-# INLINE timestamptz #-}
 timestamptz :: LocalTime -> Builder
 timestamptz (LocalTime dayX timeX) =
-  let days = Date.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
+  let days = Time.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
       time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
       in int64BE $ fromIntegral $ days + time
 

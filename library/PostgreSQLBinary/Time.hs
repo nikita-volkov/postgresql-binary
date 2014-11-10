@@ -1,4 +1,4 @@
-module PostgreSQLBinary.Date where
+module PostgreSQLBinary.Time where
 
 import PostgreSQLBinary.Prelude
 import Data.Time.Calendar.Julian
@@ -33,7 +33,28 @@ dayToPostgresJulian =
   (+ (2400001 - 2451545)) . toModifiedJulianDay
 
 {-# INLINABLE postgresJulianToDay #-}
-postgresJulianToDay :: Integer -> Day
+postgresJulianToDay :: Int -> Day
 postgresJulianToDay =
-  ModifiedJulianDay . (subtract (2400001 - 2451545))
+  ModifiedJulianDay . fromIntegral . subtract (2400001 - 2451545)
 
+{-# INLINABLE microsToTimeOfDay #-}
+microsToTimeOfDay :: Int -> TimeOfDay
+microsToTimeOfDay =
+  evalState $ do
+    h <- state $ flip divMod (10 ^ 6 * 60 * 60)
+    m <- state $ flip divMod (10 ^ 6 * 60)
+    u <- get
+    let p = fromIntegral u * 10 ^ 6 :: Integer
+    return $
+      TimeOfDay h m (unsafeCoerce p)
+
+{-# INLINABLE secondsToTimeOfDay #-}
+secondsToTimeOfDay :: Double -> TimeOfDay
+secondsToTimeOfDay =
+  evalState $ do
+    h <- state $ flip divMod' (60 * 60)
+    m <- state $ flip divMod' (60)
+    s <- get
+    let p = truncate $ toRational s * 10 ^ 12 :: Integer
+    return $
+      TimeOfDay h m (unsafeCoerce p)
