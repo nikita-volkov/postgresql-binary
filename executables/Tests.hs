@@ -105,11 +105,10 @@ connect =
 initConnection :: PQ.Connection -> IO ()
 initConnection c =
   void $ PQ.exec c $ mconcat $ map (<> ";") $ 
-    [ "SET standard_conforming_strings TO on",
-      "SET datestyle TO ISO",
-      "SET client_encoding = 'UTF8'",
+    [ 
       "SET client_min_messages TO WARNING",
-      "SET bytea_output = 'hex'" ]
+      "SET client_encoding = 'UTF8'"
+    ]
 
 nonNullParser p =
   fromMaybe (Left "Unexpected NULL") . fmap p
