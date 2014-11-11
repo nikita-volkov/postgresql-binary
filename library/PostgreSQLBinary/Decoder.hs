@@ -159,8 +159,8 @@ interval =
       u <- int ub
       d <- int db
       m <- int mb
-      return $ picosecondsToDiffTime $ fromIntegral $
-        (10 ^ 6 * (u + 10 ^ 6 * 60 * 60 * 24 * (d + 31 * m)) :: Int)
+      return $ picosecondsToDiffTime $
+        10 ^ 6 * fromIntegral (u + 10 ^ 6 * 60 * 60 * 24 * (d + 31 * m) :: Int64)
 
 
 
