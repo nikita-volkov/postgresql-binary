@@ -107,7 +107,8 @@ initConnection c =
   void $ PQ.exec c $ mconcat $ map (<> ";") $ 
     [ 
       "SET client_min_messages TO WARNING",
-      "SET client_encoding = 'UTF8'"
+      "SET client_encoding = 'UTF8'",
+      "SET intervalstyle = 'postgres'"
     ]
 
 getIntegerDatetimes :: PQ.Connection -> IO Bool
@@ -134,7 +135,8 @@ scientificGen =
 
 microsTimeOfDayGen :: Gen TimeOfDay
 microsTimeOfDayGen =
-  timeToTimeOfDay <$> microsDiffTimeGen
+  fmap timeToTimeOfDay $ fmap picosecondsToDiffTime $ fmap (* (10^6)) $ 
+    choose (0, (10^6)*24*60*60)
 
 microsLocalTimeGen :: Gen LocalTime
 microsLocalTimeGen = 
@@ -144,9 +146,12 @@ microsUTCTimeGen :: Gen UTCTime
 microsUTCTimeGen =
   localTimeToUTC <$> timeZoneGen <*> microsLocalTimeGen
 
-microsDiffTimeGen :: Gen DiffTime
-microsDiffTimeGen = do
-  fmap picosecondsToDiffTime $ fmap (* (10^6)) $ choose (0, (10^6)*24*60*60)
+intervalDiffTimeGen :: Gen DiffTime
+intervalDiffTimeGen = do
+  unsafeCoerce ((* (10^6)) <$> choose (uMin, uMax) :: Gen Integer)
+  where
+    uMin = unsafeCoerce minInterval `div` 10^6
+    uMax = unsafeCoerce maxInterval `div` 10^6
 
 timeZoneGen :: Gen TimeZone
 timeZoneGen =
@@ -184,6 +189,15 @@ arrayGen =
       where
         dimensionWidth (x, _) = fromIntegral x
 
+-- * Constants
+-------------------------
+
+maxInterval :: DiffTime = 
+  unsafeCoerce $ 
+    (truncate (1780000 * 365.2425 * 24 * 60 * 60 * 10 ^ 12 :: Rational) :: Integer)
+
+minInterval :: DiffTime = 
+  negate maxInterval
 
 -- * Tests
 -------------------------
@@ -209,15 +223,36 @@ test_uuidParsing =
       query "SELECT '550e8400-e29b-41d4-a716-446655440000' :: uuid" [] PQ.Binary
 
 prop_interval =
-  forAll microsDiffTimeGen $ 
+  forAll intervalDiffTimeGen $ 
     mappingP (PTI.oidOf PTI.interval) 
              (nonNullRenderer Encoder.interval)
              (nonNullParser Decoder.interval)
 
-test_intervalParsing =
-  assertEqual (Right (secondsToDiffTime (44 + 60 * (10 + 60 * 24 * (20 + 31 * 2))))) =<< do
-    fmap (Decoder.interval . fromJust) $ 
-      query "SELECT 'P0000-02-20T00:10:44' :: interval" [] PQ.Binary
+test_maxInterval =
+  let x = maxInterval
+    in 
+      assertEqual (Just (Right x)) =<< do
+        let 
+          p = 
+            (,,)
+              (PQ.Oid (fromIntegral (PTI.oidOf PTI.interval)))
+              (Encoder.interval x)
+              (PQ.Binary)
+        (fmap . fmap) Decoder.interval $ 
+          query "SELECT $1" [Just p] PQ.Binary
+
+test_minInterval =
+  let x = minInterval
+    in 
+      assertEqual (Just (Right x)) =<< do
+        let 
+          p = 
+            (,,)
+              (PQ.Oid (fromIntegral (PTI.oidOf PTI.interval)))
+              (Encoder.interval x)
+              (PQ.Binary)
+        (fmap . fmap) Decoder.interval $ 
+          query "SELECT $1" [Just p] PQ.Binary
 
 prop_timestamp =
   forAll microsUTCTimeGen $ 

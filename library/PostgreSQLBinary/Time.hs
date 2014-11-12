@@ -1,6 +1,6 @@
 module PostgreSQLBinary.Time where
 
-import PostgreSQLBinary.Prelude
+import PostgreSQLBinary.Prelude hiding (second)
 import Data.Time.Calendar.Julian
 
 
@@ -58,3 +58,21 @@ secondsToTimeOfDay =
     let p = truncate $ toRational s * 10 ^ 12 :: Integer
     return $
       TimeOfDay h m (unsafeCoerce p)
+
+
+-- * Constants in microseconds according to Julian dates standard
+-------------------------
+-- According to
+-- http://www.postgresql.org/docs/9.1/static/datatype-datetime.html
+-- Postgres uses Julian dates internally
+-------------------------
+
+year   :: Int64 = truncate (365.2425 * fromIntegral day :: Rational)
+day    :: Int64 = 24 * hour
+hour   :: Int64 = 60 * minute
+minute :: Int64 = 60 * second
+second :: Int64 = 10 ^ 6 
+
+microsToDiffTime :: Int64 -> DiffTime
+microsToDiffTime =
+  unsafeCoerce . (* (10^6)) . fromIntegral

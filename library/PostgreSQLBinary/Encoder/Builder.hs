@@ -15,6 +15,7 @@ import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Numeric as Numeric
+import qualified PostgreSQLBinary.Interval as Interval
 
 
 {-# INLINE run #-}
@@ -70,13 +71,11 @@ timestamptz (LocalTime dayX timeX) =
 
 {-# INLINE interval #-}
 interval :: DiffTime -> Builder
-interval x =
-  flip evalState (unsafeCoerce x :: Integer) $ do
-    u <- state (`divMod` (10 ^ 6))
-    d <- state (`divMod` (10 ^ 6 * 60 * 60 * 24))
-    m <- get
-    return $
-      int64BE (fromIntegral u) <> int32BE (fromIntegral d) <> int32BE (fromIntegral m)
+interval =
+  Interval.fromDiffTime >>> 
+  fromMaybe (error "Too large DiffTime value for an interval") >>>
+  \(Interval.Interval u d m) -> int64BE u <> int32BE d <> int32BE m
+
 
 {-# INLINE numeric #-}
 numeric :: Scientific -> Builder

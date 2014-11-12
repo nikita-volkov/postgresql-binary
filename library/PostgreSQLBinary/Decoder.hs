@@ -16,6 +16,7 @@ import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
+import qualified PostgreSQLBinary.Interval as Interval
 
 
 -- |
@@ -155,13 +156,8 @@ interval =
     ub <- state $ B.splitAt 8
     db <- state $ B.splitAt 4
     mb <- get
-    lift $ do
-      u <- int ub
-      d <- int db
-      m <- int mb
-      return $ picosecondsToDiffTime $
-        10 ^ 6 * fromIntegral (u + 10 ^ 6 * 60 * 60 * 24 * (d + 31 * m) :: Int64)
-
+    i <- lift $ Interval.Interval <$> int ub <*> int db <*> int mb
+    return $ Interval.toDiffTime i
 
 
 -- * Misc
