@@ -19,6 +19,7 @@ intOfSize :: (Integral a, Bits a) => Int -> Parser a
 intOfSize x =
   Integral.pack <$> take x
 
+{-# INLINE numeric #-}
 numeric :: Parser Scientific
 numeric =
   do
