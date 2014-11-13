@@ -51,6 +51,7 @@ array =
         1 -> return True
         w -> fail $ "Invalid value: " <> show w
 
+{-# INLINE numeric #-}
 numeric :: Parser Scientific
 numeric =
   do
