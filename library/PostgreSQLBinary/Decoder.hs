@@ -12,5 +12,5 @@ type D a = ByteString -> Either Text a
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
-  flip Zepto.run (inline Zepto.numeric)
+  flip Zepto.run Zepto.numeric
 
