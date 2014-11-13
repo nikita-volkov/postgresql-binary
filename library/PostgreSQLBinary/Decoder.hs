@@ -46,7 +46,7 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
-  flip Zepto.run Zepto.numeric
+  flip Zepto.run (inline Zepto.numeric)
 
 
 -- * Text
