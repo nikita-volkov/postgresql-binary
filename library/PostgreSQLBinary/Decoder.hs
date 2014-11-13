@@ -46,24 +46,7 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
 numeric =
-  evalStateT $ do
-    componentsAmount <- intOfSize 2
-    pointIndex :: Int16 <- intOfSize 2
-    signCode <- intOfSize 2
-    modify (B.drop 2)
-    components <- replicateM componentsAmount (intOfSize 2)
-    signer <-
-      if | signCode == Numeric.negSignCode -> return negate
-         | signCode == Numeric.posSignCode -> return id
-         | signCode == Numeric.nanSignCode -> lift $ Left "NAN sign"
-         | otherwise -> lift $ Left $ "Unexpected sign value: " <> (fromString . show) signCode
-    let
-      c = signer $ fromIntegral $ (Numeric.mergeComponents components :: Word64)
-      e = (fromIntegral (pointIndex + 1) - length components) * 4
-      in return $ Scientific.scientific c e
-  where
-    intOfSize n =
-      lift . int =<< state (B.splitAt n)
+  flip Zepto.run Zepto.numeric
 
 
 -- * Text
