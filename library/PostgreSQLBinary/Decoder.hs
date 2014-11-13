@@ -10,7 +10,6 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
-import qualified PostgreSQLBinary.Decoder.Atto as Atto
 import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
