@@ -1,0 +1,137 @@
+
+STACK USAGE:
+
+ENTERS: 40290528  of which 40290528 (100.0%) direct to the entry code
+		  [the rest indirected via Node's info ptr]
+   26860042 ( 66.7%) thunks
+          0 (  0.0%) data values
+          0 (  0.0%) normal indirections
+          0 (  0.0%) permanent indirections
+
+FUNCTION ENTRIES: 13430486
+
+TAIL CALLS: 26860274, of which 26860274 (100%) were to known functions
+
+SLOW APPLICATIONS: 0 evaluated, 0 unevaluated
+
+         Too few args   Correct args   Too many args
+   FUN            0              0               0
+   PAP            0              0               0
+
+
+RETURNS: 233
+          0 (  0.0%) from entering a new constructor
+		  [the rest from entering an existing constructor]
+
+UPDATE FRAMES: 13430017 (0 omitted from thunks)
+CATCH FRAMES:  0
+UPDATES: 0
+          0 (  0.0%) data values
+		  [0 in place, 0 allocated new space]
+          0 (  0.0%) partial applications
+		  [0 in place, 0 allocated new space]
+          0 (  0.0%) updates by squeezing
+
+The following table is explained by http://ghc.haskell.org/trac/ghc/wiki/Debugging/TickyTicky
+All allocation numbers are in bytes.
+
+**************************************************
+
+    Entries      Alloc    Alloc'd  Non-void Arguments      STG Name
+--------------------------------------------------------------------------------
+   40290284  322320408          0   2 Si                   main:Main.main_$s$wa{v r89d}
+        233          0          0   1 I                    main:Main.main4{v r899}
+          1          0          0   0                      main:Main.main1{v r875}
+          1          0          0   0                      main:Main.main7{v r89f}
+          1          0          0   0                      main::Main.main{v 01D}
+
+**************************************************
+   13430251 ALLOC_HEAP_ctr
+  322320424 ALLOC_HEAP_tot
+   13430259 HEAP_CHK_ctr
+   26860515 STK_CHK_ctr
+          0 ALLOC_RTS_ctr
+          0 ALLOC_RTS_tot
+          0 ALLOC_FUN_ctr
+          0 ALLOC_FUN_gds
+          0 ALLOC_PAP_ctr
+          0 ALLOC_PAP_adm
+          0 ALLOC_PAP_gds
+   13430017 ALLOC_UP_THK_ctr
+          0 ALLOC_SE_THK_ctr
+  322320408 ALLOC_THK_gds
+          1 ALLOC_CON_ctr
+         16 ALLOC_CON_gds
+          0 ALLOC_PRIM_ctr
+          0 ALLOC_PRIM_gds
+          0 ALLOC_PRIM_slp
+          0 ENT_VIA_NODE_ctr
+          0 ENT_STATIC_CON_ctr
+          0 ENT_DYN_CON_ctr
+   13430486 ENT_STATIC_FUN_DIRECT_ctr
+          0 ENT_DYN_FUN_DIRECT_ctr
+          0 ENT_LNE_ctr
+          0 ENT_STATIC_IND_ctr
+          0 ENT_DYN_IND_ctr
+          0 E!NT_PERM_IND_ctr requires +RTS -Z
+          0 ENT_AP_ctr
+          0 ENT_PAP_ctr
+          0 ENT_AP_STACK_ctr
+          0 ENT_BH_ctr
+          0 ENT_STATIC_THK_SINGLE_ctr
+          8 ENT_STATIC_THK_MANY_ctr
+          0 ENT_DYN_THK_SINGLE_ctr
+   26860034 ENT_DYN_THK_MANY_ctr
+          0 UPD_CAF_BH_UPDATABLE_ctr
+          4 UPD_CAF_BH_SINGLE_ENTRY_ctr
+          0 SLOW_CALL_fast_v16_ctr
+          0 SLOW_CALL_fast_v_ctr
+          0 SLOW_CALL_fast_f_ctr
+          0 SLOW_CALL_fast_d_ctr
+          0 SLOW_CALL_fast_l_ctr
+          0 SLOW_CALL_fast_n_ctr
+          0 SLOW_CALL_fast_p_ctr
+          0 SLOW_CALL_fast_pv_ctr
+          0 SLOW_CALL_fast_pp_ctr
+          0 SLOW_CALL_fast_ppv_ctr
+          0 SLOW_CALL_fast_ppp_ctr
+          0 SLOW_CALL_fast_pppv_ctr
+          0 SLOW_CALL_fast_pppp_ctr
+          0 SLOW_CALL_fast_ppppp_ctr
+          0 SLOW_CALL_fast_pppppp_ctr
+          0 VERY_SLOW_CALL_ctr
+          0 UNKNOWN_CALL_ctr
+   26860274 KNOWN_CALL_ctr
+          0 KNOWN_CALL_TOO_FEW_ARGS_ctr
+          0 KNOWN_CALL_EXTRA_ARGS_ctr
+          0 MULTI_CHUNK_SLOW_CALL_ctr
+          0 MULTI_CHUNK_SLOW_CALL_CHUNKS_ctr
+          0 SLOW_CALL_ctr
+          0 SLOW_CALL_FUN_TOO_FEW_ctr
+          0 SLOW_CALL_FUN_CORRECT_ctr
+          0 SLOW_CALL_FUN_TOO_MANY_ctr
+          0 SLOW_CALL_PAP_TOO_FEW_ctr
+          0 SLOW_CALL_PAP_CORRECT_ctr
+          0 SLOW_CALL_PAP_TOO_MANY_ctr
+          0 SLOW_CALL_UNEVALD_ctr
+          0 RET_NEW_ctr
+          0 RET_OLD_ctr
+        233 RET_UNBOXED_TUP_ctr
+          0 UPDF_OMITTED_ctr
+   13430017 UPDF_PUSHED_ctr
+          0 CATCHF_PUSHED_ctr
+          0 UPDF_RCC_PUSHED_ctr
+          0 UPDF_RCC_OMITTED_ctr
+          0 UPD_SQUEEZED_ctr
+          0 UPD_CON_IN_NEW_ctr
+          0 UPD_CON_IN_PLACE_ctr
+          0 UPD_PAP_IN_NEW_ctr
+          0 UPD_PAP_IN_PLACE_ctr
+          0 UPD_NEW_IND_ctr
+          0 U!PD_NEW_PERM_IND_ctr requires +RTS -Z
+          0 UPD_OLD_IND_ctr
+          0 U!PD_OLD_PERM_IND_ctr requires +RTS -Z
+          0 GC_SEL_ABANDONED_ctr
+          0 GC_SEL_MINOR_ctr
+          0 GC_SEL_MAJOR_ctr
+          0 GC_FAILED_PROMOTION_ctr
