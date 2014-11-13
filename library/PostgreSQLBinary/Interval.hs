@@ -16,7 +16,7 @@ data Interval =
 -- |
 -- Oddly enough despite a claim of support of up to 178000000 years in
 -- <http://www.postgresql.org/docs/9.3/static/datatype-datetime.html Postgres' docs>
--- in practice it starts behaving unpredictable after a smaller limit.
+-- in practice it starts behaving unpredictably after a smaller limit.
 maxDiffTime :: DiffTime = 1780000 * Time.microsToDiffTime Time.year
 minDiffTime :: DiffTime = negate maxDiffTime
 
@@ -39,5 +39,5 @@ toDiffTime :: Interval -> DiffTime
 toDiffTime x =
   picosecondsToDiffTime $ 
     (10 ^ 6) *
-      (fromIntegral (micros x) + 
-       10 ^ 6 * 60 * 60 * 24 * (fromIntegral (days x + 31 * months x)))
+    (fromIntegral (micros x) + 
+     10 ^ 6 * 60 * 60 * 24 * (fromIntegral (days x + 31 * months x)))
