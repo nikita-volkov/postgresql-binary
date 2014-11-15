@@ -6,7 +6,7 @@ ghc:
 
 env:
   - postgres_install=1
-    postgres_version=8.4.22
+    postgres_version=8.0.26
     postgres_integer_datetimes=0
   - postgres_install=0
   
