@@ -10,6 +10,9 @@ description:
   It can be used to implement high level APIs for Postgres.
   E.g., <http://hackage.haskell.org/package/hasql-postgres "hasql-postgres">
   is based on this library.
+  .
+  It's tested against Postgres versions 8.4 and 9.3
+  with the @integer_datetimes@ setting off and on.
 category:
   Database, Codecs, Parsing
 homepage:
