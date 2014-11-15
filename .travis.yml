@@ -4,7 +4,43 @@ ghc:
   - 7.6
   - 7.8
 
+env:
+  - postgres_install=1
+    postgres_version=8.4.22
+    postgres_integer_datetimes=0
+  - postgres_install=0
+  
 install:
+  - if [ $postgres_install -eq 1 ];
+    then
+      set -o pipefail;
+      set -e;
+      export project_dir=$(pwd);
+      sudo /etc/init.d/postgresql stop;
+      wget https://ftp.postgresql.org/pub/source/v$postgres_version/postgresql-$postgres_version.tar.gz;
+      tar xzvf postgresql-$postgres_version.tar.gz;
+      cd "postgresql-$postgres_version";
+      if [ $postgres_integer_datetimes -eq 1 ];
+      then
+        sudo ./configure --enable-integer-datetimes --without-readline;
+      else
+        sudo ./configure --disable-integer-datetimes --without-readline;
+      fi;
+      sudo make;
+      sudo make install;
+      sudo adduser postgres || true;
+      sudo mkdir /usr/local/pgsql/data;
+      sudo chown postgres /usr/local/pgsql/data;
+      sudo mkdir /usr/local/pgsql/log;
+      sudo chown postgres /usr/local/pgsql/log;
+      sudo -u postgres /usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data;
+      sudo -u postgres 
+        /usr/local/pgsql/bin/pg_ctl start 
+          -D /usr/local/pgsql/data 
+          -l /usr/local/pgsql/log/main.log
+          -o "-h localhost -p 5432";
+      cd $project_dir;
+    fi
   - cabal install happy # a "haskell-src-exts" implicit dependency workaround
   - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 
