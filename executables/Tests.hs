@@ -199,6 +199,15 @@ maxInterval :: DiffTime =
 minInterval :: DiffTime = 
   negate maxInterval
 
+integerDatetimes :: Bool
+integerDatetimes =
+  unsafePerformIO $ do
+    connection <- connect
+    initConnection connection
+    integerDatetimes <- getIntegerDatetimes connection
+    PQ.finish connection
+    return integerDatetimes
+
 -- * Tests
 -------------------------
 
@@ -255,21 +264,21 @@ test_minInterval =
           query "SELECT $1" [Just p] PQ.Binary
 
 prop_timestamp =
-  forAll microsUTCTimeGen $ 
+  forAll microsLocalTimeGen $ 
     mappingP (PTI.oidOf PTI.timestamp) 
-             (nonNullRenderer Encoder.timestamp)
-             (nonNullParser Decoder.timestamp)
+             (nonNullRenderer (Encoder.timestamp integerDatetimes))
+             (nonNullParser (Decoder.timestamp integerDatetimes))
 
 test_timestampParsing1 =
-  assertEqual (Right (read "2000-01-19 10:41:06" :: UTCTime)) =<< do
-    fmap (Decoder.timestamp . fromJust) $ 
+  assertEqual (Right (read "2000-01-19 10:41:06" :: LocalTime)) =<< do
+    fmap (Decoder.timestamp integerDatetimes . fromJust) $ 
       query "SELECT '2000-01-19 10:41:06' :: timestamp" [] PQ.Binary
 
 prop_timestamptz =
-  forAll microsLocalTimeGen $ 
+  forAll microsUTCTimeGen $ 
     mappingP (PTI.oidOf PTI.timestamptz) 
-             (nonNullRenderer Encoder.timestamptz)
-             (nonNullParser Decoder.timestamptz)
+             (nonNullRenderer (Encoder.timestamptz integerDatetimes))
+             (nonNullParser (Decoder.timestamptz integerDatetimes))
 
 prop_timetz =
   forAll ((,) <$> microsTimeOfDayGen <*> timeZoneGen) $ \x ->

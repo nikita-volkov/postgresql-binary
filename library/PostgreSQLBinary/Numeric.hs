@@ -3,12 +3,12 @@ module PostgreSQLBinary.Numeric where
 import PostgreSQLBinary.Prelude
 
 
-posSignCode = 0x0000 :: Word16
-negSignCode = 0x4000 :: Word16
-nanSignCode = 0xC000 :: Word16
+posSignCode = 0x0000 :: Int16
+negSignCode = 0x4000 :: Int16
+nanSignCode = 0xC000 :: Int16
 
 {-# INLINE extractComponents #-}
-extractComponents :: Integral a => a -> [Word16]
+extractComponents :: Integral a => a -> [Int16]
 extractComponents =
   (reverse .) . (. abs) . unfoldr $ \case
     0 -> Nothing
@@ -28,7 +28,7 @@ mergeDigits =
 -- |
 -- Unpack a component into digits.
 {-# INLINE componentDigits #-}
-componentDigits :: Word16 -> [Word16]
+componentDigits :: Int16 -> [Int16]
 componentDigits =
   evalState $ do
     a <- state (`divMod` 1000)

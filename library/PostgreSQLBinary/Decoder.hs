@@ -36,12 +36,12 @@ int =
 {-# INLINABLE float4 #-}
 float4 :: D Float
 float4 =
-  unsafeCoerce . (int :: D Word32)
+  unsafeCoerce (int :: D Word32)
 
 {-# INLINABLE float8 #-}
 float8 :: D Double
 float8 =
-  unsafeCoerce . (int :: D Word64)
+  unsafeCoerce (int :: D Word64)
 
 {-# INLINABLE numeric #-}
 numeric :: D Scientific
@@ -89,7 +89,7 @@ time =
     True ->
       fmap Time.microsToTimeOfDay . int
     False ->
-      fmap Time.secondsToTimeOfDay . float8
+      fmap Time.secsToTimeOfDay . float8
 
 -- |
 -- Decoding strategy depends on whether the server supports @integer_datetimes@.
@@ -103,33 +103,27 @@ timetz integer_datetimes =
     tz =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
 
-{-# INLINABLE timestamp #-}
-timestamp :: D UTCTime
-timestamp =
-  fmap fromMicros . int
-  where
-    fromMicros =
-      evalState $ do
-        days <- state $ (`divMod` (10^6 * 60 * 60 * 24))
-        micros <- get
-        return $
-          UTCTime 
-            (Time.postgresJulianToDay days)
-            (picosecondsToDiffTime . (* (10^6)) . fromIntegral $ micros)
-
+-- |
+-- Decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timestamptz #-}
-timestamptz :: D LocalTime
+timestamp :: Bool -> D LocalTime
+timestamp =
+  \case
+    True ->
+      fmap Time.microsToLocalTime . int
+    False ->
+      fmap Time.secsToLocalTime . float8
+
+-- |
+-- Decoding strategy depends on whether the server supports @integer_datetimes@.
+{-# INLINABLE timestamp #-}
+timestamptz :: Bool -> D UTCTime
 timestamptz =
-  fmap fromMicros . int
-  where
-    fromMicros =
-      evalState $ do
-        days <- state $ (`divMod` (10^6 * 60 * 60 * 24))
-        micros <- get
-        return $
-          LocalTime 
-            (Time.postgresJulianToDay days)
-            (Time.microsToTimeOfDay micros)
+  \case
+    True ->
+      fmap Time.microsToUTC . int
+    False ->
+      fmap Time.secsToUTC . float8
 
 {-# INLINABLE interval #-}
 interval :: D DiffTime

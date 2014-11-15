@@ -55,20 +55,6 @@ date :: Day -> Builder
 date =
   int32BE . fromIntegral . Time.dayToPostgresJulian
 
-{-# INLINE timestamp #-}
-timestamp :: UTCTime -> Builder
-timestamp (UTCTime dayX timeX) =
-  let days = Time.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
-      time = (`div` (10^6)) . unsafeCoerce $ timeX
-      in int64BE $ fromIntegral $ days + time
-
-{-# INLINE timestamptz #-}
-timestamptz :: LocalTime -> Builder
-timestamptz (LocalTime dayX timeX) =
-  let days = Time.dayToPostgresJulian dayX * 10^6 * 60 * 60 * 24
-      time = (`div` (10^6)) . unsafeCoerce timeOfDayToTime $ timeX
-      in int64BE $ fromIntegral $ days + time
-
 {-# INLINE interval #-}
 interval :: DiffTime -> Builder
 interval =
@@ -80,11 +66,11 @@ interval =
 {-# INLINE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =
-  word16BE (fromIntegral componentsAmount) <>
+  int16BE (fromIntegral componentsAmount) <>
   int16BE (fromIntegral pointIndex) <>
-  word16BE signCode <>
-  word16BE (fromIntegral trimmedExponent) <>
-  foldMap word16BE components
+  int16BE signCode <>
+  int16BE (fromIntegral trimmedExponent) <>
+  foldMap int16BE components
   where
     componentsAmount = 
       length components

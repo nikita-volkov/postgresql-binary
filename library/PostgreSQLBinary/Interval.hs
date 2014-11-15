@@ -17,7 +17,7 @@ data Interval =
 -- Oddly enough despite a claim of support of up to 178000000 years in
 -- <http://www.postgresql.org/docs/9.3/static/datatype-datetime.html Postgres' docs>
 -- in practice it starts behaving unpredictably after a smaller limit.
-maxDiffTime :: DiffTime = 1780000 * Time.microsToDiffTime Time.year
+maxDiffTime :: DiffTime = 1780000 * Time.microsToDiffTime Time.yearMicros
 minDiffTime :: DiffTime = negate maxDiffTime
 
 fromDiffTime :: DiffTime -> Maybe Interval

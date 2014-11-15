@@ -126,14 +126,18 @@ timetz integer_datetimes (timeX, tzX) =
       Integral.unpackBySize 4 . (*60) . negate . timeZoneMinutes
 
 {-# INLINABLE timestamp #-}
-timestamp :: E UTCTime
+timestamp :: Bool -> E LocalTime
 timestamp =
-  Builder.run . Builder.timestamp
+  \case
+    True -> int8 . Left . Time.localTimeToMicros
+    False -> float8 . Time.localTimeToSecs
 
 {-# INLINABLE timestamptz #-}
-timestamptz :: E LocalTime
+timestamptz :: Bool -> E UTCTime
 timestamptz =
-  Builder.run . Builder.timestamptz
+  \case
+    True -> int8 . Left . Time.utcToMicros
+    False -> float8 . Time.utcToSecs
 
 {-# INLINABLE interval #-}
 interval :: E DiffTime
