@@ -208,6 +208,24 @@ integerDatetimes =
     PQ.finish connection
     return integerDatetimes
 
+-- * Misc
+-------------------------
+
+timestamptzApxRep (UTCTime d d') =
+  let p = unsafeCoerce d' :: Integer
+      in (d, div p (10^6))
+
+timestampApxRep (LocalTime d t) =
+  (d, timeApxRep t)
+
+timetzApxRep (t, tz) = 
+  (timeApxRep t, tz)
+
+timeApxRep (TimeOfDay h m s) =
+  let p = unsafeCoerce s :: Integer
+      in (h, m, div p (10^6))
+
+
 -- * Tests
 -------------------------
 
@@ -264,10 +282,14 @@ test_minInterval =
           query "SELECT $1" [Just p] PQ.Binary
 
 prop_timestamp =
-  forAll microsLocalTimeGen $ 
-    mappingP (PTI.oidOf PTI.timestamp) 
-             (nonNullRenderer (Encoder.timestamp integerDatetimes))
-             (nonNullParser (Decoder.timestamp integerDatetimes))
+  forAll microsLocalTimeGen $ \x ->
+    Just (Right (timestampApxRep x)) === do
+      unsafePerformIO $ do
+        let p = (,,) (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.timestamp)
+                     (Encoder.timestamp integerDatetimes x)
+                     (PQ.Binary)
+            in (fmap . fmap) (fmap timestampApxRep . Decoder.timestamp integerDatetimes)
+                             (query "SELECT $1" [Just p] PQ.Binary)
 
 test_timestampParsing1 =
   assertEqual (Right (read "2000-01-19 10:41:06" :: LocalTime)) =<< do
@@ -275,35 +297,34 @@ test_timestampParsing1 =
       query "SELECT '2000-01-19 10:41:06' :: timestamp" [] PQ.Binary
 
 prop_timestamptz =
-  forAll microsUTCTimeGen $ 
-    mappingP (PTI.oidOf PTI.timestamptz) 
-             (nonNullRenderer (Encoder.timestamptz integerDatetimes))
-             (nonNullParser (Decoder.timestamptz integerDatetimes))
+  forAll microsUTCTimeGen $ \x ->
+    Just (Right (timestamptzApxRep x)) === do
+      unsafePerformIO $ do
+        let p = (,,) (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.timestamptz)
+                     (Encoder.timestamptz integerDatetimes x)
+                     (PQ.Binary)
+            in (fmap . fmap) (fmap timestamptzApxRep . Decoder.timestamptz integerDatetimes)
+                             (query "SELECT $1" [Just p] PQ.Binary)
 
 prop_timetz =
   forAll ((,) <$> microsTimeOfDayGen <*> timeZoneGen) $ \x ->
-    Right x === do
+    Just (Right (timetzApxRep x)) === do
       unsafePerformIO $ do
-        connection <- connect
-        initConnection connection
-        integerDatetimes <- getIntegerDatetimes connection
-        Just result <- 
-          let params = [Just (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.timetz, Encoder.timetz integerDatetimes x, PQ.Binary)]
-              in PQ.execParams connection "SELECT $1" params PQ.Binary
-        encodedResult <- PQ.getvalue result 0 0
-        PQ.finish connection
-        return $ 
-          Decoder.timetz integerDatetimes (fromJust encodedResult)
+        let p = (,,) (PQ.Oid $ fromIntegral $ PTI.oidOf PTI.timetz)
+                     (Encoder.timetz integerDatetimes x)
+                     (PQ.Binary)
+            in (fmap . fmap) (fmap timetzApxRep . Decoder.timetz integerDatetimes)
+                             (query "SELECT $1" [Just p] PQ.Binary)
 
 test_timetzParsing =
-  assertEqual (Right (read "(10:41:06.002897, +0500)" :: (TimeOfDay, TimeZone))) =<< do
+  assertEqual (Right $ timetzApxRep (read "(10:41:06.002897, +0500)" :: (TimeOfDay, TimeZone))) =<< do
     connection <- connect
     initConnection connection
     integerDatetimes <- getIntegerDatetimes connection
     Just result <- PQ.execParams connection "SELECT '10:41:06.002897+05' :: timetz" [] PQ.Binary
     encodedResult <- PQ.getvalue result 0 0
     PQ.finish connection
-    return $ 
+    return $ fmap timetzApxRep $ 
       Decoder.timetz integerDatetimes (fromJust encodedResult)
 
 prop_timeFromIntegerIsomorphism =
@@ -320,7 +341,7 @@ prop_timeFromDoubleIsomorphism =
 
 prop_time =
   forAll microsTimeOfDayGen $ \x ->
-    Right x === do
+    Right (timeApxRep x) === do
       unsafePerformIO $ do
         connection <- connect
         initConnection connection
@@ -330,12 +351,12 @@ prop_time =
               in PQ.execParams connection "SELECT $1" params PQ.Binary
         encodedResult <- PQ.getvalue result 0 0
         PQ.finish connection
-        return $ 
+        return $ fmap timeApxRep $
           Decoder.time integerDatetimes (fromJust encodedResult)
 
 prop_timeParsing =
   forAll microsTimeOfDayGen $ \x ->
-    Right x === do
+    Right (timeApxRep x) === do
       unsafePerformIO $ do
         connection <- connect
         initConnection connection
@@ -345,7 +366,7 @@ prop_timeParsing =
               in PQ.execParams connection "SELECT $1" params PQ.Binary
         encodedResult <- PQ.getvalue result 0 0
         PQ.finish connection
-        return $ 
+        return $ fmap timeApxRep $
           Decoder.time integerDatetimes (fromJust encodedResult)
 
 prop_scientific (c, e) =
