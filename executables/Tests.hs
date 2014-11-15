@@ -45,12 +45,17 @@ mappingP oid encode decode v =
     unsafePerformIO $ do
       c <- connect
       initConnection c
-      Just result <-
+      result <-
         let param = (,,) <$> pure (PQ.Oid $ fromIntegral oid) <*> encode v <*> pure PQ.Binary
             in PQ.execParams c "SELECT $1" [param] PQ.Binary
-      binaryResult <- PQ.getvalue result 0 0
-      PQ.finish c
-      return $ decode binaryResult
+      case result of
+        Just result -> do
+          binaryResult <- PQ.getvalue result 0 0
+          PQ.finish c
+          return $ decode binaryResult
+        Nothing -> do
+          m <- PQ.errorMessage c
+          fail $ maybe "Fatal PQ error" (\m -> "Fatal PQ error: " <> show m) m
 
 mappingTextP ::
   (Show a, Eq a) => 
