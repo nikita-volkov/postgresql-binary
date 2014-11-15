@@ -6,8 +6,11 @@ ghc:
 
 env:
   - postgres_install=1
-    postgres_version=8.0.26
+    postgres_version=8.3.0
     postgres_integer_datetimes=0
+  - postgres_install=1
+    postgres_version=8.3.0
+    postgres_integer_datetimes=1
   - postgres_install=0
   
 install:
@@ -28,7 +31,6 @@ install:
       fi;
       sudo make;
       sudo make install;
-      sudo adduser postgres || true;
       sudo mkdir /usr/local/pgsql/data;
       sudo chown postgres /usr/local/pgsql/data;
       sudo mkdir /usr/local/pgsql/log;
@@ -39,6 +41,8 @@ install:
           -D /usr/local/pgsql/data 
           -l /usr/local/pgsql/log/main.log
           -o "-h localhost -p 5432";
+      sleep 3;
+      sudo -u postgres /usr/local/pgsql/bin/createdb postgres || true;
       cd $project_dir;
     fi
   - cabal install happy # a "haskell-src-exts" implicit dependency workaround
@@ -47,4 +51,9 @@ install:
 script:
   - cabal configure --enable-tests --enable-benchmarks
   - cabal build
-  - cabal test --show-details=always
+  - cabal test --show-details=always ||
+    { 
+      echo "Test failed. Here's the Postgres' log:";
+      sudo cat /usr/local/pgsql/log/main.log;
+      exit 1;
+    }
