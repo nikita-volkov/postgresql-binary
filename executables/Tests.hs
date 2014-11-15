@@ -304,6 +304,30 @@ test_timestampParsing1 =
     fmap (Decoder.timestamp integerDatetimes . fromJust) $ 
       query "SELECT '2000-01-19 10:41:06' :: timestamp" [] PQ.Binary
 
+test_timestamptzOffset =
+  do
+    c <- connect
+    initConnection c
+    PQ.exec c "DROP TABLE IF EXISTS a"
+    PQ.exec c "CREATE TABLE a (b TIMESTAMPTZ)"
+    PQ.exec c "set timezone to 'America/Los_Angeles'"
+    let p = (,,) (PQ.Oid $ fromIntegral o) 
+                 (Encoder.timestamptz integerDatetimes x) 
+                 (PQ.Binary)
+        o = PTI.oidOf PTI.timestamptz
+        x = read "2011-09-28 00:17:25"
+    PQ.execParams c "insert into a (b) values ($1)" [Just p] PQ.Text
+    PQ.exec c "set timezone to 'Europe/Stockholm'"
+    assertEqual (Just "2011-09-28 02:17:25+02") 
+      =<< singleResult 
+      =<< PQ.execParams c "SELECT * FROM a" [] PQ.Text
+    assertEqual (Just (Right x)) 
+      =<< return . fmap (Decoder.timestamptz integerDatetimes)
+      =<< singleResult 
+      =<< PQ.execParams c "SELECT * FROM a" [] PQ.Binary
+  where
+    singleResult r = PQ.getvalue (fromJust r) 0 0
+
 prop_timestamptz =
   forAll microsUTCTimeGen $ \x ->
     Just (Right (timestamptzApxRep x)) === do
