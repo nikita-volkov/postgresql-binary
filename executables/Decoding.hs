@@ -32,7 +32,7 @@ main =
       b "timetz"      (D.timetz True)      (E.timetz True (read "(10:41:06, +0300)")),
       b "timestamp"   D.timestamp          (E.timestamp (read "2000-01-19 10:41:06")),
       b "timestamptz" D.timestamptz        (E.timestamptz (read "2000-01-19 10:41:06")),
-      b "interval"    D.interval           (E.interval (secondsToDiffTime 23472391470128374)),
+      b "interval"    D.interval           (E.interval (secondsToDiffTime 23472391128374)),
       b "uuid"        D.uuid               (E.uuid (read "550e8400-e29b-41d4-a716-446655440000")),
       b "array"       D.array              (E.array 
                                              (Array.fromListUnsafe 
