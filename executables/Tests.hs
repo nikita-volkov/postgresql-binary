@@ -217,8 +217,7 @@ integerDatetimes =
 -------------------------
 
 timestamptzApxRep (UTCTime d d') =
-  let p = unsafeCoerce d' :: Integer
-      in (d, div p (10^6))
+  (d, picoApxRep (unsafeCoerce d'))
 
 timestampApxRep (LocalTime d t) =
   (d, timeApxRep t)
@@ -227,8 +226,12 @@ timetzApxRep (t, tz) =
   (timeApxRep t, tz)
 
 timeApxRep (TimeOfDay h m s) =
+  (h, m, picoApxRep s)
+
+picoApxRep :: Pico -> Integer
+picoApxRep s =
   let p = unsafeCoerce s :: Integer
-      in (h, m, div p (10^6))
+      in round (p % 10^6)
 
 
 -- * Tests
