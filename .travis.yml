@@ -51,7 +51,10 @@ install:
   - if [ $lower_bound_dependencies -eq 1 ];
     then
       cabal install "transformers == 0.2.*";
+      cabal install "bytestring == 0.10.0.0";
+      cabal install "text == 1.0.*";
       cabal install "attoparsec == 0.10.*";
+      cabal install "scientific == 0.0.*";
       cabal install "QuickCheck == 2.6.*";
     fi;
   - cabal install happy # a "haskell-src-exts" implicit dependency workaround
