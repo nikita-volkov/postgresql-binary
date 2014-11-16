@@ -262,7 +262,7 @@ test_intervalParsing =
       in 
       assertEqual (Just (Right (picosecondsToDiffTime p))) =<< do
         (fmap . fmap) (Decoder.interval) $ 
-          query "SELECT 'P0001-02-03T04:05:06.332211' :: interval" [] PQ.Binary
+          query "SELECT '1 year 2 months 3 days 4 hours 5 minutes 6 seconds 332211 microseconds' :: interval" [] PQ.Binary
 
 prop_interval =
   forAll intervalDiffTimeGen $ 
