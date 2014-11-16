@@ -1,7 +1,7 @@
 module PostgreSQLBinary.Encoder.Builder where
 
 import PostgreSQLBinary.Prelude hiding (bool)
-import Data.ByteString.Builder
+import Data.ByteString.Lazy.Builder
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL

@@ -2,7 +2,7 @@ module PostgreSQLBinary.Decoder where
 
 import PostgreSQLBinary.Prelude hiding (bool)
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy.Builder as BB
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
