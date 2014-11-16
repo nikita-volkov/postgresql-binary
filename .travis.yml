@@ -5,20 +5,19 @@ ghc:
   - 7.8
 
 env:
-  - postgres_install=1
-    postgres_version=8.3.0
+  - postgres_version=8.3.0
     postgres_integer_datetimes=0
-  - postgres_install=1
-    postgres_version=8.3.0
+  - postgres_version=8.3.0
     postgres_integer_datetimes=1
-  - postgres_install=0
-    dependencies_attoparsec=0.10.*
-  
+  - lower_bound_dependencies=1
+  - 
+
 install:
-  - if [ $postgres_install -eq 1 ];
+  # Set up the Shell to treat the semicolon as &&
+  - set -o pipefail && set -e
+  # Optionally install an arbitrary PostgreSQL version:
+  - if [ $postgres_version ];
     then
-      set -o pipefail;
-      set -e;
       export project_dir=$(pwd);
       sudo /etc/init.d/postgresql stop;
       wget https://ftp.postgresql.org/pub/source/v$postgres_version/postgresql-$postgres_version.tar.gz;
@@ -45,8 +44,14 @@ install:
       sleep 3;
       sudo -u postgres /usr/local/pgsql/bin/createdb postgres || true;
       cd $project_dir;
-    fi
-  - [ -z $dependencies_attoparsec ] || cabal install "attoparsec == $dependencies_attoparsec"
+    fi;
+  # Install the lower bound dependencies
+  - if [ $lower_bound_dependencies -eq 1 ];
+    then
+      cabal install "transformers == 0.2.*";
+      cabal install "attoparsec == 0.10.*";
+      cabal install "QuickCheck == 2.6.*";
+    fi;
   - cabal install happy # a "haskell-src-exts" implicit dependency workaround
   - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 
