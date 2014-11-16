@@ -257,6 +257,13 @@ test_uuidParsing =
     fmap (Decoder.uuid . fromJust) $ 
       query "SELECT '550e8400-e29b-41d4-a716-446655440000' :: uuid" [] PQ.Binary
 
+test_intervalParsing =
+  let p = 10^6 * (332211 + 10^6 * (6 + 60 * (5 + 60 * (4 + 24 * (3 + 31 * (2 + 12))))))
+      in 
+      assertEqual (Just (Right (picosecondsToDiffTime p))) =<< do
+        (fmap . fmap) (Decoder.interval) $ 
+          query "SELECT 'P0001-02-03T04:05:06.332211' :: interval" [] PQ.Binary
+
 prop_interval =
   forAll intervalDiffTimeGen $ 
     mappingP (PTI.oidOf PTI.interval) 
