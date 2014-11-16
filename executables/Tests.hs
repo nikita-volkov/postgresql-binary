@@ -261,14 +261,14 @@ test_intervalParsing =
   let p = 10^6 * (332211 + 10^6 * (6 + 60 * (5 + 60 * (4 + 24 * (3 + 31 * (2 + 12))))))
       in 
       assertEqual (Just (Right (picosecondsToDiffTime p))) =<< do
-        (fmap . fmap) (Decoder.interval) $ 
+        (fmap . fmap) (Decoder.interval integerDatetimes) $ 
           query "SELECT '1 year 2 months 3 days 4 hours 5 minutes 6 seconds 332211 microseconds' :: interval" [] PQ.Binary
 
 prop_interval =
   forAll intervalDiffTimeGen $ 
     mappingP (PTI.oidOf PTI.interval) 
-             (nonNullRenderer Encoder.interval)
-             (nonNullParser Decoder.interval)
+             (nonNullRenderer (Encoder.interval integerDatetimes))
+             (nonNullParser (Decoder.interval integerDatetimes))
 
 test_maxInterval =
   let x = maxInterval
@@ -278,9 +278,9 @@ test_maxInterval =
           p = 
             (,,)
               (PQ.Oid (fromIntegral (PTI.oidOf PTI.interval)))
-              (Encoder.interval x)
+              ((Encoder.interval integerDatetimes) x)
               (PQ.Binary)
-        (fmap . fmap) Decoder.interval $ 
+        (fmap . fmap) (Decoder.interval integerDatetimes) $ 
           query "SELECT $1" [Just p] PQ.Binary
 
 test_minInterval =
@@ -291,9 +291,9 @@ test_minInterval =
           p = 
             (,,)
               (PQ.Oid (fromIntegral (PTI.oidOf PTI.interval)))
-              (Encoder.interval x)
+              ((Encoder.interval integerDatetimes) x)
               (PQ.Binary)
-        (fmap . fmap) Decoder.interval $ 
+        (fmap . fmap) (Decoder.interval integerDatetimes) $ 
           query "SELECT $1" [Just p] PQ.Binary
 
 prop_timestamp =

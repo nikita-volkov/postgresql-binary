@@ -14,6 +14,7 @@ import qualified PostgreSQLBinary.Encoder.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
+import qualified PostgreSQLBinary.Interval as Interval
 import qualified PostgreSQLBinary.Numeric as Numeric
 
 
@@ -140,9 +141,17 @@ timestamptz =
     False -> float8 . Time.utcToSecs
 
 {-# INLINABLE interval #-}
-interval :: E DiffTime
-interval =
-  Builder.run . Builder.interval
+interval :: Bool -> E DiffTime
+interval integerDatetimes x =
+  Builder.run $ 
+    (if integerDatetimes then BB.int64BE u else BB.doubleBE s) <>
+    BB.int32BE d <>
+    BB.int32BE m
+  where
+    Interval.Interval u d m = 
+      fromMaybe (error "Too large DiffTime value for an interval") $
+      Interval.fromDiffTime x
+    s = fromIntegral u / (10^6)
 
 -- * Misc
 -------------------------

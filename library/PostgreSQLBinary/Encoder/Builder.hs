@@ -55,14 +55,6 @@ date :: Day -> Builder
 date =
   int32BE . fromIntegral . Time.dayToPostgresJulian
 
-{-# INLINE interval #-}
-interval :: DiffTime -> Builder
-interval =
-  Interval.fromDiffTime >>> 
-  fromMaybe (error "Too large DiffTime value for an interval") >>>
-  \(Interval.Interval u d m) -> int64BE u <> int32BE d <> int32BE m
-
-
 {-# INLINE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =

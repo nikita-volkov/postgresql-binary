@@ -81,7 +81,7 @@ date =
   fmap (Time.postgresJulianToDay . fromIntegral) . (int :: D Int32)
 
 -- |
--- Decoding strategy depends on whether the server supports @integer_datetimes@.
+-- The decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE time #-}
 time :: Bool -> D TimeOfDay
 time =
@@ -92,7 +92,7 @@ time =
       fmap Time.secsToTimeOfDay . float8
 
 -- |
--- Decoding strategy depends on whether the server supports @integer_datetimes@.
+-- The decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timetz #-}
 timetz :: Bool -> D (TimeOfDay, TimeZone)
 timetz integer_datetimes =
@@ -104,7 +104,7 @@ timetz integer_datetimes =
       fmap (minutesToTimeZone . negate . (`div` 60) . fromIntegral) . (int :: D Int32)
 
 -- |
--- Decoding strategy depends on whether the server supports @integer_datetimes@.
+-- The decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timestamptz #-}
 timestamp :: Bool -> D LocalTime
 timestamp =
@@ -115,7 +115,7 @@ timestamp =
       fmap Time.secsToLocalTime . float8
 
 -- |
--- Decoding strategy depends on whether the server supports @integer_datetimes@.
+-- The decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE timestamp #-}
 timestamptz :: Bool -> D UTCTime
 timestamptz =
@@ -125,15 +125,22 @@ timestamptz =
     False ->
       fmap Time.secsToUTC . float8
 
+-- |
+-- The decoding strategy depends on whether the server supports @integer_datetimes@.
 {-# INLINABLE interval #-}
-interval :: D DiffTime
-interval =
-  evalStateT $ do
-    ub <- state $ B.splitAt 8
-    db <- state $ B.splitAt 4
-    mb <- get
-    i <- lift $ Interval.Interval <$> int ub <*> int db <*> int mb
-    return $ Interval.toDiffTime i
+interval :: Bool -> D DiffTime
+interval integerDatetimes =
+  evalState $ do
+    t <- state $ B.splitAt 8
+    d <- state $ B.splitAt 4
+    m <- get
+    return $ do
+      ux <- if integerDatetimes
+              then int t
+              else float8 t >>= return . round . (* (10^6)) . toRational
+      dx <- int d
+      mx <- int m
+      return $ Interval.toDiffTime $ Interval.Interval ux dx mx
 
 
 -- * Misc
