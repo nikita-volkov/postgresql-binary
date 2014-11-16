@@ -12,6 +12,7 @@ env:
     postgres_version=8.3.0
     postgres_integer_datetimes=1
   - postgres_install=0
+    dependencies_attoparsec=0.10.*
   
 install:
   - if [ $postgres_install -eq 1 ];
@@ -45,6 +46,7 @@ install:
       sudo -u postgres /usr/local/pgsql/bin/createdb postgres || true;
       cd $project_dir;
     fi
+  - [ -z $dependencies_attoparsec ] || cabal install "attoparsec == $dependencies_attoparsec"
   - cabal install happy # a "haskell-src-exts" implicit dependency workaround
   - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 
