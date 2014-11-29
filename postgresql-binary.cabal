@@ -104,7 +104,7 @@ test-suite tests
     postgresql-binary,
     HTF == 0.12.*,
     quickcheck-instances == 0.3.*,
-    QuickCheck >= 2.6 && < 2.8,
+    QuickCheck >= 2.7 && < 2.8,
     -- database:
     postgresql-libpq == 0.9.*,
     -- data:
