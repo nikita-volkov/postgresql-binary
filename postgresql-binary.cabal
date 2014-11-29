@@ -89,6 +89,8 @@ test-suite tests
     executables
   main-is:          
     Tests.hs
+  other-modules:
+    PostgreSQLBinary.PTI
   ghc-options:
     -threaded
     "-with-rtsopts=-N"
