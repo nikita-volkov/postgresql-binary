@@ -8,7 +8,7 @@ env:
     postgres_integer_datetimes=0
   - postgres_version=8.3.0
     postgres_integer_datetimes=1
-  - postgres_version=9.4rc1
+  - postgres_version=9.4.0
     postgres_integer_datetimes=0
 
 install:
