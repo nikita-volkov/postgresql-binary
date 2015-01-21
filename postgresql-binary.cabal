@@ -1,7 +1,7 @@
 name:
   postgresql-binary
 version:
-  0.5.0
+  0.5.1
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
