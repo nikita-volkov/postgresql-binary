@@ -1,7 +1,7 @@
 name:
   postgresql-binary
 version:
-  0.5.1
+  0.5.2
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
@@ -77,9 +77,8 @@ library
     loch-th == 0.2.*,
     placeholders == 0.1.*,
     -- general:
-    transformers >= 0.2 && < 0.5,
-    base-prelude >= 0.1.3 && < 0.2,
-    base >= 4.5 && < 4.8
+    transformers >= 0.3 && < 0.5,
+    base-prelude >= 0.1.3 && < 0.2
 
 
 test-suite tests
@@ -114,8 +113,7 @@ test-suite tests
     text >= 1 && < 1.3,
     bytestring >= 0.10 && < 0.11,
     -- general:
-    base-prelude >= 0.1.3 && < 0.2,
-    base >= 4.5 && < 4.8
+    base-prelude >= 0.1.3 && < 0.2
 
 
 benchmark decoding
@@ -144,10 +142,9 @@ benchmark decoding
     text >= 1 && < 1.3,
     bytestring >= 0.10 && < 0.11,
     -- general:
-    deepseq == 1.3.*,
+    deepseq >= 1.3 && < 1.5,
     mtl-prelude < 3,
-    base-prelude >= 0.1.3 && < 0.2,
-    base >= 4.5 && < 4.8
+    base-prelude >= 0.1.3 && < 0.2
 
 
 benchmark encoding
@@ -176,7 +173,6 @@ benchmark encoding
     text >= 1 && < 1.3,
     bytestring >= 0.10 && < 0.11,
     -- general:
-    deepseq == 1.3.*,
+    deepseq >= 1.3 && < 1.5,
     mtl-prelude < 3,
-    base-prelude >= 0.1.3 && < 0.2,
-    base >= 4.5 && < 4.8
+    base-prelude >= 0.1.3 && < 0.2

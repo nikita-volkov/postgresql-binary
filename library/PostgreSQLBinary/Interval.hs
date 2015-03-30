@@ -1,6 +1,6 @@
 module PostgreSQLBinary.Interval where
 
-import PostgreSQLBinary.Prelude
+import PostgreSQLBinary.Prelude hiding (months)
 import qualified PostgreSQLBinary.Time as Time
 
 

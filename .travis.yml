@@ -1,26 +1,24 @@
 env:
-  - 
-  - lower_bound_dependencies=1 
-  - ghc_version=7.6.1
-  - ghc_version=7.6.1
-    lower_bound_dependencies=1
-  - postgres_version=8.3.0
-    postgres_integer_datetimes=0
-  - postgres_version=8.3.0
-    postgres_integer_datetimes=1
-  - postgres_version=9.4.0
-    postgres_integer_datetimes=0
+  - ghc=7.6.1  cabal=1.18 lower_bound_dependencies=1
+  - ghc=7.6.1  cabal=1.18
+  - ghc=7.8.1  cabal=1.18 benchmarks=1
+  - ghc=7.10.1 cabal=1.22 tests=1
+  - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=8.3.0 postgres_integer_datetimes=0
+  - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=8.3.0 postgres_integer_datetimes=1
+  - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=9.4.0 postgres_integer_datetimes=1
+  
 
 install:
   # Set up the Shell to treat the semicolon as &&
   - set -o pipefail && set -e
   # Install GHC and Cabal
-  - 
-    ghc_version=${ghc_version=7.8.1};
+  -
+    ghc=${ghc=7.10.1}; 
+    cabal=${cabal=1.22};
     travis_retry sudo add-apt-repository -y ppa:hvr/ghc;
     travis_retry sudo apt-get update;
-    travis_retry sudo apt-get install cabal-install-1.18 ghc-$ghc_version;
-    export PATH=/opt/ghc/$ghc_version/bin:/opt/cabal/1.18/bin:$PATH;
+    travis_retry sudo apt-get install cabal-install-$cabal ghc-$ghc;
+    export PATH=/opt/ghc/$ghc/bin:/opt/cabal/$cabal/bin:$PATH;
   # Update the Cabal database
   - cabal update
   # Switch to the distro:
@@ -32,23 +30,31 @@ install:
     cd $pkg_name;
   # Install the lower bound dependencies
   - 
-    if [ $lower_bound_dependencies -eq 1 ];
+    if [ "$lower_bound_dependencies" = "1" ];
     then
-      cabal install "transformers == 0.2.*";
-      cabal install "bytestring == 0.10.0.0";
-      cabal install "text == 1.0.*";
-      cabal install "attoparsec == 0.10.*";
-      cabal install "scientific == 0.2.*";
-      cabal install "QuickCheck == 2.6.*";
+      constraint_options=(
+        "--constraint=transformers==0.3.*"
+        "--constraint=bytestring==0.10.0.0"
+        "--constraint=text==1.0.*"
+        "--constraint=attoparsec==0.10.*"
+        "--constraint=scientific==0.2.*"
+      );
     fi;
-  # Install the remaining dependencies
-  - 
-    cabal install happy;
-    cabal install --only-dependencies --enable-tests --enable-benchmarks --avoid-reinstalls
-  # Configure and build
-  - 
-    cabal configure --enable-tests --enable-benchmarks;
-    cabal build
+  # Install the "haskell-src-exts" implicit dependency
+  - cabal install happy --reorder-goals --force-reinstalls ${constraint_options[@]}
+  # Install the library dependencies
+  - cabal install --only-dependencies --reorder-goals --force-reinstalls
+      ${constraint_options[@]}
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
+  # Build the library
+  - cabal build
+  # Configure and build the remaining stuff
+  - cabal configure 
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
+      -f doctest
+  - cabal build
   # Optionally install an arbitrary PostgreSQL version:
   - 
     if [ $postgres_version ];
@@ -58,7 +64,7 @@ install:
       wget https://ftp.postgresql.org/pub/source/v$postgres_version/postgresql-$postgres_version.tar.gz;
       tar xzvf postgresql-$postgres_version.tar.gz;
       cd "postgresql-$postgres_version";
-      if [ $postgres_integer_datetimes -eq 1 ];
+      if [ $postgres_integer_datetimes = "1" ];
       then
         sudo ./configure --enable-integer-datetimes --without-readline;
       else
@@ -81,10 +87,15 @@ install:
       cd $project_dir;
     fi;
 
+
 script:
-  - cabal test --show-details=always ||
-    { 
-      echo "Test failed. Here's the Postgres' log:";
-      sudo cat /usr/local/pgsql/log/main.log;
-      exit 1;
-    }
+  - |
+    if [ "$tests" = "1" ];
+    then
+      cabal test --show-details=always ||
+      { 
+        echo "Test failed. Here's the Postgres' log:";
+        sudo cat /usr/local/pgsql/log/main.log;
+        exit 1;
+      };
+    fi;
