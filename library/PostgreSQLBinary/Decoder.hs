@@ -189,12 +189,15 @@ array =
 --   2. size or NULL (\255\255\255\255 ie -1);
 --   3. payload if it wasn't NULL
 
-size :: D Int32
-size s = case B.take 4 s of
-  s' | B.length s' == 4 -> int s'
-     | otherwise        -> Left "No length."
+-- | Take a leading Int32, return the rest of the string
+takeInt32 :: D (Int32, B.ByteString)
+takeInt32 s = case B.splitAt 4 s of
+  (i', s')
+     | B.length i' == 4 -> do
+         i <- int i'
+         Right (i, s')
+     | otherwise -> Left "takeInt32: needs at least 4 bytes"
 
-data Field a
 data Field
   = Field
     { fieldOid   :: {-# UNPACK #-} !Int32
@@ -206,41 +209,37 @@ data Field
 -- | Parse the fields of a composite type
 compositeFields :: D (V.Vector Field)
 compositeFields row = do
-  s <- size row
-
+  (size, fields) <- takeInt32 row
   let
-    fields :: ByteString
-    fields = B.drop 4 row
-
     int32At :: Int -> Either Text Int32
-    int32At n = int (B.take 4 (B.drop n fields))
+    int32At n = int $! B.take 4 $! B.drop n fields
 
     area :: Int -> Int -> B.ByteString
-    area n len = B.take len (B.drop n fields)
+    area n len = B.take len $! B.drop n fields
+
+    sizei :: Int
+    sizei = fromIntegral size
   
   runST (do
-    vector <- VM.new (fromIntegral s)
-    
+    vector <- VM.new sizei
     let
-      parse fi i | fi < fromIntegral s = do
-        case int32At i of
+      -- fi : current field
+      -- pos : position in the bytestring
+      parse fi pos =
+        if fi < sizei
+        then case int32At pos of
           Left  err -> return (Just err)
-          Right oid -> case int32At (i+4) of
+          Right oid -> case int32At (pos+4) of
             Left  err -> return (Just err)
             Right len -> do
-              let leni    = fromIntegral len
-                  payload = area (i+8) leni
-
+              let leni = fromIntegral len
               VM.write vector fi $!
                 if len /= -1
-                then Field oid len payload
+                then Field oid len (area (pos+8) leni)
                 else NULL
-
-              parse (fi+1) (i+8+max 0 leni)
-      parse _ _ = return Nothing
-
+              parse (fi+1) (pos+8+max 0 leni)
+        else return Nothing
     merr <- parse 0 0
     case merr of
       Just err -> return (Left err)
-      Nothing  -> fmap Right (V.unsafeFreeze vector)
-    )
+      Nothing  -> Right <$> V.unsafeFreeze vector)
