@@ -195,14 +195,16 @@ size s = case B.take 4 s of
      | otherwise        -> Left "No length."
 
 data Field a
+data Field
   = Field
     { fieldOid   :: {-# UNPACK #-} !Int32
     , fieldSize  :: {-# UNPACK #-} !Int32
-    , field      :: !a } 
-  | NULL
+    , field      :: !ByteString } 
+  | NULL 
  deriving (Show, Eq, Ord)
 
-compositeFields :: D (V.Vector (Field ByteString))
+-- | Parse the fields of a composite type
+compositeFields :: D (V.Vector Field)
 compositeFields row = do
   s <- size row
 
