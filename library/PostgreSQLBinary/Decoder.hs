@@ -8,6 +8,9 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Vector as V
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as VM
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
@@ -173,3 +176,69 @@ uuid =
 array :: D Array.Data
 array =
   flip Zepto.run Zepto.array
+
+-- * Composite types
+-------------------------
+
+-- a composite type looks like:-
+--   1. int32 number of fields;
+--   2. fields
+--
+-- fields look like:-
+--   1. OID;
+--   2. size or NULL (\255\255\255\255 ie -1);
+--   3. payload if it wasn't NULL
+
+size :: D Int32
+size s = case B.take 4 s of
+  s' | B.length s' == 4 -> int s'
+     | otherwise        -> Left "No length."
+
+data Field a
+  = Field
+    { fieldOid   :: {-# UNPACK #-} !Int32
+    , fieldSize  :: {-# UNPACK #-} !Int32
+    , field      :: !a } 
+  | NULL
+ deriving (Show, Eq, Ord)
+
+compositeFields :: D (V.Vector (Field ByteString))
+compositeFields row = do
+  s <- size row
+
+  let
+    fields :: ByteString
+    fields = B.drop 4 row
+
+    int32At :: Int -> Either Text Int32
+    int32At n = int (B.take 4 (B.drop n fields))
+
+    area :: Int -> Int -> B.ByteString
+    area n len = B.take len (B.drop n fields)
+  
+  runST (do
+    vector <- VM.new (fromIntegral s)
+    
+    let
+      parse fi i | fi < fromIntegral s = do
+        case int32At i of
+          Left  err -> return (Just err)
+          Right oid -> case int32At (i+4) of
+            Left  err -> return (Just err)
+            Right len -> do
+              let leni    = fromIntegral len
+                  payload = area (i+8) leni
+
+              VM.write vector fi $!
+                if len /= -1
+                then Field oid len payload
+                else NULL
+
+              parse (fi+1) (i+8+max 0 leni)
+      parse _ _ = return Nothing
+
+    merr <- parse 0 0
+    case merr of
+      Just err -> return (Left err)
+      Nothing  -> fmap Right (V.unsafeFreeze vector)
+    )
