@@ -10,13 +10,14 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Vector as V
 import qualified PostgreSQLBinary.Encoder.Builder as Builder
 import qualified PostgreSQLBinary.Array as Array
 import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Interval as Interval
 import qualified PostgreSQLBinary.Numeric as Numeric
-
+import qualified PostgreSQLBinary.Composite as Composite
 
 -- |
 -- A function for rendering a value into a byte string.
@@ -172,3 +173,18 @@ uuid =
 array :: E Array.Data
 array = 
   Builder.run . Builder.array
+
+-- * Composite types
+-------------------------
+
+composite :: E (V.Vector Composite.Field)
+composite vect = Builder.run (sizeTag <> foldMap field vect)
+ where
+  field :: Composite.Field -> BB.Builder
+  field f = case f of
+    Composite.NULL  oid         -> BB.int32BE oid <> BB.int32BE (-1)
+    Composite.Field oid size bs -> BB.int32BE oid <> BB.int32BE size <>
+                                   BB.byteString bs
+  sizeTag :: BB.Builder
+  sizeTag = BB.int32BE (fromIntegral (V.length vect) :: Int32)
+    
