@@ -60,6 +60,7 @@ library
     PostgreSQLBinary.Numeric
     PostgreSQLBinary.Time
     PostgreSQLBinary.Interval
+    PostgreSQLBinary.Composite
   exposed-modules:
     PostgreSQLBinary.Array
     PostgreSQLBinary.Encoder

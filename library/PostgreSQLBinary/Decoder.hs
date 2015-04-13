@@ -1,7 +1,7 @@
 module PostgreSQLBinary.Decoder where
-
 import PostgreSQLBinary.Prelude hiding (bool)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Unsafe as BU
 import qualified Data.ByteString.Lazy.Builder as BB
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
@@ -19,7 +19,7 @@ import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 import qualified PostgreSQLBinary.Interval as Interval
-
+import qualified PostgreSQLBinary.Composite as Composite
 
 -- |
 -- A function for decoding a byte string into a value.
@@ -198,24 +198,20 @@ takeInt32 s = case B.splitAt 4 s of
          Right (i, s')
      | otherwise -> Left "takeInt32: needs at least 4 bytes"
 
-data Field
-  = Field
-    { fieldOid   :: {-# UNPACK #-} !Int32
-    , fieldSize  :: {-# UNPACK #-} !Int32
-    , field      :: !ByteString } 
-  | NULL 
- deriving (Show, Eq, Ord)
+{-# INLINE slice #-}
+slice :: B.ByteString -> Int -> Int -> Either Text B.ByteString
+slice bs n len =
+  if B.length bs >= len+n
+  then Right $! BU.unsafeTake len $! BU.unsafeDrop n bs
+  else Left "slice: string too short"
 
 -- | Parse the fields of a composite type
-compositeFields :: D (V.Vector Field)
+compositeFields :: D (V.Vector Composite.Field)
 compositeFields row = do
   (size, fields) <- takeInt32 row
   let
     int32At :: Int -> Either Text Int32
-    int32At n = int $! B.take 4 $! B.drop n fields
-
-    area :: Int -> Int -> B.ByteString
-    area n len = B.take len $! B.drop n fields
+    int32At n = int =<< slice fields n 4
 
     sizei :: Int
     sizei = fromIntegral size
@@ -227,18 +223,26 @@ compositeFields row = do
       -- pos : position in the bytestring
       parse fi pos =
         if fi < sizei
-        then case int32At pos of
-          Left  err -> return (Just err)
-          Right oid -> case int32At (pos+4) of
-            Left  err -> return (Just err)
-            Right len -> do
+        then
+          let
+            -- the next position and the field we parse here
+            field :: Either Text (Int, Composite.Field)
+            field = do
+              oid <- int32At pos
+              len <- int32At (pos+4)
               let leni = fromIntegral len
-              VM.write vector fi $!
+              (,) (pos+8+max 0 leni) <$>
                 if len /= -1
-                then Field oid len (area (pos+8) leni)
-                else NULL
-              parse (fi+1) (pos+8+max 0 leni)
+                then Composite.Field oid len <$> slice fields (pos+8) leni
+                else Right Composite.NULL
+          in case field of
+            Left err        -> return (Just err)
+            Right (pos', f) -> do
+              VM.write vector fi f
+              parse (fi+1) pos'
+
         else return Nothing
+
     merr <- parse 0 0
     case merr of
       Just err -> return (Left err)
