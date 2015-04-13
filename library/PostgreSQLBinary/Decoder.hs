@@ -206,8 +206,8 @@ slice bs n len =
   else Left "slice: string too short"
 
 -- | Parse the fields of a composite type
-compositeFields :: D (V.Vector Composite.Field)
-compositeFields row = do
+composite :: D (V.Vector Composite.Field)
+composite row = do
   (size, fields) <- takeInt32 row
   let
     int32At :: Int -> Either Text Int32
@@ -234,7 +234,8 @@ compositeFields row = do
               (,) (pos+8+max 0 leni) <$>
                 if len /= -1
                 then Composite.Field oid len <$> slice fields (pos+8) leni
-                else Right Composite.NULL
+                else Right (Composite.NULL oid)
+
           in case field of
             Left err        -> return (Just err)
             Right (pos', f) -> do
