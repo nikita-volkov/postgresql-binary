@@ -5,6 +5,7 @@ import BasePrelude hiding (assert)
 import Test.Framework
 import Test.QuickCheck.Instances
 import Data.Time
+import qualified Data.Vector as V
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
@@ -19,6 +20,7 @@ import qualified PostgreSQLBinary.PTI as PTI
 import qualified PostgreSQLBinary.Encoder as Encoder
 import qualified PostgreSQLBinary.Decoder as Decoder
 import qualified PostgreSQLBinary.Array as Array
+import qualified PostgreSQLBinary.Composite as Composite
 
 
 type Text = T.Text
@@ -178,21 +180,34 @@ arrayGen =
   where
     dimGen =
       (,) <$> choose (1, 7) <*> pure 1
-    valueGen =
-      do
-        (pti, gen) <- elements [(PTI.int8, mkGen (Encoder.int8 . Left)),
-                                (PTI.bool, mkGen Encoder.bool),
-                                (PTI.date, mkGen Encoder.date),
-                                (PTI.text, mkGen Encoder.text),
-                                (PTI.bytea, mkGen Encoder.bytea)]
-        return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
-      where
-        mkGen renderer =
-          fmap (fmap renderer) arbitrary
+
+
     dimsToNValues =
       product . map dimensionWidth
       where
         dimensionWidth (x, _) = fromIntegral x
+
+valueGen :: Gen (Gen (Maybe BC.ByteString), Word32, Word32)
+valueGen =
+  do
+    (pti, gen) <- elements [(PTI.int8, mkGen (Encoder.int8 . Left)),
+                            (PTI.bool, mkGen Encoder.bool),
+                            (PTI.date, mkGen Encoder.date),
+                            (PTI.text, mkGen Encoder.text),
+                            (PTI.bytea, mkGen Encoder.bytea)]
+    return (gen, PTI.oidOf pti, fromJust $ PTI.arrayOIDOf pti)
+  where
+    mkGen renderer =
+      fmap (fmap renderer) arbitrary
+
+compositesGen :: Gen (V.Vector Composite.Field)
+compositesGen = do
+  -- hacky way of reducing the size of these vectors :)
+  Positive lenW <- arbitrary :: Gen (Positive Word16)
+  V.replicateM (fromIntegral lenW) $ do
+    (getVal, oid, _) <- valueGen
+    val              <- getVal
+    return (Composite.createField oid val)
 
 -- * Constants
 -------------------------
@@ -601,3 +616,6 @@ prop_arrayData =
              (nonNullRenderer Encoder.array)
              (nonNullParser Decoder.array)
 
+prop_compositeId =
+  forAll compositesGen $ \fields ->
+    Right fields === Decoder.composite (Encoder.composite fields)
