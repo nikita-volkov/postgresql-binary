@@ -190,16 +190,6 @@ array =
 --   2. size or NULL (\255\255\255\255 ie -1);
 --   3. payload if it wasn't NULL
 
-{-# INLINE takeNum32 #-} -- prevent Bits/Integral dictionary passing around 
--- | Take a leading Word32, return the rest of the string
-takeNum32 :: (Bits a, Integral a) => D (a, B.ByteString)
-takeNum32 s = case B.splitAt 4 s of
-  (i', s')
-     | B.length i' == 4 -> do
-         i <- int i'
-         Right (i, s')
-     | otherwise -> Left "takeNum32: needs at least 4 bytes"
-
 {-# INLINE slice #-}
 slice :: B.ByteString -> Int -> Int -> Either Text B.ByteString
 slice bs n len = 
@@ -210,14 +200,13 @@ slice bs n len =
 -- | Parse the fields of a composite type
 composite :: D (V.Vector Composite.Field)
 composite row = do
-  (size, fields) <- takeNum32 row
   let
     {-# INLINE num32At #-}
     num32At :: (Integral a, Bits a) => Int -> Either Text a
-    num32At n = int =<< slice fields n 4
+    num32At n = int =<< slice row n 4
 
-    sizei :: Int
-    sizei = fromIntegral (size :: Word32)
+  size <- num32At 0
+  let sizei = fromIntegral (size :: Word32) :: Int
   
   runST (do
     vector <- VM.new sizei
@@ -236,8 +225,7 @@ composite row = do
               let leni = fromIntegral len
               (,) (pos+8+max 0 leni) <$>
                 if leni /= -1
-                then Composite.Field oid len <$>
-                     slice fields (pos+8) leni
+                then Composite.Field oid len <$> slice row (pos+8) leni
                 else Right (Composite.NULL oid)
 
           in case field of
@@ -245,10 +233,9 @@ composite row = do
             Right (pos', f) -> do
               VM.write vector fi f
               parse (fi+1) pos'
-
         else return Nothing
 
-    merr <- parse 0 0
+    merr <- parse 0 4 -- start immediately following the size
     case merr of
       Just err -> return (Left err)
       Nothing  -> Right <$> V.unsafeFreeze vector)
