@@ -182,9 +182,9 @@ composite vect = Builder.run (sizeTag <> foldMap field vect)
  where
   field :: Composite.Field -> BB.Builder
   field f = case f of
-    Composite.NULL  oid         -> BB.int32BE oid <> BB.int32BE (-1)
-    Composite.Field oid size bs -> BB.int32BE oid <> BB.int32BE size <>
+    Composite.NULL  oid         -> BB.word32BE oid <> BB.int32BE (-1)
+    Composite.Field oid size bs -> BB.word32BE oid <> BB.int32BE size <>
                                    BB.byteString bs
   sizeTag :: BB.Builder
-  sizeTag = BB.int32BE (fromIntegral (V.length vect) :: Int32)
+  sizeTag = BB.word32BE (fromIntegral (V.length vect) :: Word32)
     

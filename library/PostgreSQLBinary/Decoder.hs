@@ -21,6 +21,7 @@ import qualified PostgreSQLBinary.Numeric as Numeric
 import qualified PostgreSQLBinary.Interval as Interval
 import qualified PostgreSQLBinary.Composite as Composite
 
+
 -- |
 -- A function for decoding a byte string into a value.
 type D a = ByteString -> Either Text a
@@ -181,7 +182,7 @@ array =
 -------------------------
 
 -- a composite type looks like:-
---   1. int32 number of fields;
+--   1. word32 number of fields;
 --   2. fields
 --
 -- fields look like:-
@@ -189,32 +190,34 @@ array =
 --   2. size or NULL (\255\255\255\255 ie -1);
 --   3. payload if it wasn't NULL
 
--- | Take a leading Int32, return the rest of the string
-takeInt32 :: D (Int32, B.ByteString)
-takeInt32 s = case B.splitAt 4 s of
+{-# INLINE takeNum32 #-} -- prevent Bits/Integral dictionary passing around 
+-- | Take a leading Word32, return the rest of the string
+takeNum32 :: (Bits a, Integral a) => D (a, B.ByteString)
+takeNum32 s = case B.splitAt 4 s of
   (i', s')
      | B.length i' == 4 -> do
          i <- int i'
          Right (i, s')
-     | otherwise -> Left "takeInt32: needs at least 4 bytes"
+     | otherwise -> Left "takeNum32: needs at least 4 bytes"
 
 {-# INLINE slice #-}
 slice :: B.ByteString -> Int -> Int -> Either Text B.ByteString
-slice bs n len =
-  if B.length bs >= len+n
+slice bs n len = 
+  if len+n <= B.length bs
   then Right $! BU.unsafeTake len $! BU.unsafeDrop n bs
   else Left "slice: string too short"
 
 -- | Parse the fields of a composite type
 composite :: D (V.Vector Composite.Field)
 composite row = do
-  (size, fields) <- takeInt32 row
+  (size, fields) <- takeNum32 row
   let
-    int32At :: Int -> Either Text Int32
-    int32At n = int =<< slice fields n 4
+    {-# INLINE num32At #-}
+    num32At :: (Integral a, Bits a) => Int -> Either Text a
+    num32At n = int =<< slice fields n 4
 
     sizei :: Int
-    sizei = fromIntegral size
+    sizei = fromIntegral (size :: Word32)
   
   runST (do
     vector <- VM.new sizei
@@ -228,12 +231,13 @@ composite row = do
             -- the next position and the field we parse here
             field :: Either Text (Int, Composite.Field)
             field = do
-              oid <- int32At pos
-              len <- int32At (pos+4)
+              oid <- num32At pos
+              len <- num32At (pos+4)
               let leni = fromIntegral len
               (,) (pos+8+max 0 leni) <$>
-                if len /= -1
-                then Composite.Field oid len <$> slice fields (pos+8) leni
+                if leni /= -1
+                then Composite.Field oid len <$>
+                     slice fields (pos+8) leni
                 else Right (Composite.NULL oid)
 
           in case field of
