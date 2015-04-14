@@ -203,7 +203,7 @@ valueGen =
 compositesGen :: Gen (V.Vector Composite.Field)
 compositesGen = do
   -- hacky way of reducing the size of these vectors :)
-  Positive lenW <- arbitrary :: Gen (Positive Word16)
+  Positive lenW <- arbitrary :: Gen (Positive Word8)
   V.replicateM (fromIntegral lenW) $ do
     (getVal, oid, _) <- valueGen
     val              <- getVal
