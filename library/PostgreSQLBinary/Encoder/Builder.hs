@@ -60,7 +60,7 @@ numeric :: Scientific -> Builder
 numeric x =
   int16BE (fromIntegral componentsAmount) <>
   int16BE (fromIntegral pointIndex) <>
-  int16BE signCode <>
+  word16BE signCode <>
   int16BE (fromIntegral trimmedExponent) <>
   foldMap int16BE components
   where

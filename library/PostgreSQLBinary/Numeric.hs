@@ -3,9 +3,9 @@ module PostgreSQLBinary.Numeric where
 import PostgreSQLBinary.Prelude
 
 
-posSignCode = 0x0000 :: Int16
-negSignCode = 0x4000 :: Int16
-nanSignCode = 0xC000 :: Int16
+posSignCode :: Word16 = 0x0000
+negSignCode :: Word16 = 0x4000
+nanSignCode :: Word16 = 0xC000
 
 {-# INLINE extractComponents #-}
 extractComponents :: Integral a => a -> [Int16]
