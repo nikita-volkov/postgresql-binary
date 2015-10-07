@@ -1,7 +1,7 @@
 name:
   postgresql-binary
 version:
-  0.6.0
+  0.5.2.1
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
@@ -67,20 +67,20 @@ library
     PostgreSQLBinary.Decoder
   build-depends:
     -- parsers:
-    attoparsec >= 0.10 && < 0.13,
+    attoparsec >= 0.10 && < 0.14,
     -- data:
     uuid == 1.3.*,
     time >= 1.4 && < 1.6,
     scientific >= 0.2 && < 0.4,
-    text >= 1 && < 1.3,
+    text >= 1 && < 2,
     bytestring >= 0.10 && < 0.11,
-    vector == 0.10.*,
+    vector >= 0.10 && < 0.12,
     -- errors:
     loch-th == 0.2.*,
     placeholders == 0.1.*,
     -- general:
     transformers >= 0.3 && < 0.5,
-    base-prelude >= 0.1.3 && < 0.2
+    base-prelude >= 0.1.19 && < 0.2
 
 
 test-suite tests
@@ -103,20 +103,20 @@ test-suite tests
   build-depends:
     -- testing:
     postgresql-binary,
-    HTF == 0.12.*,
+    HTF == 0.13.*,
     quickcheck-instances == 0.3.*,
-    QuickCheck >= 2.7 && < 2.8,
+    QuickCheck >= 2.7 && < 2.9,
     -- database:
     postgresql-libpq == 0.9.*,
     -- data:
-    uuid == 1.3.*,
-    time >= 1.4 && < 1.6,
-    scientific >= 0.2 && < 0.4,
-    text >= 1 && < 1.3,
-    bytestring >= 0.10 && < 0.11,
-    vector == 0.10.*,
+    uuid,
+    time,
+    scientific,
+    text,
+    bytestring,
+    vector,
     -- general:
-    base-prelude >= 0.1.3 && < 0.2
+    base-prelude
 
 
 benchmark decoding
@@ -138,16 +138,16 @@ benchmark decoding
   build-depends:
     postgresql-binary,
     -- benchmarking:
-    criterion == 1.0.*,
+    criterion >= 1.0 && < 1.2,
     -- data:
-    time >= 1.4 && < 1.6,
-    scientific >= 0.2 && < 0.4,
-    text >= 1 && < 1.3,
-    bytestring >= 0.10 && < 0.11,
+    time,
+    scientific,
+    text,
+    bytestring,
     -- general:
     deepseq >= 1.3 && < 1.5,
     mtl-prelude < 3,
-    base-prelude >= 0.1.3 && < 0.2
+    base-prelude
 
 
 benchmark encoding
@@ -169,13 +169,13 @@ benchmark encoding
   build-depends:
     postgresql-binary,
     -- benchmarking:
-    criterion == 1.0.*,
+    criterion >= 1.0 && < 1.2,
     -- data:
-    time >= 1.4 && < 1.6,
-    scientific >= 0.2 && < 0.4,
-    text >= 1 && < 1.3,
-    bytestring >= 0.10 && < 0.11,
+    time,
+    scientific,
+    text,
+    bytestring,
     -- general:
     deepseq >= 1.3 && < 1.5,
     mtl-prelude < 3,
-    base-prelude >= 0.1.3 && < 0.2
+    base-prelude
