@@ -1,4 +1,10 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+-- |
+-- This is an old and messy test suite,
+-- which we haven't gotten to refactor yet and possibly never will.
+-- 
+-- If you're thinking about writing new tests,
+-- it is recommended to consider doing it in another suite.
 module Main where
 
 import BasePrelude hiding (assert)
