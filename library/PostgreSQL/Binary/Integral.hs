@@ -6,20 +6,10 @@ import PostgreSQL.Binary.Prelude
 import qualified Data.ByteString as B
 
 
-{-# INLINE byteSize #-}
-byteSize :: (Bits a) => a -> Int
-byteSize =
-  flip div 8 . bitSize
-
 {-# INLINE pack #-}
 pack :: (Bits a, Num a) => B.ByteString -> a
 pack =
   B.foldl' (\n h -> shiftL n 8 .|. fromIntegral h) 0
-
-{-# INLINE unpack #-}
-unpack :: (Bits a, Integral a) => a -> B.ByteString
-unpack x =
-  unpackBySize (byteSize x) x
 
 {-# INLINE unpackBySize #-}
 unpackBySize :: (Bits a, Integral a) => Int -> a -> B.ByteString
