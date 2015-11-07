@@ -1,14 +1,14 @@
 name:
   postgresql-binary
 version:
-  0.5.2.1
+  0.6
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
-  An API for dealing with PostgreSQL's binary data format.
+  An unopinionated API for dealing with PostgreSQL's binary data format.
   .
-  It can be used to implement high level APIs for Postgres.
-  E.g., <http://hackage.haskell.org/package/hasql-postgres "hasql-postgres">
+  It can be used to implement performant bindings to Postgres.
+  E.g., <http://hackage.haskell.org/package/hasql-postgres "hasql">
   is based on this library.
   .
   It supports all Postgres versions starting from 8.3 
@@ -53,45 +53,51 @@ library
   default-language:
     Haskell2010
   other-modules:
-    PostgreSQLBinary.Prelude
-    PostgreSQLBinary.Encoder.Builder
-    PostgreSQLBinary.Decoder.Zepto
-    PostgreSQLBinary.Integral
-    PostgreSQLBinary.Numeric
-    PostgreSQLBinary.Time
-    PostgreSQLBinary.Interval
+    PostgreSQL.Binary.Prelude
+    PostgreSQL.Binary.Integral
+    PostgreSQL.Binary.Interval
+    PostgreSQL.Binary.Numeric
+    PostgreSQL.Binary.Time
+    PostgreSQL.Binary.BuilderPrim
   exposed-modules:
-    PostgreSQLBinary.Array
-    PostgreSQLBinary.Composite
-    PostgreSQLBinary.Encoder
-    PostgreSQLBinary.Decoder
+    PostgreSQL.Binary.Data
+    PostgreSQL.Binary.Decoder
+    PostgreSQL.Binary.Encoder
   build-depends:
-    -- parsers:
-    attoparsec >= 0.10 && < 0.14,
+    -- parsing:
+    binary-parser >= 0.4.1 && < 0.5,
     -- data:
     uuid == 1.3.*,
     time >= 1.4 && < 1.6,
     scientific >= 0.2 && < 0.4,
+    bytestring >= 0.10.4 && < 0.11,
     text >= 1 && < 2,
-    bytestring >= 0.10 && < 0.11,
     vector >= 0.10 && < 0.12,
     -- errors:
     loch-th == 0.2.*,
     placeholders == 0.1.*,
     -- general:
+    foldl >= 1.1.1 && < 2,
     transformers >= 0.3 && < 0.5,
-    base-prelude >= 0.1.19 && < 0.2
+    base-prelude >= 0.1.19 && < 0.2,
+    base >= 4.6 && < 5
 
 
-test-suite tests
-  type:             
+test-suite tasty
+  type:
     exitcode-stdio-1.0
-  hs-source-dirs:   
-    executables
-  main-is:          
-    Tests.hs
+  hs-source-dirs:
+    tasty
+  main-is:
+    Main.hs
   other-modules:
-    PostgreSQLBinary.PTI
+    Main.DB
+    Main.Apx
+    Main.IO
+    Main.Gens
+    Main.PTI
+    Main.Properties
+    Main.Prelude
   ghc-options:
     -threaded
     "-with-rtsopts=-N"
@@ -103,29 +109,40 @@ test-suite tests
   build-depends:
     -- testing:
     postgresql-binary,
-    HTF == 0.13.*,
-    quickcheck-instances == 0.3.*,
-    QuickCheck >= 2.7 && < 2.9,
-    -- database:
     postgresql-libpq == 0.9.*,
+    tasty == 0.11.*,
+    tasty-quickcheck == 0.8.*,
+    tasty-smallcheck == 0.8.*,
+    tasty-hunit == 0.9.*,
+    quickcheck-instances >= 0.3.11 && < 0.4,
+    QuickCheck >= 2.8.1 && < 2.9,
     -- data:
-    uuid,
-    time,
-    scientific,
-    text,
-    bytestring,
-    vector,
+    uuid == 1.3.*,
+    time >= 1.4 && < 1.6,
+    scientific >= 0.2 && < 0.4,
+    bytestring >= 0.10.4 && < 0.11,
+    text >= 1 && < 2,
+    vector >= 0.10 && < 0.12,
+    -- errors:
+    loch-th == 0.2.*,
+    placeholders == 0.1.*,
     -- general:
-    base-prelude
+    conversion == 1.*,
+    conversion-bytestring == 1.*,
+    conversion-text == 1.*,
+    either == 4.*,
+    transformers,
+    base-prelude,
+    base
 
 
-benchmark decoding
+benchmark encoding
   type: 
     exitcode-stdio-1.0
   hs-source-dirs:
-    executables
+    encoding
   main-is:
-    Decoding.hs
+    Main.hs
   ghc-options:
     -O2
     -threaded
@@ -150,13 +167,13 @@ benchmark decoding
     base-prelude
 
 
-benchmark encoding
+benchmark decoding
   type: 
     exitcode-stdio-1.0
   hs-source-dirs:
-    executables
+    decoding
   main-is:
-    Encoding.hs
+    Main.hs
   ghc-options:
     -O2
     -threaded

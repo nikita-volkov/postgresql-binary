@@ -1,6 +1,6 @@
-module PostgreSQLBinary.Time where
+module PostgreSQL.Binary.Time where
 
-import PostgreSQLBinary.Prelude hiding (second)
+import PostgreSQL.Binary.Prelude hiding (second)
 import Data.Time.Calendar.Julian
 
 
@@ -10,7 +10,7 @@ dayToPostgresJulian =
   (+ (2400001 - 2451545)) . toModifiedJulianDay
 
 {-# INLINABLE postgresJulianToDay #-}
-postgresJulianToDay :: Int64 -> Day
+postgresJulianToDay :: Integral a => a -> Day
 postgresJulianToDay =
   ModifiedJulianDay . fromIntegral . subtract (2400001 - 2451545)
 

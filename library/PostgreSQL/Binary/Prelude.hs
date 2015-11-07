@@ -1,32 +1,40 @@
-module PostgreSQLBinary.Prelude
+module PostgreSQL.Binary.Prelude
 ( 
   module Exports,
   LazyByteString,
+  ByteStringBuilder,
   LazyText,
+  TextBuilder,
   bug,
   bottom,
-  partial,
+  mapLeft,
+  joinMap,
 )
 where
 
 
 -- base-prelude
 -------------------------
-import BasePrelude as Exports
+import BasePrelude as Exports hiding (assert, Data, fail)
 
 -- transformers
 -------------------------
 import Control.Monad.Trans.State.Strict as Exports hiding (liftCallCC, liftCatch)
 import Control.Monad.Trans.Reader as Exports hiding (liftCallCC, liftCatch)
 import Control.Monad.Trans.Class as Exports
+import Data.Functor.Identity as Exports
+
+-- bytestring
+-------------------------
+import Data.ByteString as Exports (ByteString)
 
 -- text
 -------------------------
 import Data.Text as Exports (Text)
 
--- bytestring
+-- vector
 -------------------------
-import Data.ByteString as Exports (ByteString)
+import Data.Vector as Exports (Vector)
 
 -- scientific
 -------------------------
@@ -44,15 +52,31 @@ import Data.Time as Exports
 -------------------------
 import Development.Placeholders as Exports
 
+-- loch-th
+-------------------------
+import Debug.Trace.LocationTH as Exports
+
 -- custom
 -------------------------
-import qualified Debug.Trace.LocationTH
-import qualified Data.Text.Lazy
 import qualified Data.ByteString.Lazy
+import qualified Data.ByteString.Builder
+import qualified Data.Text.Lazy
+import qualified Data.Text.Lazy.Builder
+import qualified Debug.Trace.LocationTH
 
 
-type LazyByteString = Data.ByteString.Lazy.ByteString
-type LazyText = Data.Text.Lazy.Text
+type LazyByteString =
+  Data.ByteString.Lazy.ByteString
+
+type ByteStringBuilder =
+  Data.ByteString.Builder.Builder
+
+type LazyText =
+  Data.Text.Lazy.Text
+
+type TextBuilder =
+  Data.Text.Lazy.Builder.Builder
+
 
 bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
   where
@@ -60,6 +84,11 @@ bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
 
 bottom = [e| $bug "Bottom evaluated" |]
 
-partial :: Alternative f => (a -> Bool) -> a -> f a
-partial p x = 
-  if p x then pure x else empty
+{-# INLINE mapLeft #-}
+mapLeft :: (a -> b) -> Either a x -> Either b x
+mapLeft f =
+  either (Left . f) Right
+
+joinMap :: Monad m => (a -> m b) -> m a -> m b
+joinMap f =
+  join . fmap f

@@ -87,7 +87,9 @@ install:
       cd $project_dir;
     fi;
 
-
+before_script:
+  - psql -d postgres -c "create extension hstore"
+  
 script:
   - |
     if [ "$tests" = "1" ];
