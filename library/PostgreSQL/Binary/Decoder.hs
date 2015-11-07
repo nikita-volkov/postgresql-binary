@@ -111,13 +111,10 @@ float8 :: Decoder Double
 float8 =
   unsafeCoerce (int :: Decoder Int64)
 
-{-# INLINABLE bool #-}
+{-# INLINE bool #-}
 bool :: Decoder Bool
 bool =
-  fmap ByteString.uncons remainders >>= \case
-    Just (0, _) -> return False
-    Just (1, _) -> return True
-    b -> failure ("Invalid value: " <> (fromString . show) b)
+  fmap (== 1) byte
 
 {-# INLINABLE numeric #-}
 numeric :: Decoder Scientific
@@ -195,35 +192,30 @@ bytea_lazy =
 
 -- |
 -- @DATE@ values decoding.
-{-# INLINE date #-}
 date :: Decoder Day
 date =
   fmap (Time.postgresJulianToDay . fromIntegral) (int :: Decoder Int32)
 
 -- |
 -- @TIME@ values decoding for servers, which have @integer_datetimes@ enabled.
-{-# INLINE time_int #-}
 time_int :: Decoder TimeOfDay
 time_int =
   fmap Time.microsToTimeOfDay int
 
 -- |
 -- @TIME@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-{-# INLINE time_float #-}
 time_float :: Decoder TimeOfDay
 time_float =
   fmap Time.secsToTimeOfDay float8
 
 -- |
 -- @TIMETZ@ values decoding for servers, which have @integer_datetimes@ enabled.
-{-# INLINABLE timetz_int #-}
 timetz_int :: Decoder (TimeOfDay, TimeZone)
 timetz_int =
   (,) <$> limited 8 time_int <*> tz
 
 -- |
 -- @TIMETZ@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-{-# INLINABLE timetz_float #-}
 timetz_float :: Decoder (TimeOfDay, TimeZone)
 timetz_float =
   (,) <$> limited 8 time_float <*> tz
@@ -235,35 +227,30 @@ tz =
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which have @integer_datetimes@ enabled.
-{-# INLINABLE timestamp_int #-}
 timestamp_int :: Decoder LocalTime
 timestamp_int =
   fmap Time.microsToLocalTime int
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-{-# INLINABLE timestamp_float #-}
 timestamp_float :: Decoder LocalTime
 timestamp_float =
   fmap Time.secsToLocalTime float8
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which have @integer_datetimes@ enabled.
-{-# INLINABLE timestamptz_int #-}
 timestamptz_int :: Decoder UTCTime
 timestamptz_int =
   fmap Time.microsToUTC int
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-{-# INLINABLE timestamptz_float #-}
 timestamptz_float :: Decoder UTCTime
 timestamptz_float =
   fmap Time.secsToUTC float8
 
 -- |
 -- @INTERVAL@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-{-# INLINABLE interval_int #-}
 interval_int :: Decoder DiffTime
 interval_int =
   do
@@ -274,7 +261,6 @@ interval_int =
 
 -- |
 -- @INTERVAL@ values decoding for servers, which have @integer_datetimes@ enabled.
-{-# INLINABLE interval_float #-}
 interval_float :: Decoder DiffTime
 interval_float =
   do
