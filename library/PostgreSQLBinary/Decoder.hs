@@ -1,13 +1,16 @@
 module PostgreSQLBinary.Decoder where
-
 import PostgreSQLBinary.Prelude hiding (bool)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Unsafe as BU
 import qualified Data.ByteString.Lazy.Builder as BB
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Vector as V
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as VM
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified PostgreSQLBinary.Decoder.Zepto as Zepto
@@ -16,6 +19,7 @@ import qualified PostgreSQLBinary.Time as Time
 import qualified PostgreSQLBinary.Integral as Integral
 import qualified PostgreSQLBinary.Numeric as Numeric
 import qualified PostgreSQLBinary.Interval as Interval
+import qualified PostgreSQLBinary.Composite as Composite
 
 
 -- |
@@ -173,3 +177,65 @@ uuid =
 array :: D Array.Data
 array =
   flip Zepto.run Zepto.array
+
+-- * Composite types
+-------------------------
+
+-- a composite type looks like:-
+--   1. word32 number of fields;
+--   2. fields
+--
+-- fields look like:-
+--   1. OID;
+--   2. size or NULL (\255\255\255\255 ie -1);
+--   3. payload if it wasn't NULL
+
+{-# INLINE slice #-}
+slice :: B.ByteString -> Int -> Int -> Either Text B.ByteString
+slice bs n len = 
+  if len+n <= B.length bs
+  then Right $! BU.unsafeTake len $! BU.unsafeDrop n bs
+  else Left "slice: string too short"
+
+-- | Parse the fields of a composite type
+composite :: D (V.Vector Composite.Field)
+composite row = do
+  let
+    {-# INLINE num32At #-}
+    num32At :: (Integral a, Bits a) => Int -> Either Text a
+    num32At n = int =<< slice row n 4
+
+  size <- num32At 0
+  let sizei = fromIntegral (size :: Word32) :: Int
+  
+  runST (do
+    vector <- VM.new sizei
+    let
+      -- fi : current field
+      -- pos : position in the bytestring
+      parse fi pos =
+        if fi < sizei
+        then
+          let
+            -- the next position and the field we parse here
+            field :: Either Text (Int, Composite.Field)
+            field = do
+              oid <- num32At pos
+              len <- num32At (pos+4)
+              let leni = fromIntegral len
+              (,) (pos+8+max 0 leni) <$>
+                if leni /= -1
+                then Composite.Field oid len <$> slice row (pos+8) leni
+                else Right (Composite.NULL oid)
+
+          in case field of
+            Left err        -> return (Just err)
+            Right (pos', f) -> do
+              VM.write vector fi f
+              parse (fi+1) pos'
+        else return Nothing
+
+    merr <- parse 0 4 -- start immediately following the size
+    case merr of
+      Just err -> return (Left err)
+      Nothing  -> Right <$> V.unsafeFreeze vector)
