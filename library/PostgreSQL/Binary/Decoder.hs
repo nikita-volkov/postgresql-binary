@@ -103,15 +103,13 @@ int :: (Integral a, Bits a) => Decoder a
 int =
   fmap Integral.pack remainders
 
-{-# INLINE float4 #-}
 float4 :: Decoder Float
 float4 =
-  unsafeCoerce (int :: Decoder Word32)
+  unsafeCoerce (int :: Decoder Int32)
 
-{-# INLINE float8 #-}
 float8 :: Decoder Double
 float8 =
-  unsafeCoerce (int :: Decoder Word64)
+  unsafeCoerce (int :: Decoder Int64)
 
 {-# INLINABLE bool #-}
 bool :: Decoder Bool
