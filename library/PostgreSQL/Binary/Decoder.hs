@@ -371,7 +371,7 @@ hstoreRep =
 
 newtype CompositeDecoder a =
   CompositeDecoder ( Decoder a )
-  deriving ( Functor , Applicative , Alternative )
+  deriving ( Functor , Applicative , Monad )
 
 -- |
 -- Unlift a 'CompositeDecoder' to a value 'Decoder'.
