@@ -446,13 +446,13 @@ arrayRep (dimensionsV, valuesV, nullsV, oidV) =
 -- Accepts:
 -- 
 -- * An implementation of the @foldl@ function
--- (e.g., @Data.Foldable.'foldl\''@),
+-- (e.g., @Data.Foldable."foldl'"@),
 -- which determines the output value.
 -- 
 -- Here's how you can use it to produce a specific encoder:
 -- 
 -- @
--- hashMapHStore :: Encoder ( Data.HashMap.Strict.HashMap Text ( Maybe Text ) )
+-- hashMapHStore :: Encoder (Data.HashMap.Strict.HashMap Text (Maybe Text))
 -- hashMapHStore =
 --   hstore foldl'
 -- @
