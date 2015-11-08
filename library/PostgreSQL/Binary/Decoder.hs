@@ -80,7 +80,7 @@ onContent :: Decoder a -> Decoder ( Maybe a )
 onContent decoder =
   intOfSize 4 >>= \case
     (-1) -> pure Nothing
-    n -> fmap Just (limited n decoder)
+    n -> fmap Just (sized n decoder)
 
 {-# INLINABLE content #-}
 content :: Decoder (Maybe ByteString)
@@ -212,13 +212,13 @@ time_float =
 -- @TIMETZ@ values decoding for servers, which have @integer_datetimes@ enabled.
 timetz_int :: Decoder (TimeOfDay, TimeZone)
 timetz_int =
-  (,) <$> limited 8 time_int <*> tz
+  (,) <$> sized 8 time_int <*> tz
 
 -- |
 -- @TIMETZ@ values decoding for servers, which don't have @integer_datetimes@ enabled.
 timetz_float :: Decoder (TimeOfDay, TimeZone)
 timetz_float =
-  (,) <$> limited 8 time_float <*> tz
+  (,) <$> sized 8 time_float <*> tz
 
 {-# INLINE tz #-}
 tz :: Decoder TimeZone
@@ -254,8 +254,8 @@ timestamptz_float =
 interval_int :: Decoder DiffTime
 interval_int =
   do
-    u <- limited 8 int
-    d <- limited 4 int
+    u <- sized 8 int
+    d <- sized 4 int
     m <- int
     return $ Interval.toDiffTime $ Interval.Interval u d m
 
@@ -264,8 +264,8 @@ interval_int =
 interval_float :: Decoder DiffTime
 interval_float =
   do
-    u <- limited 8 (fmap (round . (*(10^6)) . toRational) float8)
-    d <- limited 4 int
+    u <- sized 8 (fmap (round . (*(10^6)) . toRational) float8)
+    d <- sized 4 int
     m <- int
     return $ Interval.toDiffTime $ Interval.Interval u d m
 
