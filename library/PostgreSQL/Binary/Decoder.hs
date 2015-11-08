@@ -39,6 +39,7 @@ module PostgreSQL.Binary.Decoder
   CompositeDecoder,
   composite,
   compositeValue,
+  compositeNonNullValue,
   -- ** HStore
   hstore,
 )
@@ -378,6 +379,13 @@ composite (CompositeDecoder decoder) =
 compositeValue :: Decoder a -> CompositeDecoder ( Maybe a )
 compositeValue =
   CompositeDecoder . onContent
+
+-- |
+-- Lift a non-nullable value 'Decoder' into 'CompositeDecoder'.
+{-# INLINE compositeNonNullValue #-}
+compositeNonNullValue :: Decoder a -> CompositeDecoder a
+compositeNonNullValue =
+  CompositeDecoder . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
 
 
 -- * Array
