@@ -14,6 +14,7 @@ module PostgreSQL.Binary.Encoder
   bool,
   numeric,
   uuid,
+  json,
   char,
   text_strict,
   text_lazy,
@@ -51,6 +52,7 @@ import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.Vector as Vector
 import qualified Data.Scientific as Scientific
+import qualified Data.Aeson as Aeson
 import qualified Data.UUID as UUID
 import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Integral as Integral
@@ -210,6 +212,12 @@ numeric x =
 uuid :: Encoder UUID
 uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
+
+{-# INLINABLE json #-}
+json :: Encoder Aeson.Value
+json =
+  Aeson.fromEncoding . Aeson.toEncoding
+
 
 -- * Text
 -------------------------
