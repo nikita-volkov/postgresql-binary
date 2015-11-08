@@ -31,6 +31,7 @@ module PostgreSQL.Binary.Encoder
   timestamptz_float,
   interval_int,
   interval_float,
+  ArrayEncoder,
   array,
   arrayValue,
   arrayNullableValue,
