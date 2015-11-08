@@ -1,7 +1,8 @@
 module PostgreSQL.Binary.Encoder
 (
-  Encoder,
   run,
+  -- * Value encoder
+  Encoder,
   int2_int16,
   int2_word16,
   int4_int32,
@@ -31,14 +32,15 @@ module PostgreSQL.Binary.Encoder
   timestamptz_float,
   interval_int,
   interval_float,
-  ArrayEncoder,
+  hstore,
+  hstoreRep,
   array,
+  -- * Array encoder
+  ArrayEncoder,
   arrayValue,
   arrayNullableValue,
   arrayDimension,
   arrayRep,
-  hstore,
-  hstoreRep,
 )
 where
 
@@ -447,7 +449,7 @@ arrayRep (dimensionsV, valuesV, nullsV, oidV) =
 -- Accepts:
 -- 
 -- * An implementation of the @foldl@ function
--- (e.g., @Data.Foldable."foldl'"@),
+-- (e.g., @Data.Foldable.'foldl''@),
 -- which determines the output value.
 -- 
 -- Here's how you can use it to produce a specific encoder:
