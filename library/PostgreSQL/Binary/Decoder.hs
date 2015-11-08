@@ -16,6 +16,7 @@ module PostgreSQL.Binary.Decoder
   -- * Misc
   numeric,
   uuid,
+  json,
   -- * Time
   date,
   time_int,
@@ -60,6 +61,7 @@ import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.UUID as UUID
+import qualified Data.Aeson as Aeson
 
 
 type Decoder =
@@ -132,6 +134,11 @@ numeric =
 uuid :: Decoder UUID
 uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
+
+{-# INLINABLE json #-}
+json :: Decoder Aeson.Value
+json =
+  bytea_strict >>= either (BinaryParser.failure . fromString) pure . Aeson.eitherDecodeStrict'
 
 
 -- ** Textual
