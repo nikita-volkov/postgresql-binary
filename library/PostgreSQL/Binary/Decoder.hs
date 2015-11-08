@@ -433,16 +433,14 @@ arrayDimension replicateM (ArrayDecoder component) =
     _ -> failure "A missing dimension length"
 
 -- |
--- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of leaf values,
--- which are always nullable, hence the 'Maybe'.
+-- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of nullable leaf values.
 {-# INLINE arrayValue #-}
 arrayValue :: Decoder a -> ArrayDecoder ( Maybe a )
 arrayValue =
   ArrayDecoder . const . onContent
 
 -- |
--- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of leaf values,
--- which are always nullable, hence the 'Maybe'.
+-- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of non-nullable leaf values.
 {-# INLINE arrayNonNullValue #-}
 arrayNonNullValue :: Decoder a -> ArrayDecoder a
 arrayNonNullValue =
