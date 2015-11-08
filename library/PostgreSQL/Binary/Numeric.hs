@@ -26,9 +26,9 @@ extractComponents =
       (d, m) -> Just (fromIntegral m, d)
 
 {-# INLINE mergeComponents #-}
-mergeComponents :: Integral a => Vector a -> a
+mergeComponents :: Integral a => Vector a -> Integer
 mergeComponents = 
-  Vector.foldl' (\l r -> l * 10000 + r) 0
+  Vector.foldl' (\l r -> l * 10000 + fromIntegral r) 0
 
 {-# INLINE mergeDigits #-}
 mergeDigits :: Integral a => Vector a -> a
@@ -55,7 +55,7 @@ componentsReplicateM amount component =
     folder acc component =
       liftA2 (+) (fmap (*10000) acc) component
 
-{-# INLINABLE signer #-}
+{-# INLINE signer #-}
 signer :: Integral a => Word16 -> Either Text (a -> a)
 signer =
   \case
@@ -64,8 +64,8 @@ signer =
     0xC000 -> Left "NAN sign"
     signCode -> Left ("Unexpected sign code: " <> (fromString . show) signCode)
 
-{-# INLINABLE scientific #-}
-scientific :: Int16 -> Word16 -> Vector Integer -> Either Text Scientific
+{-# INLINE scientific #-}
+scientific :: Int16 -> Word16 -> Vector Word16 -> Either Text Scientific
 scientific pointIndex signCode components =
   do
     theSigner <- signer signCode

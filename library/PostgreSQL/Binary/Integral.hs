@@ -6,7 +6,7 @@ import PostgreSQL.Binary.Prelude
 import qualified Data.ByteString as B
 
 
-{-# INLINE pack #-}
+{-# INLINABLE pack #-}
 pack :: (Bits a, Num a) => B.ByteString -> a
 pack =
   B.foldl' (\n h -> shiftL n 8 .|. fromIntegral h) 0

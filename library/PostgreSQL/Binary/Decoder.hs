@@ -119,7 +119,7 @@ bool :: Decoder Bool
 bool =
   fmap (== 1) byte
 
-{-# INLINABLE numeric #-}
+{-# NOINLINE numeric #-}
 numeric :: Decoder Scientific
 numeric =
   do
