@@ -1,4 +1,44 @@
-module PostgreSQL.Binary.Encoder where
+module PostgreSQL.Binary.Encoder
+(
+  Encoder,
+  run,
+  int2_int16,
+  int2_word16,
+  int4_int32,
+  int4_word32,
+  int8_int64,
+  int8_word64,
+  float4,
+  float8,
+  composite,
+  bool,
+  numeric,
+  uuid,
+  char,
+  text_strict,
+  text_lazy,
+  bytea_strict,
+  bytea_lazy,
+  date,
+  time_int,
+  time_float,
+  timetz_int,
+  timetz_float,
+  timestamp_int,
+  timestamp_float,
+  timestamptz_int,
+  timestamptz_float,
+  interval_int,
+  interval_float,
+  array,
+  arrayValue,
+  arrayNullableValue,
+  arrayDimension,
+  arrayRep,
+  hstore,
+  hstoreRep,
+)
+where
 
 import PostgreSQL.Binary.Prelude hiding (take, bool, maybe)
 import Data.ByteString.Builder (Builder)
