@@ -450,7 +450,7 @@ arrayRep (dimensionsV, valuesV, nullsV, oidV) =
 -- 
 -- * An implementation of the @foldl@ function
 -- (e.g., @Data.Foldable.'foldl''@),
--- which determines the output value.
+-- which determines the input value.
 -- 
 -- Here's how you can use it to produce a specific encoder:
 -- 
