@@ -493,8 +493,8 @@ hstoreRep vector =
 
 -- |
 -- Given a function,
--- which maps the value into the textual enum label on DB side,
--- produces the enocder of that value
+-- which maps the value into the textual enum label from the DB side,
+-- produces an encoder of that value
 -- 
 {-# INLINE enum #-}
 enum :: (a -> Text) -> Encoder a
