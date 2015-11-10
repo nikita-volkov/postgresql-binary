@@ -43,6 +43,8 @@ module PostgreSQL.Binary.Decoder
   compositeNonNullValue,
   -- ** HStore
   hstore,
+  -- **
+  enum,
 )
 where
 
@@ -462,3 +464,21 @@ arrayNonNullValue =
   ArrayDecoder . const . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
 
 
+-- * Enum
+-------------------------
+
+-- |
+-- Given a partial mapping from text to value,
+-- produces a decoder of that value.
+{-# INLINE enum #-}
+enum :: (Text -> Maybe a) -> Decoder a
+enum mapping =
+  text_strict >>= onText
+  where
+    onText text =
+      maybe onNothing onJust (mapping text)
+      where
+        onNothing =
+          failure ("No mapping for text \"" <> text <> "\"")
+        onJust =
+          pure
