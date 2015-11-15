@@ -19,6 +19,13 @@ auto :: Arbitrary a => Gen a
 auto =
   arbitrary
 
+postgresInt :: (Bounded a, Ord a, Integral a, Arbitrary a) => Gen a
+postgresInt =
+  arbitrary >>= \x -> if x > halfMaxBound then postgresInt else pure x
+  where
+    halfMaxBound =
+      div maxBound 2
+
 text :: Gen Text
 text =
   arbitrary >>= \x -> if Text.find (== '\NUL') x == Nothing then return x else text

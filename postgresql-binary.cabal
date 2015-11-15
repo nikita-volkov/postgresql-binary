@@ -84,6 +84,7 @@ library
     base >= 4.6 && < 5
 
 
+-- This test-suite must be executed in a single-thread.
 test-suite tasty
   type:
     exitcode-stdio-1.0
@@ -92,6 +93,7 @@ test-suite tasty
   main-is:
     Main.hs
   other-modules:
+    Main.TextEncoder 
     Main.DB
     Main.Apx
     Main.IO
@@ -99,10 +101,6 @@ test-suite tasty
     Main.PTI
     Main.Properties
     Main.Prelude
-  ghc-options:
-    -threaded
-    "-with-rtsopts=-N"
-    -funbox-strict-fields
   default-extensions:
     Arrows, BangPatterns, ConstraintKinds, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFunctor, DeriveGeneric, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, ImpredicativeTypes, LambdaCase, LiberalTypeSynonyms, MagicHash, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeFamilies, TypeOperators, UnboxedTuples
   default-language:

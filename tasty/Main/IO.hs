@@ -7,6 +7,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Instances
 import qualified Main.PTI as PTI
 import qualified Main.DB as DB
+import qualified Main.TextEncoder as TextEncoder 
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
@@ -15,6 +16,20 @@ import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoder as Encoder
 import qualified PostgreSQL.Binary.Decoder as Decoder
 
+
+textRoundtrip :: DB.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
+textRoundtrip oid encoder decoder value =
+  fmap (either (Left . Text.decodeUtf8) id) $
+  DB.session $ do
+    integerDatetimes <- DB.integerDatetimes
+    bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) DB.Binary
+    return $ Decoder.run (decoder integerDatetimes) bytes
+  where
+    params integerDatetimes =
+      [ Just ( oid , bytes , DB.Text ) ]
+      where
+        bytes =
+          (convert . encoder) value
 
 roundtrip :: DB.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
 roundtrip oid encoder decoder value =

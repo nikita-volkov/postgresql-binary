@@ -16,14 +16,15 @@ import qualified Main.Gens as Gens
 import qualified Main.Properties as Properties
 import qualified Main.IO as IO
 import qualified Main.PTI as PTI
+import qualified Main.TextEncoder as TextEncoder 
 import Main.Apx (Apx(..))
 
 
 main =
-  defaultMain tree
+  defaultMain (testGroup "" [binary, textual])
 
-tree =
-  testGroup ""
+binary =
+  testGroup "Binary format"
   [
     select "SELECT '1 year 2 months 3 days 4 hours 5 minutes 6 seconds 332211 microseconds' :: interval"
     (bool Decoder.interval_float Decoder.interval_int)
@@ -158,6 +159,36 @@ tree =
       in
         arrayRoundtrip (Gens.array3 Gens.text) pti encoder decoder
   ]
+
+textual =
+  testGroup "Textual format" $
+  [
+    test "numeric" Gens.scientific PTI.numeric TextEncoder.numeric (const Decoder.numeric)
+    ,
+    test "float4" Gens.auto PTI.float4 TextEncoder.float4 (const Decoder.float4)
+    ,
+    test "float8" Gens.auto PTI.float8 TextEncoder.float8 (const Decoder.float8)
+    ,
+    test "uuid" Gens.uuid PTI.uuid TextEncoder.uuid (const Decoder.uuid)
+    ,
+    test "int2_int16" Gens.auto PTI.int2 TextEncoder.int2_int16 (const Decoder.int)
+    ,
+    test "int2_word16" Gens.postgresInt PTI.int2 TextEncoder.int2_word16 (const Decoder.int)
+    ,
+    test "int4_int32" Gens.auto PTI.int4 TextEncoder.int4_int32 (const Decoder.int)
+    ,
+    test "int4_word32" Gens.postgresInt PTI.int4 TextEncoder.int4_word32 (const Decoder.int)
+    ,
+    test "int8_int64" Gens.auto PTI.int8 TextEncoder.int8_int64 (const Decoder.int)
+    ,
+    test "int8_word64" Gens.postgresInt PTI.int8 TextEncoder.int8_word64 (const Decoder.int)
+    ,
+    test "bool" Gens.auto PTI.bool TextEncoder.bool (const Decoder.bool)
+  ]
+  where
+    test typeName gen pti encoder decoder =
+      QuickCheck.testProperty (typeName <> " roundtrip") $
+      QuickCheck.forAll gen $ Properties.textRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
 
 arrayCodec gen encoder decoder =
   QuickCheck.testProperty ("Array codec") $
