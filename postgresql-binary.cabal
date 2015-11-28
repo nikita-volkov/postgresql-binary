@@ -15,7 +15,7 @@ description:
   and is tested against 8.3, 9.3 and 9.4
   with the @integer_datetimes@ setting off and on.
 category:
-  Database, Codecs, Parsing
+  PostgreSQL, Database, Codecs, Parsing
 homepage:
   https://github.com/nikita-volkov/postgresql-binary 
 bug-reports:
