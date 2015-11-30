@@ -17,36 +17,53 @@ instance (Eq (Apx a), Eq (Apx b)) => Eq (Apx (a, b)) where
 
 instance Eq (Apx LocalTime) where
   (==) (Apx a) (Apx b) =
-    localTimeRep a == localTimeRep b
+    Apx (localTimeToSeconds a) ==
+    Apx (localTimeToSeconds b)
 
 instance Eq (Apx UTCTime) where
   (==) (Apx a) (Apx b) =
-    utcTimeApxRep a == utcTimeApxRep b
+    Apx (utcTimeToSeconds a) ==
+    Apx (utcTimeToSeconds b)
 
 instance Eq (Apx TimeOfDay) where
   (==) (Apx a) (Apx b) =
-    timeOfDayApxRep a == timeOfDayApxRep b
+    Apx (timeOfDayToSeconds a) ==
+    Apx (timeOfDayToSeconds b)
 
 instance Eq (Apx TimeZone) where
   (==) (Apx a) (Apx b) =
     a == b
 
+instance Eq (Apx Double) where
+  (==) (Apx a) (Apx b) =
+    toRational a == toRational b
 
-utcTimeApxRep (UTCTime d d') =
-  (d, picoApxRep (unsafeCoerce d'))
+instance Eq (Apx Rational) where
+  (==) (Apx a) (Apx b) =
+    a + error >= b &&
+    a - error <= b
+    where
+      error =
+        10 ^^ negate 3
 
-localTimeRep (LocalTime d t) =
-  (d, timeOfDayApxRep t)
 
-timetzApxRep (t, tz) = 
-  (timeOfDayApxRep t, tz)
+utcTimeToSeconds :: UTCTime -> Rational
+utcTimeToSeconds (UTCTime days diffTime) =
+  dayToSeconds days + diffTimeToSeconds diffTime
 
-timeOfDayApxRep :: TimeOfDay -> (Int, Int, Integer)
-timeOfDayApxRep (TimeOfDay h m s) =
-  (h, m, picoApxRep s)
+diffTimeToSeconds :: DiffTime -> Rational
+diffTimeToSeconds diffTime =
+  unsafeCoerce diffTime % (10 ^ 12)
 
-picoApxRep :: Pico -> Integer
-picoApxRep s =
-  let p = unsafeCoerce s :: Integer
-      in floor (p % 10^6)
+dayToSeconds :: Day -> Rational
+dayToSeconds (ModifiedJulianDay day) =
+  (unsafeCoerce day * 24 * 60 * 60) % 1
 
+localTimeToSeconds :: LocalTime -> Rational
+localTimeToSeconds (LocalTime day tod) =
+  dayToSeconds day +
+  timeOfDayToSeconds tod
+
+timeOfDayToSeconds :: TimeOfDay -> Rational
+timeOfDayToSeconds (TimeOfDay h m s) =
+  ((toInteger h * 60 + toInteger m) * 60) % 1 + unsafeCoerce s % (10 ^ 12)
