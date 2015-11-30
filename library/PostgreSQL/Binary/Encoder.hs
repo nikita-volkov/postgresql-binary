@@ -425,7 +425,7 @@ arrayRep (dimensionsV, valuesV, nullsV, oidV) =
   dimensionsLength <> nulls <> oid <> dimensions <> values
   where
     dimensionsLength = 
-      int4_word32 $ fromIntegral $ length dimensionsV
+      int4_word32 $ fromIntegral $ Vector.length dimensionsV
     nulls = 
       int4_word32 $ if nullsV then 1 else 0
     oid = 

@@ -91,4 +91,4 @@ mapLeft f =
 
 joinMap :: Monad m => (a -> m b) -> m a -> m b
 joinMap f =
-  join . fmap f
+  join . liftM f
