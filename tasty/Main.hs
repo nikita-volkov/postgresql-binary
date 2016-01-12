@@ -30,6 +30,24 @@ binary =
     (bool Decoder.interval_float Decoder.interval_int)
     (picosecondsToDiffTime (10^6 * (332211 + 10^6 * (6 + 60 * (5 + 60 * (4 + 24 * (3 + 31 * (2 + 12))))))))
     ,
+    select "SELECT '10 seconds' :: interval"
+    (bool Decoder.interval_float Decoder.interval_int)
+    (10 :: DiffTime)
+    ,
+    HUnit.testCase "Interval encoder: 10 seconds" $
+    let
+      pti =
+        PTI.interval
+      encoder =
+        (bool Encoder.interval_float Encoder.interval_int)
+      decoder =
+        (bool Decoder.interval_float Decoder.interval_int)
+      value =
+        (10 :: DiffTime)
+      in
+        HUnit.assertEqual "" (Right value) =<<
+        IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value
+    ,
     timeRoundtrip "interval" Gens.intervalDiffTime PTI.interval
     (bool Encoder.interval_float Encoder.interval_int)
     (bool Decoder.interval_float Decoder.interval_int)
@@ -211,4 +229,5 @@ select statement decoder value =
   HUnit.testCase (show statement) $
   HUnit.assertEqual "" (Right value) $
   unsafePerformIO $ IO.parameterlessStatement statement decoder value
+
     

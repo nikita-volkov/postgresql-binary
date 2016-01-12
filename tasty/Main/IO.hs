@@ -31,7 +31,7 @@ textRoundtrip oid encoder decoder value =
         bytes =
           (convert . encoder) value
 
-roundtrip :: DB.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
+roundtrip :: DB.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
