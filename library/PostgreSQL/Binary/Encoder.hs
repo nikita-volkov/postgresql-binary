@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module PostgreSQL.Binary.Encoder
 (
   run,
@@ -220,8 +221,13 @@ uuid =
 
 {-# INLINABLE json #-}
 json :: Encoder Aeson.Value
+#if MIN_VERSION_aeson(0,10,0)
 json =
   Aeson.fromEncoding . Aeson.toEncoding
+#else
+json =
+  Builder.lazyByteString . Aeson.encode
+#endif
 
 
 -- * Text

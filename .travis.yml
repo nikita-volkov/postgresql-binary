@@ -1,9 +1,9 @@
 env:
-  - ghc=7.6.1  cabal=1.18
-  - ghc=7.8.1  cabal=1.18 benchmarks=1
-  - ghc=7.10.1 cabal=1.22 tests=1
+  - ghc=7.6.1  cabal=1.18 lower_bound_dependencies=1
+  - ghc=7.8.1  cabal=1.18
+  - ghc=7.10.1 cabal=1.22
+  - ghc=7.10.1 cabal=1.22 tests=1 benchmarks=1
   - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=8.3.0 postgres_integer_datetimes=0
-  - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=8.3.0 postgres_integer_datetimes=1
   - ghc=7.10.1 cabal=1.22 tests=1 postgres_version=9.4.0 postgres_integer_datetimes=1
   
 
@@ -32,6 +32,7 @@ install:
     if [ "$lower_bound_dependencies" = "1" ];
     then
       constraint_options=(
+        "--constraint=aeson==0.9.*"
       );
     fi;
   # Install the "haskell-src-exts" implicit dependency
