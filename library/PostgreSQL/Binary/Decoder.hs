@@ -3,6 +3,7 @@ module PostgreSQL.Binary.Decoder
   Decoder,
   run,
   -- * Primitive
+  fn,
   int,
   float4,
   float8,
@@ -102,6 +103,13 @@ nonNull =
 
 -- * Primitive
 -------------------------
+
+-- |
+-- Lifts a custom decoder implementation.
+{-# INLINE fn #-}
+fn :: (ByteString -> Either Text a) -> Decoder a
+fn fn =
+  BinaryParser.remainders >>= either BinaryParser.failure return . fn
 
 {-# INLINE int #-}
 int :: (Integral a, Bits a) => Decoder a
