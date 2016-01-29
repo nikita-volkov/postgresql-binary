@@ -26,6 +26,8 @@ main =
 binary =
   testGroup "Binary format"
   [
+    stdRoundtrip "jsonb" Gens.aeson PTI.jsonb Encoder.jsonb Decoder.jsonb
+    ,
     select "SELECT '1 year 2 months 3 days 4 hours 5 minutes 6 seconds 332211 microseconds' :: interval"
     (bool Decoder.interval_float Decoder.interval_int)
     (picosecondsToDiffTime (10^6 * (332211 + 10^6 * (6 + 60 * (5 + 60 * (4 + 24 * (3 + 31 * (2 + 12))))))))

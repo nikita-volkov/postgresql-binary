@@ -15,7 +15,7 @@ where
 
 -- base-prelude
 -------------------------
-import BasePrelude as Exports hiding (assert, Data, fail)
+import Rebase.Prelude as Exports hiding (assert, Data, fail)
 
 -- transformers
 -------------------------
@@ -29,30 +29,6 @@ import Data.Functor.Identity as Exports
 import Conversion as Exports
 import Conversion.Text ()
 import Conversion.ByteString ()
-
--- bytestring
--------------------------
-import Data.ByteString as Exports (ByteString)
-
--- text
--------------------------
-import Data.Text as Exports (Text)
-
--- vector
--------------------------
-import Data.Vector as Exports (Vector)
-
--- scientific
--------------------------
-import Data.Scientific as Exports (Scientific)
-
--- uuid
--------------------------
-import Data.UUID as Exports (UUID)
-
--- time
--------------------------
-import Data.Time as Exports
 
 -- placeholders
 -------------------------

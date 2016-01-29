@@ -17,6 +17,7 @@ module PostgreSQL.Binary.Encoder
   numeric,
   uuid,
   json,
+  jsonb,
   char,
   text_strict,
   text_lazy,
@@ -229,6 +230,10 @@ json =
   Builder.lazyByteString . Aeson.encode
 #endif
 
+{-# INLINABLE jsonb #-}
+jsonb :: Encoder Aeson.Value
+jsonb =
+  \x -> "\1" <> json x
 
 -- * Text
 -------------------------

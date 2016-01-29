@@ -18,6 +18,7 @@ module PostgreSQL.Binary.Decoder
   numeric,
   uuid,
   json,
+  jsonb,
   -- * Time
   date,
   time_int,
@@ -149,6 +150,19 @@ uuid =
 json :: Decoder Aeson.Value
 json =
   bytea_strict >>= either (BinaryParser.failure . fromString) pure . Aeson.eitherDecodeStrict'
+
+{-# INLINABLE jsonb #-}
+jsonb :: Decoder Aeson.Value
+jsonb =
+  fn $ (=<<) decode . getBytes
+  where
+    decode =
+      mapLeft fromString .
+      Aeson.eitherDecodeStrict'
+    getBytes =
+      maybe (Left "Empty input") Right .
+      fmap snd .
+      ByteString.uncons
 
 
 -- ** Textual

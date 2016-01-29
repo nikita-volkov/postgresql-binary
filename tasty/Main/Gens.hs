@@ -1,15 +1,19 @@
 module Main.Gens where
 
-import Main.Prelude hiding (assert, isRight, isLeft)
-import Test.QuickCheck
+import Main.Prelude hiding (assert, isRight, isLeft, choose)
+import Test.QuickCheck hiding (vector)
 import Test.QuickCheck.Instances
+import JSON.AST (JSON)
 import qualified Main.PTI as PTI
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
+import qualified Rebase.Data.HashMap.Strict as HashMap
 import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoder as Encoder
 import qualified Data.Text as Text
+import qualified Data.Aeson as Aeson
+import qualified JSON.AST
 
 
 -- * Generators
@@ -18,6 +22,53 @@ import qualified Data.Text as Text
 auto :: Arbitrary a => Gen a
 auto =
   arbitrary
+
+json :: Gen JSON
+json =
+  byDepth 0
+  where
+    byDepth depth =
+      frequency (primitives <> composites)
+      where
+        primitives =
+          map (freq,) [null, bool, number, string]
+          where
+            freq =
+              maxFreq
+        composites =
+          map (freq,) [array, object]
+          where
+            freq =
+              maxFreq - depth
+        maxFreq =
+          6
+        null =
+          pure JSON.AST.Null
+        bool =
+          fmap JSON.AST.Bool arbitrary
+        number =
+          fmap JSON.AST.Number arbitrary
+        string =
+          fmap JSON.AST.String text
+        array =
+          fmap JSON.AST.Array (vector (byDepth (succ depth)))
+        object =
+          fmap JSON.AST.Object (hashMap text (byDepth (succ depth)))
+
+vector :: Gen a -> Gen (Vector a)
+vector element =
+  join $ Vector.replicateM <$> arbitrary <*> pure element
+
+hashMap :: (Eq a, Hashable a) => Gen a -> Gen b -> Gen (HashMap a b)
+hashMap key value =
+  fmap HashMap.fromList $ join $ replicateM <$> arbitrary <*> pure row
+  where
+    row =
+      (,) <$> key <*> value
+
+aeson :: Gen Aeson.Value
+aeson =
+  fmap unsafeCoerce json
 
 postgresInt :: (Bounded a, Ord a, Integral a, Arbitrary a) => Gen a
 postgresInt =
