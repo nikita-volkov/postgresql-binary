@@ -3,7 +3,6 @@ module PostgreSQL.Binary.Decoder
   Decoder,
   run,
   -- * Primitive
-  fn,
   int,
   float4,
   float8,
@@ -15,6 +14,7 @@ module PostgreSQL.Binary.Decoder
   text_lazy,
   char,
   -- * Misc
+  fn,
   numeric,
   uuid,
   json,
