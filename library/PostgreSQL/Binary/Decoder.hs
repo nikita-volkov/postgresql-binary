@@ -154,15 +154,27 @@ json =
 {-# INLINABLE jsonb #-}
 jsonb :: Decoder Aeson.Value
 jsonb =
-  fn $ (=<<) decode . getBytes
+  jsonb_bytes $ mapLeft fromString . Aeson.eitherDecodeStrict'
+
+-- |
+-- Given a function, which parses a plain UTF-8 JSON string encoded as a byte-array,
+-- produces a decoder.
+-- 
+-- For those wondering, yes,
+-- JSONB is encoded as plain JSON string in the binary format of Postgres.
+-- Sad, but true.
+{-# INLINABLE jsonb_bytes #-}
+jsonb_bytes :: (ByteString -> Either Text a) -> Decoder a
+jsonb_bytes cont =
+  getAllBytes >>= trimBytes >>= parseJSON
   where
-    decode =
-      mapLeft fromString .
-      Aeson.eitherDecodeStrict'
-    getBytes =
-      maybe (Left "Empty input") Right .
-      fmap snd .
-      ByteString.uncons
+    getAllBytes =
+      BinaryParser.remainders
+    trimBytes =
+      maybe (BinaryParser.failure "Empty input") return .
+      fmap snd . ByteString.uncons
+    parseJSON =
+      either BinaryParser.failure return . cont
 
 
 -- ** Textual
