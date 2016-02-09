@@ -7,22 +7,13 @@ module Main.Prelude
   TextBuilder,
   bug,
   bottom,
-  mapLeft,
-  joinMap,
 )
 where
 
 
--- base-prelude
+-- rebase
 -------------------------
 import Rebase.Prelude as Exports hiding (assert, Data, fail)
-
--- transformers
--------------------------
-import Control.Monad.Trans.State.Strict as Exports hiding (liftCallCC, liftCatch)
-import Control.Monad.Trans.Reader as Exports hiding (liftCallCC, liftCatch)
-import Control.Monad.Trans.Class as Exports
-import Data.Functor.Identity as Exports
 
 -- conversion
 -------------------------
@@ -65,12 +56,3 @@ bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
     msg = "A \"postgresql-binary\" package bug: " :: String
 
 bottom = [e| $bug "Bottom evaluated" |]
-
-{-# INLINE mapLeft #-}
-mapLeft :: (a -> b) -> Either a x -> Either b x
-mapLeft f =
-  either (Left . f) Right
-
-joinMap :: Monad m => (a -> m b) -> m a -> m b
-joinMap f =
-  join . liftM f
