@@ -17,8 +17,10 @@ module PostgreSQL.Binary.Decoder
   fn,
   numeric,
   uuid,
-  json,
-  jsonb,
+  json_ast,
+  json_bytes,
+  jsonb_ast,
+  jsonb_bytes,
   -- * Time
   date,
   time_int,
@@ -146,14 +148,27 @@ uuid :: Decoder UUID
 uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
 
-{-# INLINABLE json #-}
-json :: Decoder Aeson.Value
-json =
+{-# INLINABLE json_ast #-}
+json_ast :: Decoder Aeson.Value
+json_ast =
   bytea_strict >>= either (BinaryParser.failure . fromString) pure . Aeson.eitherDecodeStrict'
 
-{-# INLINABLE jsonb #-}
-jsonb :: Decoder Aeson.Value
-jsonb =
+-- |
+-- Given a function, which parses a plain UTF-8 JSON string encoded as a byte-array,
+-- produces a decoder.
+{-# INLINABLE json_bytes #-}
+json_bytes :: (ByteString -> Either Text a) -> Decoder a
+json_bytes cont =
+  getAllBytes >>= parseJSON
+  where
+    getAllBytes =
+      BinaryParser.remainders
+    parseJSON =
+      either BinaryParser.failure return . cont
+
+{-# INLINABLE jsonb_ast #-}
+jsonb_ast :: Decoder Aeson.Value
+jsonb_ast =
   jsonb_bytes $ mapLeft fromString . Aeson.eitherDecodeStrict'
 
 -- |
