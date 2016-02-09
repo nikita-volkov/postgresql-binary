@@ -16,8 +16,10 @@ module PostgreSQL.Binary.Encoder
   bool,
   numeric,
   uuid,
-  json,
-  jsonb,
+  json_ast,
+  json_bytes,
+  jsonb_ast,
+  jsonb_bytes,
   char,
   text_strict,
   text_lazy,
@@ -220,20 +222,30 @@ uuid :: Encoder UUID
 uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
 
-{-# INLINABLE json #-}
-json :: Encoder Aeson.Value
+{-# INLINABLE json_ast #-}
+json_ast :: Encoder Aeson.Value
 #if MIN_VERSION_aeson(0,10,0)
-json =
+json_ast =
   Aeson.fromEncoding . Aeson.toEncoding
 #else
-json =
+json_ast =
   Builder.lazyByteString . Aeson.encode
 #endif
 
-{-# INLINABLE jsonb #-}
-jsonb :: Encoder Aeson.Value
-jsonb =
-  \x -> "\1" <> json x
+{-# INLINABLE json_bytes #-}
+json_bytes :: Encoder ByteString
+json_bytes =
+  Builder.byteString
+
+{-# INLINABLE jsonb_ast #-}
+jsonb_ast :: Encoder Aeson.Value
+jsonb_ast =
+  \x -> "\1" <> json_ast x
+
+{-# INLINABLE jsonb_bytes #-}
+jsonb_bytes :: Encoder ByteString
+jsonb_bytes =
+  \x -> "\1" <> Builder.byteString x
 
 -- * Text
 -------------------------
