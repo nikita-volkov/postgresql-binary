@@ -1,7 +1,7 @@
 name:
   postgresql-binary
 version:
-  0.8
+  0.8.1
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
@@ -80,7 +80,7 @@ library
     -- general:
     foldl >= 1.1.1 && < 2,
     transformers >= 0.3 && < 0.6,
-    base-prelude >= 0.1.19 && < 0.2,
+    base-prelude >= 0.1.19 && < 2,
     base >= 4.6 && < 5
 
 
