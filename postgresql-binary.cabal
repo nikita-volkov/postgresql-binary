@@ -133,7 +133,7 @@ test-suite tasty
     conversion-text == 1.*,
     either == 4.*,
     transformers,
-    rebase >= 0.4 && < 0.5,
+    rebase >= 0.4 && < 2,
     base
 
 
