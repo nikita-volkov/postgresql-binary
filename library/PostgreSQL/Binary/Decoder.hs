@@ -472,9 +472,12 @@ array :: ArrayDecoder a -> Decoder a
 array (ArrayDecoder decoder) =
   do
     dimensionsAmount <- intOfSize 4
-    unitOfSize (4 + 4)
-    dimensionSizes <- replicateM dimensionsAmount dimensionSize
-    decoder dimensionSizes
+    if dimensionsAmount /= 0
+      then do
+        unitOfSize (4 + 4)
+        dimensionSizes <- replicateM dimensionsAmount dimensionSize
+        decoder dimensionSizes
+      else decoder [0]
   where
     dimensionSize =
       intOfSize 4 <* unitOfSize 4
