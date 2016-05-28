@@ -13,17 +13,18 @@ import qualified Main.TextEncoder  as TextEncoder
 import qualified Main.PTI as PTI
 import qualified Main.DB as DB
 import qualified Main.IO as IO
+import qualified Database.PostgreSQL.LibPQ as LibPQ
 
 
 roundtrip :: (Show a, Eq a) => 
-  DB.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder a) -> a -> Property
+  LibPQ.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder a) -> a -> Property
 roundtrip oid encoder decoder value =
   Right value === unsafePerformIO (IO.roundtrip oid encoder decoder value)
 
-stdRoundtrip :: (Show a, Eq a) => DB.Oid -> Encoder.Encoder a -> Decoder.Decoder a -> a -> Property
+stdRoundtrip :: (Show a, Eq a) => LibPQ.Oid -> Encoder.Encoder a -> Decoder.Decoder a -> a -> Property
 stdRoundtrip oid encoder decoder value =
   roundtrip oid (const encoder) (const decoder) value
 
-textRoundtrip :: (Show a, Eq a) => DB.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> Property
+textRoundtrip :: (Show a, Eq a) => LibPQ.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> Property
 textRoundtrip oid encoder decoder value =
   Right value === unsafePerformIO (IO.textRoundtrip oid encoder decoder value)

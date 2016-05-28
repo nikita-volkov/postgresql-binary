@@ -15,32 +15,33 @@ import qualified Data.Text.Encoding as Text
 import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoder as Encoder
 import qualified PostgreSQL.Binary.Decoder as Decoder
+import qualified Database.PostgreSQL.LibPQ as LibPQ
 
 
-textRoundtrip :: DB.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
+textRoundtrip :: LibPQ.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
 textRoundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
-    bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) DB.Binary
+    bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) LibPQ.Binary
     return $ Decoder.run (decoder integerDatetimes) bytes
   where
     params integerDatetimes =
-      [ Just ( oid , bytes , DB.Text ) ]
+      [ Just ( oid , bytes , LibPQ.Text ) ]
       where
         bytes =
           (convert . encoder) value
 
-roundtrip :: DB.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
+roundtrip :: LibPQ.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
-    bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) DB.Binary
+    bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) LibPQ.Binary
     return $ Decoder.run (decoder integerDatetimes) bytes
   where
     params integerDatetimes =
-      [ Just ( oid , bytes , DB.Binary ) ]
+      [ Just ( oid , bytes , LibPQ.Binary ) ]
       where
         bytes =
           (convert . encoder integerDatetimes) value
@@ -50,5 +51,5 @@ parameterlessStatement statement decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
-    bytes <- DB.oneRow statement [] DB.Binary
+    bytes <- DB.oneRow statement [] LibPQ.Binary
     return $ Decoder.run (decoder integerDatetimes) bytes
