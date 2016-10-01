@@ -36,6 +36,24 @@ binary =
             else []
         other =
           [
+            let
+              sql =
+                "select (1, 'a')"
+              decoder _ =
+                Decoder.composite ((,) <$> Decoder.compositeNonNullValue Decoder.int <*> Decoder.compositeNonNullValue Decoder.char)
+              expected =
+                (1 :: Int64, 'a')
+              in select sql decoder expected
+            ,
+            let
+              sql =
+                "select (1, null)"
+              decoder _ =
+                Decoder.composite ((,) <$> Decoder.compositeNonNullValue Decoder.int <*> Decoder.compositeValue Decoder.char)
+              expected =
+                (1 :: Int64, Nothing :: Maybe Char)
+              in select sql decoder expected
+            ,
             select "SELECT '1 year 2 months 3 days 4 hours 5 minutes 6 seconds 332211 microseconds' :: interval"
             (bool Decoder.interval_float Decoder.interval_int)
             (picosecondsToDiffTime (10^6 * (332211 + 10^6 * (6 + 60 * (5 + 60 * (4 + 24 * (3 + 31 * (2 + 12))))))))
