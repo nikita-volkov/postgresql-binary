@@ -433,21 +433,30 @@ newtype CompositeDecoder a =
 {-# INLINE composite #-}
 composite :: CompositeDecoder a -> Decoder a
 composite (CompositeDecoder decoder) =
-  unitOfSize 4 *> decoder
+  numOfComponents *> decoder
+  where
+    numOfComponents =
+      unitOfSize 4
 
 -- |
 -- Lift a value 'Decoder' into 'CompositeDecoder'.
 {-# INLINE compositeValue #-}
 compositeValue :: Decoder a -> CompositeDecoder ( Maybe a )
-compositeValue =
-  CompositeDecoder . onContent
+compositeValue valueDecoder =
+  CompositeDecoder (skipOid *> onContent valueDecoder)
+  where
+    skipOid =
+      unitOfSize 4
 
 -- |
 -- Lift a non-nullable value 'Decoder' into 'CompositeDecoder'.
 {-# INLINE compositeNonNullValue #-}
 compositeNonNullValue :: Decoder a -> CompositeDecoder a
-compositeNonNullValue =
-  CompositeDecoder . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
+compositeNonNullValue valueDecoder =
+  CompositeDecoder (skipOid *> onContent valueDecoder >>= maybe (failure "Unexpected NULL") return)
+  where
+    skipOid =
+      unitOfSize 4
 
 
 -- * Array
