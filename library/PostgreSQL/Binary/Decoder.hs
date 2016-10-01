@@ -87,9 +87,13 @@ intOfSize x =
 {-# INLINABLE onContent #-}
 onContent :: Decoder a -> Decoder ( Maybe a )
 onContent decoder =
-  intOfSize 4 >>= \case
+  size >>=
+  \case
     (-1) -> pure Nothing
-    n -> fmap Just (sized n decoder)
+    n -> fmap Just (sized (fromIntegral n) decoder)
+  where
+    size =
+      intOfSize 4 :: Decoder Int32
 
 {-# INLINABLE content #-}
 content :: Decoder (Maybe ByteString)
