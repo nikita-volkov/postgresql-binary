@@ -1,14 +1,8 @@
 module Main where
 
-import BasePrelude
-import MTLPrelude
-import Control.DeepSeq
+import Prelude
 import Criterion
 import Criterion.Main
-import Data.Text (Text)
-import Data.ByteString (ByteString)
-import Data.Scientific (Scientific)
-import Data.Time
 import qualified PostgreSQL.Binary.Encoder as E
 
 

@@ -3,17 +3,16 @@ module Main.Gens where
 import Main.Prelude hiding (assert, isRight, isLeft, choose)
 import Test.QuickCheck hiding (vector)
 import Test.QuickCheck.Instances
-import JSONAST (JSON)
+import JSONAST
 import qualified Main.PTI as PTI
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
-import qualified Rebase.Data.HashMap.Strict as HashMap
+import qualified Data.HashMap.Strict as HashMap
 import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoder as Encoder
 import qualified Data.Text as Text
 import qualified Data.Aeson as Aeson
-import qualified JSONAST
 
 
 -- * Generators
@@ -43,17 +42,17 @@ json =
         maxFreq =
           6
         null =
-          pure JSONAST.Null
+          pure JSON_Null
         bool =
-          fmap JSONAST.Bool arbitrary
+          fmap JSON_Bool arbitrary
         number =
-          fmap JSONAST.Number arbitrary
+          fmap JSON_Number arbitrary
         string =
-          fmap JSONAST.String text
+          fmap JSON_String text
         array =
-          fmap JSONAST.Array (vector (byDepth (succ depth)))
+          fmap JSON_Array (vector (byDepth (succ depth)))
         object =
-          fmap JSONAST.Object (hashMap text (byDepth (succ depth)))
+          fmap JSON_Object (hashMap text (byDepth (succ depth)))
 
 vector :: Gen a -> Gen (Vector a)
 vector element =

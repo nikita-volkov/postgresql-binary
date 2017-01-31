@@ -11,9 +11,9 @@ module Main.Prelude
 where
 
 
--- rebase
+-- rerebase
 -------------------------
-import Rebase.Prelude as Exports hiding (assert, Data, fail)
+import Prelude as Exports hiding (assert, Data, fail, check)
 
 -- conversion
 -------------------------
