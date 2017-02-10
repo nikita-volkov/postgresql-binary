@@ -16,6 +16,7 @@ module PostgreSQL.Binary.Encoder
   bool,
   numeric,
   uuid,
+  inet,
   json_ast,
   json_bytes,
   jsonb_ast,
@@ -95,10 +96,28 @@ tuple4 :: Encoder a -> Encoder b -> Encoder c -> Encoder d -> Encoder (a, b, c, 
 tuple4 e1 e2 e3 e4 =
   \(v1, v2, v3, v4) -> e1 v1 <> e2 v2 <> e3 v3 <> e4 v4
 
+{-# INLINE tuple5 #-}
+tuple5 :: Encoder a -> Encoder b -> Encoder c -> Encoder d -> Encoder e -> Encoder (a, b, c, d, e)
+tuple5 e1 e2 e3 e4 e5 (v1, v2, v3, v4, v5) = e1 v1 <> e2 v2 <> e3 v3 <> e4 v4 <> e5 v5
+
+{-# INLINE tuple8 #-}
+tuple8 :: Encoder a -> Encoder b -> Encoder c -> Encoder d -> Encoder e -> Encoder f -> Encoder g -> Encoder h -> Encoder (a, b, c, d, e, f, g, h)
+tuple8 e1 e2 e3 e4 e5 e6 e7 e8 (v1, v2, v3, v4, v5, v6, v7, v8) = e1 v1 <> e2 v2 <> e3 v3 <> e4 v4 <> e5 v5 <> e6 v6 <> e7 v7 <> e8 v8
+
 {-# INLINE premap #-}
 premap :: (a -> b) -> Encoder b -> Encoder a
 premap f e =
   e . f
+
+{-# INLINE int_int8 #-}
+int_int8 :: Encoder Int8
+int_int8 =
+  Builder.int8
+
+{-# INLINE int_word8 #-}
+int_word8 :: Encoder Word8
+int_word8 =
+  Builder.word8
 
 {-# INLINE int2_int16 #-}
 int2_int16 :: Encoder Int16
@@ -221,6 +240,27 @@ numeric x =
 uuid :: Encoder UUID
 uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
+
+{-# INLINABLE inetIPv4Encoder #-}
+inetIPv4Encoder :: Encoder (Word8, Word8, Word8, Int8, Data.IPv4)
+inetIPv4Encoder = tuple5 int_word8 int_word8 int_word8 int_int8 $ tuple4 int_word8 int_word8 int_word8 int_word8
+
+{-# INLINABLE inetIPv6Encoder #-}
+inetIPv6Encoder :: Encoder (Word8, Word8, Word8, Int8, Data.IPv6)
+inetIPv6Encoder =
+  tuple5 int_word8 int_word8 int_word8 int_int8 $
+  tuple8 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16
+
+{-# INLINABLE inet #-}
+inet :: Encoder Data.Inet
+inet i@(Data.InetIPv4 ipv4) =
+  premap (const (Data.afInet, Data.maxNetmaskIPv4, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4Encoder i
+inet i@(Data.InetIPv4Subnet ipv4 netmask) =
+  premap (const (Data.afInet, netmask, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4Encoder i
+inet i@(Data.InetIPv6 ipv6) =
+  premap (const (Data.afInet6, Data.maxNetmaskIPv6, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6Encoder i
+inet i@(Data.InetIPv6Subnet ipv6 netmask) =
+  premap (const (Data.afInet6, netmask, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6Encoder i
 
 {-# INLINABLE json_ast #-}
 json_ast :: Encoder Aeson.Value

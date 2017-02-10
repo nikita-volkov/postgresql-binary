@@ -141,6 +141,8 @@ binary =
             ,
             stdRoundtrip "uuid" Gens.uuid PTI.uuid Encoder.uuid Decoder.uuid
             ,
+            stdRoundtrip "inet" Gens.inet PTI.inet Encoder.inet Decoder.inet
+            ,
             stdRoundtrip "int2_int16" Gens.auto PTI.int2 Encoder.int2_int16 Decoder.int
             ,
             stdRoundtrip "int2_word16" Gens.auto PTI.int2 Encoder.int2_word16 Decoder.int

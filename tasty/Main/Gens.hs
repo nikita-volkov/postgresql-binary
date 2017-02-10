@@ -120,6 +120,16 @@ uuid :: Gen UUID.UUID
 uuid =
   UUID.fromWords <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
+inet :: Gen Data.Inet
+inet = do
+  ipv6 <- choose (True, False)
+  subnetOn <- choose (True, False)
+  case (ipv6, subnetOn) of
+    (False, False) -> Data.InetIPv4 <$> ((,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
+    (False, True) ->  Data.InetIPv4Subnet <$> ((,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary) <*> choose (0, Data.maxNetmaskIPv4 - 1)
+    (True, False) -> Data.InetIPv6 <$> ((,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
+    (True, True) -> Data.InetIPv6Subnet <$> ((,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary) <*> choose (0, Data.maxNetmaskIPv6 - 1)
+
 arrayRep :: Gen (Word32, Data.Array)
 arrayRep =
   do
