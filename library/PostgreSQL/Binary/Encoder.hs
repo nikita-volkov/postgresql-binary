@@ -241,26 +241,27 @@ uuid :: Encoder UUID
 uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
 
-{-# INLINABLE inetIPv4Encoder #-}
-inetIPv4Encoder :: Encoder (Word8, Word8, Word8, Int8, Data.IPv4)
-inetIPv4Encoder = tuple5 int_word8 int_word8 int_word8 int_int8 $ tuple4 int_word8 int_word8 int_word8 int_word8
+{-# INLINABLE inetIPv4 #-}
+inetIPv4 :: Encoder (Word8, Word8, Word8, Int8, Data.IPv4)
+inetIPv4 =
+  tuple5 int_word8 int_word8 int_word8 int_int8 $ tuple4 int_word8 int_word8 int_word8 int_word8
 
-{-# INLINABLE inetIPv6Encoder #-}
-inetIPv6Encoder :: Encoder (Word8, Word8, Word8, Int8, Data.IPv6)
-inetIPv6Encoder =
+{-# INLINABLE inetIPv6 #-}
+inetIPv6 :: Encoder (Word8, Word8, Word8, Int8, Data.IPv6)
+inetIPv6 =
   tuple5 int_word8 int_word8 int_word8 int_int8 $
   tuple8 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16
 
 {-# INLINABLE inet #-}
 inet :: Encoder Data.Inet
 inet i@(Data.InetIPv4 ipv4) =
-  premap (const (Data.afInet, Data.maxNetmaskIPv4, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4Encoder i
+  premap (const (Data.afInet, Data.maxNetmaskIPv4, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4 i
 inet i@(Data.InetIPv4Subnet ipv4 netmask) =
-  premap (const (Data.afInet, netmask, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4Encoder i
+  premap (const (Data.afInet, netmask, Data.isCidr, Data.ipv4Size, ipv4)) inetIPv4 i
 inet i@(Data.InetIPv6 ipv6) =
-  premap (const (Data.afInet6, Data.maxNetmaskIPv6, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6Encoder i
+  premap (const (Data.afInet6, Data.maxNetmaskIPv6, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6 i
 inet i@(Data.InetIPv6Subnet ipv6 netmask) =
-  premap (const (Data.afInet6, netmask, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6Encoder i
+  premap (const (Data.afInet6, netmask, Data.isCidr, Data.ipv6Size, ipv6)) inetIPv6 i
 
 {-# INLINABLE json_ast #-}
 json_ast :: Encoder Aeson.Value
