@@ -177,22 +177,19 @@ inet = do
     else do
       ip <- ipv6
       return $ inetIPv6FromBytes af netmask isCidr ipSize ip
-
-{-# INLINABLE inetIPv4FromBytes #-}
-inetIPv4FromBytes:: Word8 -> Word8 -> Word8 -> Int8 -> Data.IPv4 -> Data.Inet
-inetIPv4FromBytes _ netmask _ _ ip =
-  if netmask == Data.maxNetmaskIPv4 then
-    Data.InetIPv4 ip
-  else
-    Data.InetIPv4Subnet ip netmask
-
-{-# INLINABLE inetIPv6FromBytes #-}
-inetIPv6FromBytes:: Word8 -> Word8 -> Word8 -> Int8 -> Data.IPv6 -> Data.Inet
-inetIPv6FromBytes _ netmask _ _ ip =
-  if netmask == Data.maxNetmaskIPv6 then
-    Data.InetIPv6 ip
-  else
-    Data.InetIPv6Subnet ip netmask
+  where
+    inetIPv4FromBytes:: Word8 -> Data.Netmask -> Word8 -> Int8 -> Data.IPv4 -> Data.Inet
+    inetIPv4FromBytes _ netmask _ _ ip =
+      if netmask == Data.maxNetmaskIPv4 then
+        Data.InetIPv4 ip
+      else
+        Data.InetIPv4Subnet ip netmask
+    inetIPv6FromBytes:: Word8 -> Data.Netmask -> Word8 -> Int8 -> Data.IPv6 -> Data.Inet
+    inetIPv6FromBytes _ netmask _ _ ip =
+      if netmask == Data.maxNetmaskIPv6 then
+        Data.InetIPv6 ip
+      else
+        Data.InetIPv6Subnet ip netmask
 
 {-# INLINABLE json_ast #-}
 json_ast :: Decoder Aeson.Value
