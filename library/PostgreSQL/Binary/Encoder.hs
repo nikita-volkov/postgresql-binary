@@ -242,12 +242,12 @@ uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
 
 {-# INLINABLE inetIPv4 #-}
-inetIPv4 :: Encoder (Word8, Word8, Word8, Int8, Data.IPv4)
+inetIPv4 :: Encoder (Word8, Data.Netmask, Word8, Int8, Data.IPv4)
 inetIPv4 =
   tuple5 int_word8 int_word8 int_word8 int_int8 $ tuple4 int_word8 int_word8 int_word8 int_word8
 
 {-# INLINABLE inetIPv6 #-}
-inetIPv6 :: Encoder (Word8, Word8, Word8, Int8, Data.IPv6)
+inetIPv6 :: Encoder (Word8, Data.Netmask, Word8, Int8, Data.IPv6)
 inetIPv6 =
   tuple5 int_word8 int_word8 int_word8 int_int8 $
   tuple8 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16
