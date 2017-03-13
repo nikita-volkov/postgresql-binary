@@ -13,6 +13,7 @@ import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoder as Encoder
 import qualified Data.Text as Text
 import qualified Data.Aeson as Aeson
+import qualified Network.IP.Addr as IPAddr
 
 
 -- * Generators
@@ -120,15 +121,13 @@ uuid :: Gen UUID.UUID
 uuid =
   UUID.fromWords <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-inet :: Gen Data.Inet
+inet :: Gen (IPAddr.NetAddr IPAddr.IP)
 inet = do
   ipv6 <- choose (True, False)
-  subnetOn <- choose (True, False)
-  case (ipv6, subnetOn) of
-    (False, False) -> Data.InetIPv4 <$> ((,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
-    (False, True) ->  Data.InetIPv4Subnet <$> ((,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary) <*> choose (0, Data.maxNetmaskIPv4 - 1)
-    (True, False) -> Data.InetIPv6 <$> ((,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
-    (True, True) -> Data.InetIPv6Subnet <$> ((,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary) <*> choose (0, Data.maxNetmaskIPv6 - 1)
+  if ipv6
+    then IPAddr.netAddr <$> (IPAddr.IPv6 <$> (IPAddr.ip6FromWords <$>
+         arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 128)
+    else IPAddr.netAddr <$> (IPAddr.IPv4 <$> (IPAddr.ip4FromOctets <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 32)
 
 arrayRep :: Gen (Word32, Data.Array)
 arrayRep =
