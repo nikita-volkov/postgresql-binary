@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiWayIf #-}
-
 module PostgreSQL.Binary.Decoder
 (
   Decoder,
@@ -62,6 +60,7 @@ import qualified PostgreSQL.Binary.Integral as Integral
 import qualified PostgreSQL.Binary.Interval as Interval
 import qualified PostgreSQL.Binary.Numeric as Numeric
 import qualified PostgreSQL.Binary.Time as Time
+import qualified PostgreSQL.Binary.Inet as Inet
 import qualified Data.Vector as Vector
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
@@ -156,30 +155,29 @@ uuid :: Decoder UUID
 uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
 
-{-# INLINABLE ipv4 #-}
-ipv4 :: Decoder IPAddr.IP
-ipv4 = fmap IPAddr.IPv4 (IPAddr.ip4FromOctets <$> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1)
+{-# INLINE ip4 #-}
+ip4 :: Decoder IPAddr.IP4
+ip4 =
+  IPAddr.ip4FromOctets <$> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1
 
-{-# INLINABLE ipv6 #-}
-ipv6 :: Decoder IPAddr.IP
-ipv6 =
-  fmap
-    IPAddr.IPv6
-    (IPAddr.ip6FromWords <$> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2)
+{-# INLINE ip6 #-}
+ip6 :: Decoder IPAddr.IP6
+ip6 =
+  IPAddr.ip6FromWords <$> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2
 
 {-# INLINABLE inet #-}
-inet :: Decoder Data.Inet
+inet :: Decoder (IPAddr.NetAddr IPAddr.IP)
 inet = do
   af <- intOfSize 1
   netmask <- intOfSize 1
   isCidr <- intOfSize 1
   ipSize <- intOfSize 1
-  if | af == Data.afInet ->
-       do ip <- ipv4
-          return $ inetFromBytes af netmask isCidr ipSize ip
-     | af == Data.afInet6 ->
-       do ip <- ipv6
-          return $ inetFromBytes af netmask isCidr ipSize ip
+  if | af == Inet.inetAddressFamily ->
+       do ip <- ip4
+          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
+     | af == Inet.inet6AddressFamily ->
+       do ip <- ip6
+          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
      | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
   where
     inetFromBytes :: Word8 -> Word8 -> Word8 -> Int8 -> IPAddr.IP -> IPAddr.NetAddr IPAddr.IP

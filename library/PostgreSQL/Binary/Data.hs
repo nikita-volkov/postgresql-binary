@@ -56,18 +56,3 @@ type UUID =
 -- 
 type Numeric =
   (Int16, Word16, Vector Int16)
-
-
--- |
--- Representation of the PostgreSQL Network Address Type @inet@.
---
--- The Inet type holds an IPv4 or IPv6 host address, and its subnet.
-type Inet = IPAddr.NetAddr IPAddr.IP
-
--- | Address family AF_INET
-afInet :: Word8
-afInet = 2
-
--- | Address family AF_INET6
-afInet6 :: Word8
-afInet6 = 3

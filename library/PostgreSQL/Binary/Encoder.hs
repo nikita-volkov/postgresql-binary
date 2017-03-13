@@ -70,6 +70,7 @@ import qualified PostgreSQL.Binary.Numeric as Numeric
 import qualified PostgreSQL.Binary.Time as Time
 import qualified PostgreSQL.Binary.Interval as Interval
 import qualified PostgreSQL.Binary.BuilderPrim as BuilderPrim
+import qualified PostgreSQL.Binary.Inet as Inet
 import qualified Control.Foldl as Foldl
 import qualified Network.IP.Addr as IPAddr
 
@@ -242,30 +243,35 @@ uuid :: Encoder UUID
 uuid =
   premap UUID.toWords (tuple4 int4_word32 int4_word32 int4_word32 int4_word32)
 
-{-# INLINABLE inetIPv4 #-}
-inetIPv4 :: Encoder (Word8, Word8, Word8, Int8, IPAddr.IP4)
-inetIPv4 =
-  tuple5 int_word8 int_word8 int_word8 int_int8 $
+{-# INLINABLE ip4 #-}
+ip4 :: Encoder IPAddr.IP4
+ip4 =
   premap IPAddr.ip4ToOctets (tuple4 int_word8 int_word8 int_word8 int_word8)
 
-{-# INLINABLE inetIPv6 #-}
-inetIPv6 :: Encoder (Word8, Word8, Word8, Int8, IPAddr.IP6)
-inetIPv6 =
-  tuple5 int_word8 int_word8 int_word8 int_int8 $
-  premap
-    IPAddr.ip6ToWords
-    (tuple8 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16)
+{-# INLINABLE ip6 #-}
+ip6 :: Encoder IPAddr.IP6
+ip6 =
+  premap IPAddr.ip6ToWords (tuple8 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16 int2_word16)
 
 {-# INLINABLE inet #-}
-inet :: Encoder Data.Inet
+inet :: Encoder (IPAddr.NetAddr IPAddr.IP)
 inet i =
   case IPAddr.netHost i of
-    IPAddr.IPv4 ip -> premap (const (Data.afInet, IPAddr.netLength i, isCidr, ipv4Size, ip)) inetIPv4 i
-    IPAddr.IPv6 ip -> premap (const (Data.afInet6, IPAddr.netLength i, isCidr, ipv6Size, ip)) inetIPv6 i
+    IPAddr.IPv4 x -> inetAddressFamily <> netLength <> isCidr <> ip4Size <> ip4 x
+    IPAddr.IPv6 x -> inet6AddressFamily <> netLength <> isCidr <> ip6Size <> ip6 x
     where
-     isCidr = 0
-     ipv4Size = 4
-     ipv6Size = 16
+      inetAddressFamily =
+        int_word8 Inet.inetAddressFamily
+      inet6AddressFamily =
+        int_word8 Inet.inet6AddressFamily
+      netLength =
+        int_word8 (IPAddr.netLength i)
+      isCidr =
+        int_word8 0
+      ip4Size =
+        int_int8 4
+      ip6Size =
+        int_int8 16
 
 {-# INLINABLE json_ast #-}
 json_ast :: Encoder Aeson.Value

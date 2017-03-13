@@ -121,11 +121,11 @@ uuid :: Gen UUID.UUID
 uuid =
   UUID.fromWords <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-inet :: Gen Data.Inet
+inet :: Gen (IPAddr.NetAddr IPAddr.IP)
 inet = do
   ipv6 <- choose (True, False)
   if ipv6
-    then IPAddr.netAddr <$>  (IPAddr.IPv6 <$> (IPAddr.ip6FromWords <$>
+    then IPAddr.netAddr <$> (IPAddr.IPv6 <$> (IPAddr.ip6FromWords <$>
          arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 128)
     else IPAddr.netAddr <$> (IPAddr.IPv4 <$> (IPAddr.ip4FromOctets <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 32)
 
