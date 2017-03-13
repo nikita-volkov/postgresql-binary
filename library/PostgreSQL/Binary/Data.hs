@@ -3,7 +3,6 @@
 module PostgreSQL.Binary.Data where
 
 import PostgreSQL.Binary.Prelude
-import qualified Network.IP.Addr as IPAddr
 
 -- | 
 -- A representation of a data serializable to the PostgreSQL array binary format.
