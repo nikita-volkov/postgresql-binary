@@ -79,6 +79,7 @@ library
     bytestring >= 0.10.4 && < 0.11,
     text >= 1 && < 2,
     vector >= 0.10 && < 0.13,
+    network-ip >= 0.3 && < 1,
     -- errors:
     loch-th == 0.2.*,
     placeholders == 0.1.*,
@@ -126,6 +127,7 @@ test-suite tasty
     conversion == 1.*,
     conversion-bytestring == 1.*,
     conversion-text == 1.*,
+    network-ip >= 0.3 && < 1,
     -- debugging:
     loch-th == 0.2.*,
     placeholders == 0.1.*,
