@@ -1,7 +1,7 @@
 name:
   postgresql-binary
 version:
-  0.10
+  1
 synopsis:
   Encoders and decoders for the PostgreSQL's binary format
 description:
@@ -61,7 +61,10 @@ library
     PostgreSQL.Binary.Data
     PostgreSQL.Binary.Decoder
     PostgreSQL.Binary.Encoder
+    PostgreSQL.Binary.Encoding
+    PostgreSQL.Binary.SupportedTypes
   other-modules:
+    PostgreSQL.Binary.Encoding.Builders
     PostgreSQL.Binary.Prelude
     PostgreSQL.Binary.Integral
     PostgreSQL.Binary.Interval
@@ -72,6 +75,8 @@ library
   build-depends:
     -- parsing:
     binary-parser >= 0.5 && < 0.6,
+    -- building:
+    strict-bytes-builder >= 0.3.2 && < 0.4,
     -- data:
     aeson >= 0.9 && < 2,
     uuid == 1.3.*,

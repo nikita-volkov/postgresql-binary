@@ -488,7 +488,7 @@ arrayDimension foldl (ArrayEncoder encoder) =
         foldedLength : foldedDimensions
       in
         (foldedBuilder, resultDimensions, foldedNulls)
-        
+
 
 -- * Array rep
 -------------------------
