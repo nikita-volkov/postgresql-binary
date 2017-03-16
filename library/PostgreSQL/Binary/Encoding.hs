@@ -32,7 +32,6 @@ module PostgreSQL.Binary.Encoding
   text_lazy,
   bytea_strict,
   bytea_lazy,
-  bytea_lazyBuilder,
   -- ** Time
   -- | Some of the functions in this section are distinguished based
   -- on the @integer_datetimes@ setting of the server.
