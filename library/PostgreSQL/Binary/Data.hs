@@ -2,7 +2,7 @@
 Reexports of all the data-types that this API supports.
 Useful for the reduction of dependencies in the \"postgresql-binary\" dependent libraries.
 -}
-module PostgreSQL.Binary.SupportedTypes
+module PostgreSQL.Binary.Data
 (
   module Data.HashMap.Strict,
   module Data.Map.Strict,

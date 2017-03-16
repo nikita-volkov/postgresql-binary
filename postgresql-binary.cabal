@@ -58,7 +58,7 @@ library
   exposed-modules:
     PostgreSQL.Binary.Decoder
     PostgreSQL.Binary.Encoding
-    PostgreSQL.Binary.SupportedTypes
+    PostgreSQL.Binary.Data
   other-modules:
     PostgreSQL.Binary.Encoding.Builders
     PostgreSQL.Binary.Prelude
