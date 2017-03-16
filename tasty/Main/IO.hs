@@ -12,7 +12,6 @@ import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import qualified Data.Text.Encoding as Text
-import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified PostgreSQL.Binary.Decoder as Decoder
 import qualified Database.PostgreSQL.LibPQ as LibPQ

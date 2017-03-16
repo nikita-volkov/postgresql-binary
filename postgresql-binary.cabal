@@ -56,7 +56,6 @@ library
   default-language:
     Haskell2010
   exposed-modules:
-    PostgreSQL.Binary.Data
     PostgreSQL.Binary.Decoder
     PostgreSQL.Binary.Encoding
     PostgreSQL.Binary.SupportedTypes

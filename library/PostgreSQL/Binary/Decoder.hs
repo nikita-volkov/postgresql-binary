@@ -55,7 +55,6 @@ where
 
 import PostgreSQL.Binary.Prelude hiding (take, bool, drop, state, fail, failure)
 import BinaryParser
-import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Integral as Integral
 import qualified PostgreSQL.Binary.Interval as Interval
 import qualified PostgreSQL.Binary.Numeric as Numeric
@@ -368,41 +367,6 @@ interval_float =
 -------------------------
 
 -- |
--- A lower-level array data parser,
--- which aggregates the intermediate data representation as per the Postgres format.
--- 
--- Only use this if 'array' doesn't fit your case.
-{-# INLINABLE arrayRep #-}
-arrayRep :: Decoder Data.Array
-arrayRep =
-  do
-    dimensionsAmount <- intOfSize 4
-    nullsValue <- nulls
-    oid <- intOfSize 4
-    dimensions <- Vector.replicateM dimensionsAmount dimension
-    let valuesAmount = (Vector.product . Vector.map fst) dimensions
-    values <- Vector.replicateM (fromIntegral valuesAmount) content
-    return (dimensions, values, nullsValue, oid)
-  where
-    dimension =
-      (,) <$> intOfSize 4 <*> intOfSize 4
-    nulls =
-      intOfSize 4 >>= \(x :: Word32) -> case x of
-        0 -> return False
-        1 -> return True
-        w -> failure $ "Invalid value: " <> (fromString . show) w
-
-{-# INLINABLE compositeRep #-}
-compositeRep :: Decoder Data.Composite
-compositeRep =
-  do
-    componentsAmount <- intOfSize 4
-    Vector.replicateM componentsAmount component
-  where
-    component =
-      (,) <$> intOfSize 4 <*> content
-
--- |
 -- A function for generic in place parsing of an HStore value.
 -- 
 -- Accepts:
@@ -437,19 +401,6 @@ hstore replicateM keyContent valueContent =
           onContent keyContent >>= nonNull
         value =
           onContent valueContent
-
-{-# INLINABLE hstoreRep #-}
-hstoreRep :: Decoder Data.HStore
-hstoreRep =
-  do
-    componentsAmount <- intOfSize 4
-    Vector.replicateM componentsAmount component
-  where
-    component =
-      (,) <$> key <*> content
-      where
-        key =
-          intOfSize 4 >>= bytesOfSize
 
 
 -- * Composite

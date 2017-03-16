@@ -6,7 +6,6 @@ import Test.QuickCheck.Instances
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
-import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified PostgreSQL.Binary.Decoder as Decoder
 import qualified Main.TextEncoder  as TextEncoder 

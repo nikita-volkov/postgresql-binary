@@ -9,7 +9,6 @@ import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import qualified Data.HashMap.Strict as HashMap
-import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified Data.Text as Text
 import qualified Data.Aeson as Aeson
@@ -128,34 +127,6 @@ inet = do
     then IPAddr.netAddr <$> (IPAddr.IPv6 <$> (IPAddr.ip6FromWords <$>
          arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 128)
     else IPAddr.netAddr <$> (IPAddr.IPv4 <$> (IPAddr.ip4FromOctets <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 32)
-
-arrayRep :: Gen (Word32, Data.Array)
-arrayRep =
-  do
-    ndims <- choose (1, 4)
-    dims <- Vector.replicateM ndims dimGen
-    (valueGen', oid, arrayOID) <- valueGen
-    values <- Vector.replicateM (dimsToNValues dims) valueGen'
-    let nulls = Vector.elem Nothing values
-    return (arrayOID, (dims, values, nulls, oid))
-  where
-    dimGen =
-      (,) <$> choose (1, 7) <*> pure 1
-    valueGen =
-      do
-        (pti, gen) <- elements [(PTI.int8, mkGen Encoder.int8_int64),
-                                (PTI.bool, mkGen Encoder.bool),
-                                (PTI.date, mkGen Encoder.date),
-                                (PTI.text, mkGen Encoder.text_strict),
-                                (PTI.bytea, mkGen Encoder.bytea_strict)]
-        return (gen, PTI.oidWord32 (PTI.ptiOID pti), PTI.oidWord32 (fromJust (PTI.ptiArrayOID pti)))
-      where
-        mkGen renderer =
-          fmap (fmap (Encoder.valueBytes . Encoder.primitiveValue . renderer)) arbitrary
-    dimsToNValues =
-      Vector.product . fmap dimensionWidth
-      where
-        dimensionWidth (x, _) = fromIntegral x
 
 array3 :: Gen a -> Gen [[[a]]]
 array3 gen =
