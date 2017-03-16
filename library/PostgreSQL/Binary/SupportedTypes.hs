@@ -4,14 +4,20 @@ Useful for the reduction of dependencies in the \"postgresql-binary\" dependent 
 -}
 module PostgreSQL.Binary.SupportedTypes
 (
-  Data.Vector.Vector,
-  Data.Scientific.Scientific,
+  module Data.HashMap.Strict,
+  module Data.Map.Strict,
+  module Data.Scientific,
+  module Data.Time,
+  module Data.UUID,
+  module Data.Vector,
+  module Network.IP.Addr,
 )
 where
 
-import Data.Vector
-import Data.Scientific
-import Data.UUID
-import Network.IP.Addr
-import PostgreSQL.Binary.Prelude
-import PostgreSQL.Binary.Numeric
+import Data.HashMap.Strict (HashMap)
+import Data.Map.Strict (Map)
+import Data.Scientific (Scientific)
+import Data.Time (Day, TimeOfDay, TimeZone, LocalTime, UTCTime, DiffTime)
+import Data.UUID (UUID)
+import Data.Vector (Vector)
+import Network.IP.Addr (IP, NetAddr)
