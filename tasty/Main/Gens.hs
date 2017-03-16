@@ -10,7 +10,7 @@ import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import qualified Data.HashMap.Strict as HashMap
 import qualified PostgreSQL.Binary.Data as Data
-import qualified PostgreSQL.Binary.Encoder as Encoder
+import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified Data.Text as Text
 import qualified Data.Aeson as Aeson
 import qualified Network.IP.Addr as IPAddr
@@ -151,7 +151,7 @@ arrayRep =
         return (gen, PTI.oidWord32 (PTI.ptiOID pti), PTI.oidWord32 (fromJust (PTI.ptiArrayOID pti)))
       where
         mkGen renderer =
-          fmap (fmap (convert . renderer)) arbitrary
+          fmap (fmap (Encoder.valueBytes . Encoder.primitiveValue . renderer)) arbitrary
     dimsToNValues =
       Vector.product . fmap dimensionWidth
       where

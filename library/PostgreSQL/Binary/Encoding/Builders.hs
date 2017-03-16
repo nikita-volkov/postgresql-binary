@@ -54,12 +54,12 @@ false1 =
 {-# NOINLINE true4 #-}
 true4 :: Builder
 true4 =
-  int4FromWord32 1
+  int4_word32 1
 
 {-# NOINLINE false4 #-}
 false4 :: Builder
 false4 =
-  int4FromWord32 0
+  int4_word32 0
 
 
 -- * Primitives
@@ -80,59 +80,59 @@ intFromWord8 :: Word8 -> Builder
 intFromWord8 =
   word8
 
-{-# INLINE int2FromInt16 #-}
-int2FromInt16 :: Int16 -> Builder
-int2FromInt16 =
+{-# INLINE int2_int16 #-}
+int2_int16 :: Int16 -> Builder
+int2_int16 =
   int16BE
 
-{-# INLINE int2FromWord16 #-}
-int2FromWord16 :: Word16 -> Builder
-int2FromWord16 =
+{-# INLINE int2_word16 #-}
+int2_word16 :: Word16 -> Builder
+int2_word16 =
   word16BE
 
-{-# INLINE int4FromInt32 #-}
-int4FromInt32 :: Int32 -> Builder
-int4FromInt32 =
+{-# INLINE int4_int32 #-}
+int4_int32 :: Int32 -> Builder
+int4_int32 =
   int32BE
 
-{-# INLINE int4FromWord32 #-}
-int4FromWord32 :: Word32 -> Builder
-int4FromWord32 =
+{-# INLINE int4_word32 #-}
+int4_word32 :: Word32 -> Builder
+int4_word32 =
   word32BE
 
 {-# INLINE int4FromInt #-}
 int4FromInt :: Int -> Builder
 int4FromInt =
-  int4FromInt32 . fromIntegral
+  int4_int32 . fromIntegral
 
-{-# INLINE int8FromInt64 #-}
-int8FromInt64 :: Int64 -> Builder
-int8FromInt64 =
+{-# INLINE int8_int64 #-}
+int8_int64 :: Int64 -> Builder
+int8_int64 =
   int64BE
 
-{-# INLINE int8FromWord64 #-}
-int8FromWord64 :: Word64 -> Builder
-int8FromWord64 =
+{-# INLINE int8_word64 #-}
+int8_word64 :: Word64 -> Builder
+int8_word64 =
   word64BE
 
 {-# INLINE float4 #-}
 float4 :: Float -> Builder
 float4 =
-  int4FromInt32 . unsafeCoerce
+  int4_int32 . unsafeCoerce
 
 {-# INLINE float8 #-}
 float8 :: Double -> Builder
 float8 =
-  int8FromInt64 . unsafeCoerce
+  int8_int64 . unsafeCoerce
 
 {-# INLINABLE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =
-  int2FromInt16 (fromIntegral componentsAmount) <>
-  int2FromInt16 (fromIntegral pointIndex) <>
+  int2_int16 (fromIntegral componentsAmount) <>
+  int2_int16 (fromIntegral pointIndex) <>
   signCode <>
-  int2FromInt16 (fromIntegral trimmedExponent) <>
-  foldMap int2FromInt16 components
+  int2_int16 (fromIntegral trimmedExponent) <>
+  foldMap int2_int16 components
   where
     componentsAmount = 
       length components
@@ -160,18 +160,18 @@ numeric x =
 {-# NOINLINE numericNegSignCode #-}
 numericNegSignCode :: Builder
 numericNegSignCode =
-  int2FromWord16 C.negSignCode
+  int2_word16 C.negSignCode
 
 {-# NOINLINE numericPosSignCode #-}
 numericPosSignCode :: Builder
 numericPosSignCode =
-  int2FromWord16 C.posSignCode
+  int2_word16 C.posSignCode
 
 {-# INLINE uuid #-}
 uuid :: UUID -> Builder
 uuid uuid =
   case E.toWords uuid of
-    (w1, w2, w3, w4) -> int4FromWord32 w1 <> int4FromWord32 w2 <> int4FromWord32 w3 <> int4FromWord32 w4
+    (w1, w2, w3, w4) -> int4_word32 w1 <> int4_word32 w2 <> int4_word32 w3 <> int4_word32 w4
 
 {-# INLINABLE ip4 #-}
 ip4 :: G.IP4 -> Builder
@@ -184,8 +184,8 @@ ip6 :: G.IP6 -> Builder
 ip6 x =
   case G.ip6ToWords x of
     (w1, w2, w3, w4, w5, w6, w7, w8) ->
-      int2FromWord16 w1 <> int2FromWord16 w2 <> int2FromWord16 w3 <> int2FromWord16 w4 <>
-      int2FromWord16 w5 <> int2FromWord16 w6 <> int2FromWord16 w7 <> int2FromWord16 w8
+      int2_word16 w1 <> int2_word16 w2 <> int2_word16 w3 <> int2_word16 w4 <>
+      int2_word16 w5 <> int2_word16 w6 <> int2_word16 w7 <> int2_word16 w8
 
 {-# INLINABLE inet #-}
 inet :: G.NetAddr G.IP -> Builder
@@ -228,34 +228,34 @@ ip6Size =
 -- 
 -- Note that since it's UTF-8-encoded
 -- not the \"char\" but the \"text\" OID should be used with it.
-{-# INLINE charInUTF8 #-}
-charInUTF8 :: Char -> Builder
-charInUTF8 = 
+{-# INLINE char_utf8 #-}
+char_utf8 :: Char -> Builder
+char_utf8 = 
   utf8Char
 
-{-# INLINE textFromStrict #-}
-textFromStrict :: Text -> Builder
-textFromStrict =
-  byteaFromLazyBuilder . J.encodeUtf8BuilderEscaped I.nullByteIgnoringBoundedPrim
+{-# INLINE text_strict #-}
+text_strict :: Text -> Builder
+text_strict =
+  bytea_lazyBuilder . J.encodeUtf8BuilderEscaped I.nullByteIgnoringBoundedPrim
 
-{-# INLINE textFromLazy #-}
-textFromLazy :: L.Text -> Builder
-textFromLazy =
-  byteaFromLazyBuilder . K.encodeUtf8BuilderEscaped I.nullByteIgnoringBoundedPrim
+{-# INLINE text_lazy #-}
+text_lazy :: L.Text -> Builder
+text_lazy =
+  bytea_lazyBuilder . K.encodeUtf8BuilderEscaped I.nullByteIgnoringBoundedPrim
 
-{-# INLINE byteaFromStrict #-}
-byteaFromStrict :: ByteString -> Builder
-byteaFromStrict =
+{-# INLINE bytea_strict #-}
+bytea_strict :: ByteString -> Builder
+bytea_strict =
   bytes
 
-{-# INLINE byteaFromLazy #-}
-byteaFromLazy :: N.ByteString -> Builder
-byteaFromLazy =
+{-# INLINE bytea_lazy #-}
+bytea_lazy :: N.ByteString -> Builder
+bytea_lazy =
   lazyBytes
 
-{-# INLINE byteaFromLazyBuilder #-}
-byteaFromLazyBuilder :: M.Builder -> Builder
-byteaFromLazyBuilder =
+{-# INLINE bytea_lazyBuilder #-}
+bytea_lazyBuilder :: M.Builder -> Builder
+bytea_lazyBuilder =
   lazyBytes . M.toLazyByteString
 
 
@@ -265,62 +265,62 @@ byteaFromLazyBuilder =
 {-# INLINE date #-}
 date :: Day -> Builder
 date =
-  int4FromInt32 . fromIntegral . O.dayToPostgresJulian
+  int4_int32 . fromIntegral . O.dayToPostgresJulian
 
-{-# INLINABLE intTime #-}
-intTime :: TimeOfDay -> Builder
-intTime (TimeOfDay h m s) =
+{-# INLINABLE time_int #-}
+time_int :: TimeOfDay -> Builder
+time_int (TimeOfDay h m s) =
   let
     p = unsafeCoerce s :: Integer
     u = p `div` (10^6)
-    in int8FromInt64 (fromIntegral u + 10^6 * 60 * (fromIntegral m + 60 * fromIntegral h))
+    in int8_int64 (fromIntegral u + 10^6 * 60 * (fromIntegral m + 60 * fromIntegral h))
 
-{-# INLINABLE floatTime #-}
-floatTime :: TimeOfDay -> Builder
-floatTime (TimeOfDay h m s) =
+{-# INLINABLE time_float #-}
+time_float :: TimeOfDay -> Builder
+time_float (TimeOfDay h m s) =
   let
     p = unsafeCoerce s :: Integer
     u = p `div` (10^6)
     in float8 (fromIntegral u / 10^6 + 60 * (fromIntegral m + 60 * (fromIntegral h)))
 
-{-# INLINE intTimetz #-}
-intTimetz :: (TimeOfDay, TimeZone) -> Builder
-intTimetz (timeX, tzX) =
-  intTime timeX <> tz tzX
+{-# INLINE timetz_int #-}
+timetz_int :: (TimeOfDay, TimeZone) -> Builder
+timetz_int (timeX, tzX) =
+  time_int timeX <> tz tzX
 
-{-# INLINE floatTimetz #-}
-floatTimetz :: (TimeOfDay, TimeZone) -> Builder
-floatTimetz (timeX, tzX) =
-  floatTime timeX <> tz tzX
+{-# INLINE timetz_float #-}
+timetz_float :: (TimeOfDay, TimeZone) -> Builder
+timetz_float (timeX, tzX) =
+  time_float timeX <> tz tzX
 
 {-# INLINE tz #-}
 tz :: TimeZone -> Builder
 tz =
   int4FromInt . (*60) . negate . timeZoneMinutes
 
-{-# INLINE intTimestamp #-}
-intTimestamp :: LocalTime -> Builder
-intTimestamp =
-  int8FromInt64 . O.localTimeToMicros
+{-# INLINE timestamp_int #-}
+timestamp_int :: LocalTime -> Builder
+timestamp_int =
+  int8_int64 . O.localTimeToMicros
 
-{-# INLINE floatTimestamp #-}
-floatTimestamp :: LocalTime -> Builder
-floatTimestamp =
+{-# INLINE timestamp_float #-}
+timestamp_float :: LocalTime -> Builder
+timestamp_float =
   float8 . O.localTimeToSecs
 
-{-# INLINE intTimestamptz #-}
-intTimestamptz :: UTCTime -> Builder
-intTimestamptz =
-  int8FromInt64 . O.utcToMicros
+{-# INLINE timestamptz_int #-}
+timestamptz_int :: UTCTime -> Builder
+timestamptz_int =
+  int8_int64 . O.utcToMicros
 
-{-# INLINE floatTimestamptz #-}
-floatTimestamptz :: UTCTime -> Builder
-floatTimestamptz =
+{-# INLINE timestamptz_float #-}
+timestamptz_float :: UTCTime -> Builder
+timestamptz_float =
   float8 . O.utcToSecs
 
-{-# INLINABLE intInterval #-}
-intInterval :: DiffTime -> Builder
-intInterval x =
+{-# INLINABLE interval_int #-}
+interval_int :: DiffTime -> Builder
+interval_int x =
   int64BE u <>
   int32BE d <>
   int32BE m
@@ -329,9 +329,9 @@ intInterval x =
       fromMaybe (error ("Too large DiffTime value for an interval " <> show x)) $
       P.fromDiffTime x
 
-{-# INLINABLE floatInterval #-}
-floatInterval :: DiffTime -> Builder
-floatInterval x =
+{-# INLINABLE interval_float #-}
+interval_float :: DiffTime -> Builder
+interval_float x =
   float8 s <>
   int32BE d <>
   int32BE m
@@ -346,23 +346,23 @@ floatInterval x =
 -- * JSON
 -------------------------
 
-{-# INLINE jsonFromBytes #-}
-jsonFromBytes :: ByteString -> Builder
-jsonFromBytes =
+{-# INLINE json_bytes #-}
+json_bytes :: ByteString -> Builder
+json_bytes =
   bytes
 
-{-# INLINE jsonbFromBytes #-}
-jsonbFromBytes :: ByteString -> Builder
-jsonbFromBytes =
+{-# INLINE jsonb_bytes #-}
+jsonb_bytes :: ByteString -> Builder
+jsonb_bytes =
   mappend "\1" . bytes
 
 
 -- * Array
 -------------------------
 
-{-# INLINE arrayFromVector #-}
-arrayFromVector :: Word32 -> (element -> Builder) -> Vector element -> Builder
-arrayFromVector oid elementBuilder vector =
+{-# INLINE array_vector #-}
+array_vector :: Word32 -> (element -> Builder) -> Vector element -> Builder
+array_vector oid elementBuilder vector =
   array oid dimensions False payload
   where
     dimensions =
@@ -385,14 +385,14 @@ array :: Word32 -> [Int32] -> Bool -> Builder -> Builder
 array oid dimensions nulls payload =
   int4FromInt (B.length dimensions) <>
   B.bool false4 true4 nulls <>
-  int4FromWord32 oid <>
+  int4_word32 oid <>
   foldMap arrayDimension dimensions <>
   payload
 
 {-# INLINE arrayDimension #-}
 arrayDimension :: Int32 -> Builder
 arrayDimension dimension =
-  int4FromInt32 dimension <> true4
+  int4_int32 dimension <> true4
 
 
 -- * HStore
@@ -440,16 +440,16 @@ hStoreFromFoldMapAndSize foldMap size =
 {-# INLINE hStoreRow #-}
 hStoreRow :: Text -> Maybe Text -> Builder
 hStoreRow key value =
-  sized (textFromStrict key) <> sizedMaybe textFromStrict value
+  sized (text_strict key) <> sizedMaybe text_strict value
 
-{-# INLINE hStoreFromHashMap #-}
-hStoreFromHashMap :: HashMap Text (Maybe Text) -> Builder
-hStoreFromHashMap input =
+{-# INLINE hStore_hashMap #-}
+hStore_hashMap :: HashMap Text (Maybe Text) -> Builder
+hStore_hashMap input =
   int4FromInt (F.size input) <>
   F.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
 
-{-# INLINE hStoreFromMap #-}
-hStoreFromMap :: Map Text (Maybe Text) -> Builder
-hStoreFromMap input =
+{-# INLINE hStore_map #-}
+hStore_map :: Map Text (Maybe Text) -> Builder
+hStore_map input =
   int4FromInt (Q.size input) <>
   Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input

@@ -58,7 +58,6 @@ library
   exposed-modules:
     PostgreSQL.Binary.Data
     PostgreSQL.Binary.Decoder
-    PostgreSQL.Binary.Encoder
     PostgreSQL.Binary.Encoding
     PostgreSQL.Binary.SupportedTypes
   other-modules:
@@ -90,7 +89,6 @@ library
     loch-th == 0.2.*,
     placeholders == 0.1.*,
     -- general:
-    foldl >= 1.1.1 && < 2,
     transformers >= 0.3 && < 0.6,
     base-prelude >= 0.1.19 && < 2,
     base >= 4.6 && < 5

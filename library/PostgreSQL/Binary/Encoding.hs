@@ -6,51 +6,51 @@ module PostgreSQL.Binary.Encoding
   Value,
   primitiveValue,
   arrayValue,
-  arrayFromFoldable,
-  arrayFromVector,
-  nullableArrayFromVector,
-  hStoreFromFoldable,
-  hStoreFromHashMap,
-  hStoreFromMap,
+  array_foldable,
+  array_vector,
+  nullableArray_vector,
+  hStore_foldable,
+  hStore_hashMap,
+  hStore_map,
 
   -- * Primitive
   Primitive,
   bool,
-  int2FromInt16,
-  int2FromWord16,
-  int4FromInt32,
-  int4FromWord32,
-  int8FromInt64,
-  int8FromWord64,
+  int2_int16,
+  int2_word16,
+  int4_int32,
+  int4_word32,
+  int8_int64,
+  int8_word64,
   float4,
   float8,
   numeric,
   uuid,
   inet,
-  charInUTF8,
-  textFromStrict,
-  textFromLazy,
-  byteaFromStrict,
-  byteaFromLazy,
-  byteaFromLazyBuilder,
+  char_utf8,
+  text_strict,
+  text_lazy,
+  bytea_strict,
+  bytea_lazy,
+  bytea_lazyBuilder,
   -- ** Time
   -- | Some of the functions in this section are distinguished based
   -- on the @integer_datetimes@ setting of the server.
   date,
-  intTime,
-  floatTime,
-  intTimetz,
-  floatTimetz,
+  time_int,
+  time_float,
+  timetz_int,
+  timetz_float,
   tz,
-  intTimestamp,
-  floatTimestamp,
-  intTimestamptz,
-  floatTimestamptz,
-  intInterval,
-  floatInterval,
+  timestamp_int,
+  timestamp_float,
+  timestamptz_int,
+  timestamptz_float,
+  interval_int,
+  interval_float,
   -- ** JSON
-  jsonFromBytes,
-  jsonbFromBytes,
+  json_bytes,
+  jsonb_bytes,
 
   -- * Array
   Array,
@@ -100,52 +100,52 @@ arrayValue oid (Array payload dimensions nulls) =
 A helper for encoding of arrays of single dimension from foldables.
 The first parameter is Array OID.
 -}
-{-# INLINE arrayFromFoldable #-}
-arrayFromFoldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
-arrayFromFoldable oid elementPrimitive =
+{-# INLINE array_foldable #-}
+array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
+array_foldable oid elementPrimitive =
   arrayValue oid . dimensionArray (maybe nullArray primitiveArray . elementPrimitive)
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is Array OID.
 -}
-{-# INLINE arrayFromVector #-}
-arrayFromVector :: Word32 -> (element -> Primitive) -> Vector element -> Value
-arrayFromVector oid elementPrimitive vector =
-  Value (C.builderBytes (B.arrayFromVector oid (primitiveBuilder . elementPrimitive) vector))
+{-# INLINE array_vector #-}
+array_vector :: Word32 -> (element -> Primitive) -> Vector element -> Value
+array_vector oid elementPrimitive vector =
+  Value (C.builderBytes (B.array_vector oid (primitiveBuilder . elementPrimitive) vector))
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is Array OID.
 -}
-{-# INLINE nullableArrayFromVector #-}
-nullableArrayFromVector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
-nullableArrayFromVector oid elementPrimitive vector =
+{-# INLINE nullableArray_vector #-}
+nullableArray_vector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
+nullableArray_vector oid elementPrimitive vector =
   Value (C.builderBytes (B.arrayFromNullableVector oid (primitiveBuilder . elementPrimitive) vector))
 
 {-|
 A polymorphic @HSTORE@ encoder.
 -}
-{-# INLINE hStoreFromFoldable #-}
-hStoreFromFoldable :: Foldable foldable => foldable (Text, Maybe Text) -> Value
-hStoreFromFoldable =
+{-# INLINE hStore_foldable #-}
+hStore_foldable :: Foldable foldable => foldable (Text, Maybe Text) -> Value
+hStore_foldable =
   Value . C.builderBytes . B.hStoreUsingFoldl foldl
 
 {-|
 @HSTORE@ encoder from HashMap.
 -}
-{-# INLINE hStoreFromHashMap #-}
-hStoreFromHashMap :: HashMap Text (Maybe Text) -> Value
-hStoreFromHashMap =
-  Value . C.builderBytes . B.hStoreFromHashMap
+{-# INLINE hStore_hashMap #-}
+hStore_hashMap :: HashMap Text (Maybe Text) -> Value
+hStore_hashMap =
+  Value . C.builderBytes . B.hStore_hashMap
 
 {-|
 @HSTORE@ encoder from Map.
 -}
-{-# INLINE hStoreFromMap #-}
-hStoreFromMap :: Map Text (Maybe Text) -> Value
-hStoreFromMap =
-  Value . C.builderBytes . B.hStoreFromMap
+{-# INLINE hStore_map #-}
+hStore_map :: Map Text (Maybe Text) -> Value
+hStore_map =
+  Value . C.builderBytes . B.hStore_map
 
 
 -- * Primitive
@@ -162,35 +162,35 @@ bool :: Bool -> Primitive
 bool =
   Primitive . B.bool
 
-{-# INLINE int2FromInt16 #-}
-int2FromInt16 :: Int16 -> Primitive
-int2FromInt16 =
-  Primitive . B.int2FromInt16
+{-# INLINE int2_int16 #-}
+int2_int16 :: Int16 -> Primitive
+int2_int16 =
+  Primitive . B.int2_int16
 
-{-# INLINE int2FromWord16 #-}
-int2FromWord16 :: Word16 -> Primitive
-int2FromWord16 =
-  Primitive . B.int2FromWord16
+{-# INLINE int2_word16 #-}
+int2_word16 :: Word16 -> Primitive
+int2_word16 =
+  Primitive . B.int2_word16
 
-{-# INLINE int4FromInt32 #-}
-int4FromInt32 :: Int32 -> Primitive
-int4FromInt32 =
-  Primitive . B.int4FromInt32
+{-# INLINE int4_int32 #-}
+int4_int32 :: Int32 -> Primitive
+int4_int32 =
+  Primitive . B.int4_int32
 
-{-# INLINE int4FromWord32 #-}
-int4FromWord32 :: Word32 -> Primitive
-int4FromWord32 =
-  Primitive . B.int4FromWord32
+{-# INLINE int4_word32 #-}
+int4_word32 :: Word32 -> Primitive
+int4_word32 =
+  Primitive . B.int4_word32
 
-{-# INLINE int8FromInt64 #-}
-int8FromInt64 :: Int64 -> Primitive
-int8FromInt64 =
-  Primitive . B.int8FromInt64
+{-# INLINE int8_int64 #-}
+int8_int64 :: Int64 -> Primitive
+int8_int64 =
+  Primitive . B.int8_int64
 
-{-# INLINE int8FromWord64 #-}
-int8FromWord64 :: Word64 -> Primitive
-int8FromWord64 =
-  Primitive . B.int8FromWord64
+{-# INLINE int8_word64 #-}
+int8_word64 :: Word64 -> Primitive
+int8_word64 =
+  Primitive . B.int8_word64
 
 {-# INLINE float4 #-}
 float4 :: Float -> Primitive
@@ -217,105 +217,105 @@ inet :: G.NetAddr G.IP -> Primitive
 inet =
   Primitive . B.inet
 
-{-# INLINE charInUTF8 #-}
-charInUTF8 :: Char -> Primitive
-charInUTF8 =
-  Primitive . B.charInUTF8
+{-# INLINE char_utf8 #-}
+char_utf8 :: Char -> Primitive
+char_utf8 =
+  Primitive . B.char_utf8
 
-{-# INLINE textFromStrict #-}
-textFromStrict :: Text -> Primitive
-textFromStrict =
-  Primitive . B.textFromStrict
+{-# INLINE text_strict #-}
+text_strict :: Text -> Primitive
+text_strict =
+  Primitive . B.text_strict
 
-{-# INLINE textFromLazy #-}
-textFromLazy :: L.Text -> Primitive
-textFromLazy =
-  Primitive . B.textFromLazy
+{-# INLINE text_lazy #-}
+text_lazy :: L.Text -> Primitive
+text_lazy =
+  Primitive . B.text_lazy
 
-{-# INLINE byteaFromStrict #-}
-byteaFromStrict :: ByteString -> Primitive
-byteaFromStrict =
-  Primitive . B.byteaFromStrict
+{-# INLINE bytea_strict #-}
+bytea_strict :: ByteString -> Primitive
+bytea_strict =
+  Primitive . B.bytea_strict
 
-{-# INLINE byteaFromLazy #-}
-byteaFromLazy :: N.ByteString -> Primitive
-byteaFromLazy =
-  Primitive . B.byteaFromLazy
+{-# INLINE bytea_lazy #-}
+bytea_lazy :: N.ByteString -> Primitive
+bytea_lazy =
+  Primitive . B.bytea_lazy
 
-{-# INLINE byteaFromLazyBuilder #-}
-byteaFromLazyBuilder :: M.Builder -> Primitive
-byteaFromLazyBuilder =
-  Primitive . B.byteaFromLazyBuilder
+{-# INLINE bytea_lazyBuilder #-}
+bytea_lazyBuilder :: M.Builder -> Primitive
+bytea_lazyBuilder =
+  Primitive . B.bytea_lazyBuilder
 
 {-# INLINE date #-}
 date :: Day -> Primitive
 date =
   Primitive . B.date
 
-{-# INLINE intTime #-}
-intTime :: TimeOfDay -> Primitive
-intTime =
-  Primitive . B.intTime
+{-# INLINE time_int #-}
+time_int :: TimeOfDay -> Primitive
+time_int =
+  Primitive . B.time_int
 
-{-# INLINE floatTime #-}
-floatTime :: TimeOfDay -> Primitive
-floatTime =
-  Primitive . B.floatTime
+{-# INLINE time_float #-}
+time_float :: TimeOfDay -> Primitive
+time_float =
+  Primitive . B.time_float
 
-{-# INLINE intTimetz #-}
-intTimetz :: (TimeOfDay, TimeZone) -> Primitive
-intTimetz =
-  Primitive . B.intTimetz
+{-# INLINE timetz_int #-}
+timetz_int :: (TimeOfDay, TimeZone) -> Primitive
+timetz_int =
+  Primitive . B.timetz_int
 
-{-# INLINE floatTimetz #-}
-floatTimetz :: (TimeOfDay, TimeZone) -> Primitive
-floatTimetz =
-  Primitive . B.floatTimetz
+{-# INLINE timetz_float #-}
+timetz_float :: (TimeOfDay, TimeZone) -> Primitive
+timetz_float =
+  Primitive . B.timetz_float
 
 {-# INLINE tz #-}
 tz :: TimeZone -> Primitive
 tz =
   Primitive . B.tz
 
-{-# INLINE intTimestamp #-}
-intTimestamp :: LocalTime -> Primitive
-intTimestamp =
-  Primitive . B.intTimestamp
+{-# INLINE timestamp_int #-}
+timestamp_int :: LocalTime -> Primitive
+timestamp_int =
+  Primitive . B.timestamp_int
 
-{-# INLINE floatTimestamp #-}
-floatTimestamp :: LocalTime -> Primitive
-floatTimestamp =
-  Primitive . B.floatTimestamp
+{-# INLINE timestamp_float #-}
+timestamp_float :: LocalTime -> Primitive
+timestamp_float =
+  Primitive . B.timestamp_float
 
-{-# INLINE intTimestamptz #-}
-intTimestamptz :: UTCTime -> Primitive
-intTimestamptz =
-  Primitive . B.intTimestamptz
+{-# INLINE timestamptz_int #-}
+timestamptz_int :: UTCTime -> Primitive
+timestamptz_int =
+  Primitive . B.timestamptz_int
 
-{-# INLINE floatTimestamptz #-}
-floatTimestamptz :: UTCTime -> Primitive
-floatTimestamptz =
-  Primitive . B.floatTimestamptz
+{-# INLINE timestamptz_float #-}
+timestamptz_float :: UTCTime -> Primitive
+timestamptz_float =
+  Primitive . B.timestamptz_float
 
-{-# INLINE intInterval #-}
-intInterval :: DiffTime -> Primitive
-intInterval =
-  Primitive . B.intInterval
+{-# INLINE interval_int #-}
+interval_int :: DiffTime -> Primitive
+interval_int =
+  Primitive . B.interval_int
 
-{-# INLINE floatInterval #-}
-floatInterval :: DiffTime -> Primitive
-floatInterval =
-  Primitive . B.floatInterval
+{-# INLINE interval_float #-}
+interval_float :: DiffTime -> Primitive
+interval_float =
+  Primitive . B.interval_float
 
-{-# INLINE jsonFromBytes #-}
-jsonFromBytes :: ByteString -> Primitive
-jsonFromBytes =
-  Primitive . B.jsonFromBytes
+{-# INLINE json_bytes #-}
+json_bytes :: ByteString -> Primitive
+json_bytes =
+  Primitive . B.json_bytes
 
-{-# INLINE jsonbFromBytes #-}
-jsonbFromBytes :: ByteString -> Primitive
-jsonbFromBytes =
-  Primitive . B.jsonbFromBytes
+{-# INLINE jsonb_bytes #-}
+jsonb_bytes :: ByteString -> Primitive
+jsonb_bytes =
+  Primitive . B.jsonb_bytes
 
 
 -- * Array

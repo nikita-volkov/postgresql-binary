@@ -13,7 +13,7 @@ import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import qualified Data.Text.Encoding as Text
 import qualified PostgreSQL.Binary.Data as Data
-import qualified PostgreSQL.Binary.Encoder as Encoder
+import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified PostgreSQL.Binary.Decoder as Decoder
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 
@@ -32,7 +32,7 @@ textRoundtrip oid encoder decoder value =
         bytes =
           (convert . encoder) value
 
-roundtrip :: LibPQ.Oid -> (Bool -> Encoder.Encoder a) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
+roundtrip :: LibPQ.Oid -> (Bool -> a -> Encoder.Value) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
@@ -44,7 +44,7 @@ roundtrip oid encoder decoder value =
       [ Just ( oid , bytes , LibPQ.Binary ) ]
       where
         bytes =
-          (convert . encoder integerDatetimes) value
+          (Encoder.valueBytes . encoder integerDatetimes) value
 
 parameterlessStatement :: ByteString -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
 parameterlessStatement statement decoder value =
