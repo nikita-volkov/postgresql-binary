@@ -9,6 +9,9 @@ module PostgreSQL.Binary.Encoding
   foldableValue,
   vectorValue,
   nullableVectorValue,
+  hStoreFromFoldable,
+  hStoreFromHashMap,
+  hStoreFromMap,
 
   -- * Primitive
   Primitive,
@@ -120,6 +123,30 @@ The first parameter is Array OID.
 nullableVectorValue :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
 nullableVectorValue oid elementPrimitive vector =
   Value (C.builderBytes (B.arrayFromNullableVector oid (primitiveBuilder . elementPrimitive) vector))
+
+{-|
+A polymorphic @HSTORE@ encoder.
+-}
+{-# INLINE hStoreFromFoldable #-}
+hStoreFromFoldable :: Foldable foldable => foldable (Text, Maybe Text) -> Value
+hStoreFromFoldable =
+  Value . C.builderBytes . B.hStoreUsingFoldl foldl
+
+{-|
+@HSTORE@ encoder from HashMap.
+-}
+{-# INLINE hStoreFromHashMap #-}
+hStoreFromHashMap :: HashMap Text (Maybe Text) -> Value
+hStoreFromHashMap =
+  Value . C.builderBytes . B.hStoreFromHashMap
+
+{-|
+@HSTORE@ encoder from Map.
+-}
+{-# INLINE hStoreFromMap #-}
+hStoreFromMap :: Map Text (Maybe Text) -> Value
+hStoreFromMap =
+  Value . C.builderBytes . B.hStoreFromMap
 
 
 -- * Primitive

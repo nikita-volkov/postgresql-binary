@@ -11,6 +11,8 @@ import qualified Data.ByteString.Lazy as N
 import qualified Data.Text.Encoding as J
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as K
+import qualified Data.HashMap.Strict as F
+import qualified Data.Map.Strict as Q
 import qualified Network.IP.Addr as G
 import qualified PostgreSQL.Binary.Prelude as B
 import qualified PostgreSQL.Binary.Numeric as C
@@ -391,3 +393,63 @@ array oid dimensions nulls payload =
 arrayDimension :: Int32 -> Builder
 arrayDimension dimension =
   int4FromInt32 dimension <> true4
+
+
+-- * HStore
+-------------------------
+
+{-|
+A polymorphic in-place @HSTORE@ encoder.
+
+Accepts:
+
+* An implementation of the @foldl@ function
+(e.g., @Data.Foldable.'foldl''@),
+which determines the input value.
+
+Here's how you can use it to produce a specific encoder:
+
+@
+hashMapHStore :: Data.HashMap.Strict.HashMap Text (Maybe Text) -> Builder
+hashMapHStore =
+  hStoreUsingFoldl foldl'
+@
+-}
+{-# INLINABLE hStoreUsingFoldl #-}
+hStoreUsingFoldl :: (forall a. (a -> (Text, Maybe Text) -> a) -> a -> b -> a) -> b -> Builder
+hStoreUsingFoldl foldl =
+  exit . foldl progress enter
+  where
+    enter =
+      (0, mempty)
+    progress (!count, !payload) (key, value) =
+      (succ count, payload <> hStoreRow key value)
+    exit (count, payload) =
+      int4FromInt count <> payload
+
+{-# INLINE hStoreUsingFoldMapAndSize #-}
+hStoreUsingFoldMapAndSize :: (forall a. Monoid a => ((Text, Maybe Text) -> a) -> b -> a) -> Int -> b -> Builder
+hStoreUsingFoldMapAndSize foldMap size input =
+  int4FromInt size <> foldMap (uncurry hStoreRow) input
+
+{-# INLINE hStoreFromFoldMapAndSize #-}
+hStoreFromFoldMapAndSize :: (forall a. Monoid a => (Text -> Maybe Text -> a) -> a) -> Int -> Builder
+hStoreFromFoldMapAndSize foldMap size =
+  int4FromInt size <> foldMap hStoreRow
+
+{-# INLINE hStoreRow #-}
+hStoreRow :: Text -> Maybe Text -> Builder
+hStoreRow key value =
+  sized (textFromStrict key) <> sizedMaybe textFromStrict value
+
+{-# INLINE hStoreFromHashMap #-}
+hStoreFromHashMap :: HashMap Text (Maybe Text) -> Builder
+hStoreFromHashMap input =
+  int4FromInt (F.size input) <>
+  F.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
+
+{-# INLINE hStoreFromMap #-}
+hStoreFromMap :: Map Text (Maybe Text) -> Builder
+hStoreFromMap input =
+  int4FromInt (Q.size input) <>
+  Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
