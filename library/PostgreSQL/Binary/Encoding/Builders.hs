@@ -1,7 +1,7 @@
 module PostgreSQL.Binary.Encoding.Builders
 where
 
-import PostgreSQL.Binary.Prelude hiding (bool, maybe)
+import PostgreSQL.Binary.Prelude hiding (bool)
 import StrictBytesBuilder
 import qualified Data.Vector as A
 import qualified Data.Scientific as D
@@ -34,6 +34,11 @@ sized payload =
   int4FromInt (builderLength payload) <>
   payload
 
+{-# INLINE sizedMaybe #-}
+sizedMaybe :: (element -> Builder) -> Maybe element -> Builder
+sizedMaybe elementBuilder =
+  B.maybe null4 (sized . elementBuilder)
+
 {-# NOINLINE true1 #-}
 true1 :: Builder
 true1 =
@@ -53,11 +58,6 @@ true4 =
 false4 :: Builder
 false4 =
   int4FromWord32 0
-
-{-# INLINE maybe #-}
-maybe :: (element -> Builder) -> Maybe element -> Builder
-maybe elementBuilder =
-  B.maybe null4 (sized . elementBuilder)
 
 
 -- * Primitives
@@ -376,7 +376,7 @@ arrayFromNullableVector oid elementBuilder vector =
     dimensions =
       [fromIntegral (A.length vector)]
     payload =
-      foldMap (maybe elementBuilder) vector
+      foldMap (sizedMaybe elementBuilder) vector
 
 {-# INLINABLE array #-}
 array :: Word32 -> [Int32] -> Bool -> Builder -> Builder
