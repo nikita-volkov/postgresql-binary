@@ -6,9 +6,9 @@ module PostgreSQL.Binary.Encoding
   Value,
   primitiveValue,
   arrayValue,
-  foldableValue,
-  vectorValue,
-  nullableVectorValue,
+  arrayFromFoldable,
+  arrayFromVector,
+  nullableArrayFromVector,
   hStoreFromFoldable,
   hStoreFromHashMap,
   hStoreFromMap,
@@ -101,27 +101,27 @@ arrayValue oid (Array payload dimensions nulls) =
 A helper for encoding of arrays of single dimension from foldables.
 The first parameter is Array OID.
 -}
-{-# INLINE foldableValue #-}
-foldableValue :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
-foldableValue oid elementPrimitive =
+{-# INLINE arrayFromFoldable #-}
+arrayFromFoldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
+arrayFromFoldable oid elementPrimitive =
   arrayValue oid . dimensionArray foldl' (maybe nullArray primitiveArray . elementPrimitive)
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is Array OID.
 -}
-{-# INLINE vectorValue #-}
-vectorValue :: Word32 -> (element -> Primitive) -> Vector element -> Value
-vectorValue oid elementPrimitive vector =
+{-# INLINE arrayFromVector #-}
+arrayFromVector :: Word32 -> (element -> Primitive) -> Vector element -> Value
+arrayFromVector oid elementPrimitive vector =
   Value (C.builderBytes (B.arrayFromVector oid (primitiveBuilder . elementPrimitive) vector))
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is Array OID.
 -}
-{-# INLINE nullableVectorValue #-}
-nullableVectorValue :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
-nullableVectorValue oid elementPrimitive vector =
+{-# INLINE nullableArrayFromVector #-}
+nullableArrayFromVector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
+nullableArrayFromVector oid elementPrimitive vector =
   Value (C.builderBytes (B.arrayFromNullableVector oid (primitiveBuilder . elementPrimitive) vector))
 
 {-|
