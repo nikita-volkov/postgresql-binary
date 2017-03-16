@@ -40,13 +40,11 @@ tested-with:
   GHC==7.10.1,
   GHC==8.0.1
 
-
 source-repository head
   type:
     git
   location:
     git://github.com/nikita-volkov/postgresql-binary.git
-
 
 library
   hs-source-dirs:
@@ -97,7 +95,6 @@ library
     base-prelude >= 0.1.19 && < 2,
     base >= 4.6 && < 5
 
-
 -- This test-suite must be executed in a single-thread.
 test-suite tasty
   type:
@@ -142,7 +139,6 @@ test-suite tasty
     -- general:
     rerebase >= 1.0.2 && < 2
 
-
 benchmark encoding
   type: 
     exitcode-stdio-1.0
@@ -165,7 +161,6 @@ benchmark encoding
     criterion >= 1.0 && < 1.2,
     -- general:
     rerebase < 2
-
 
 benchmark decoding
   type: 
