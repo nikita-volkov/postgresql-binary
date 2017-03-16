@@ -62,7 +62,6 @@ where
 
 import PostgreSQL.Binary.Prelude hiding (bool, length)
 import qualified StrictBytesBuilder as C
-import qualified Control.Foldl as F
 import qualified Data.Vector as A
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import qualified Data.ByteString.Builder as M
