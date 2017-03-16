@@ -49,13 +49,6 @@ nullableVectorValue :: Word32 -> (element -> Primitive) -> Vector (Maybe element
 nullableVectorValue oid elementPrimitive vector =
   Value (C.builderBytes (B.arrayFromNullableVector oid (primitiveBuilder . elementPrimitive) vector))
 
-{-|
-An optimized helper for directly encoding into 'ByteString'.
--}
-textValue :: Text -> Value
-textValue =
-  undefined
-
 
 -- * Primitive
 -------------------------
@@ -71,13 +64,8 @@ int4FromInt :: Int -> Primitive
 int4FromInt =
   undefined
 
-{-|
-Encodes text using builder.
-Use this when you need to compose with arrays and such.
-Otherwise use 'textValue', which is optimized to directly encode into 'ByteString'.
--}
-textPrimitive :: Text -> Primitive
-textPrimitive =
+textFromStrict :: Text -> Primitive
+textFromStrict =
   undefined
 
 
