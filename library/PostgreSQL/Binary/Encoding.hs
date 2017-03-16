@@ -104,7 +104,7 @@ The first parameter is Array OID.
 {-# INLINE arrayFromFoldable #-}
 arrayFromFoldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
 arrayFromFoldable oid elementPrimitive =
-  arrayValue oid . dimensionArray foldl' (maybe nullArray primitiveArray . elementPrimitive)
+  arrayValue oid . dimensionArray (maybe nullArray primitiveArray . elementPrimitive)
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
@@ -336,14 +336,14 @@ nullArray :: Array
 nullArray =
   Array B.null4 [] True
 
-dimensionArray :: (forall a. (a -> b -> a) -> a -> c -> a) -> (b -> Array) -> c -> Array
-dimensionArray foldl elementArray input =
+dimensionArray :: Foldable foldable => (a -> Array) -> foldable a -> Array
+dimensionArray elementArray input =
   Array builder dimensions nulls
   where
     dimensions =
       foldedLength : foldedDimensions
     (builder, foldedDimensions, foldedLength, nulls) =
-      foldl step init input
+      foldl' step init input
       where
         init =
           (mempty, [], 0, False)
