@@ -12,7 +12,6 @@ import qualified Data.Text.Encoding as J
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as K
 import qualified Network.IP.Addr as G
-import qualified Control.Foldl as F
 import qualified PostgreSQL.Binary.Prelude as B
 import qualified PostgreSQL.Binary.Numeric as C
 import qualified PostgreSQL.Binary.Inet as H
