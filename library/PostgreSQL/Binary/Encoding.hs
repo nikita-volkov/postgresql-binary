@@ -88,7 +88,7 @@ primitiveValue =
 
 {-|
 Turn an array builder into final value.
-The first parameter is Array OID.
+The first parameter is OID of the element type.
 -}
 {-# INLINE arrayValue #-}
 arrayValue :: Word32 -> Array -> Value
@@ -97,7 +97,7 @@ arrayValue oid (Array payload dimensions nulls) =
 
 {-|
 A helper for encoding of arrays of single dimension from foldables.
-The first parameter is Array OID.
+The first parameter is OID of the element type.
 -}
 {-# INLINE array_foldable #-}
 array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
@@ -106,7 +106,7 @@ array_foldable oid elementPrimitive =
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
-The first parameter is Array OID.
+The first parameter is OID of the element type.
 -}
 {-# INLINE array_vector #-}
 array_vector :: Word32 -> (element -> Primitive) -> Vector element -> Value
@@ -115,7 +115,7 @@ array_vector oid elementPrimitive vector =
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
-The first parameter is Array OID.
+The first parameter is OID of the element type.
 -}
 {-# INLINE nullableArray_vector #-}
 nullableArray_vector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
