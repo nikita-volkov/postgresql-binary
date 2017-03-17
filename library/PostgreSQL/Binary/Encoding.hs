@@ -120,7 +120,7 @@ The first parameter is Array OID.
 {-# INLINE nullableArray_vector #-}
 nullableArray_vector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
 nullableArray_vector oid elementPrimitive vector =
-  Value (C.builderBytes (B.arrayFromNullableVector oid (primitiveBuilder . elementPrimitive) vector))
+  Value (C.builderBytes (B.nullableArray_vector oid (primitiveBuilder . elementPrimitive) vector))
 
 {-|
 A polymorphic @HSTORE@ encoder.

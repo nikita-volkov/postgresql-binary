@@ -370,9 +370,9 @@ array_vector oid elementBuilder vector =
     payload =
       foldMap (sized . elementBuilder) vector
 
-{-# INLINE arrayFromNullableVector #-}
-arrayFromNullableVector :: Word32 -> (element -> Builder) -> Vector (Maybe element) -> Builder
-arrayFromNullableVector oid elementBuilder vector =
+{-# INLINE nullableArray_vector #-}
+nullableArray_vector :: Word32 -> (element -> Builder) -> Vector (Maybe element) -> Builder
+nullableArray_vector oid elementBuilder vector =
   array oid dimensions True payload
   where
     dimensions =
