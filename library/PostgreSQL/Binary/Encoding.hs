@@ -47,7 +47,9 @@ module PostgreSQL.Binary.Encoding
   interval_float,
   -- ** JSON
   json_bytes,
+  json_ast,
   jsonb_bytes,
+  jsonb_ast,
 
   -- * Array
   Array,
@@ -64,6 +66,7 @@ import qualified PostgreSQL.Binary.Encoding.Builders as B
 import qualified Data.ByteString.Builder as M
 import qualified Data.ByteString.Lazy as N
 import qualified Data.Text.Lazy as L
+import qualified Data.Aeson as R
 import qualified Network.IP.Addr as G
 
 
@@ -293,10 +296,20 @@ json_bytes :: ByteString -> Encoding
 json_bytes =
   B.json_bytes
 
+{-# INLINE json_ast #-}
+json_ast :: R.Value -> Encoding
+json_ast =
+  B.json_ast
+
 {-# INLINE jsonb_bytes #-}
 jsonb_bytes :: ByteString -> Encoding
 jsonb_bytes =
   B.jsonb_bytes
+
+{-# INLINE jsonb_ast #-}
+jsonb_ast :: R.Value -> Encoding
+jsonb_ast =
+  B.jsonb_ast
 
 
 -- * Array

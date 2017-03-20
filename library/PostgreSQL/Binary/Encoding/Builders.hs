@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as K
 import qualified Data.HashMap.Strict as F
 import qualified Data.Map.Strict as Q
+import qualified Data.Aeson as R
 import qualified Network.IP.Addr as G
 import qualified PostgreSQL.Binary.Prelude as B
 import qualified PostgreSQL.Binary.Numeric as C
@@ -341,10 +342,20 @@ json_bytes :: ByteString -> Builder
 json_bytes =
   bytes
 
+{-# INLINE json_ast #-}
+json_ast :: R.Value -> Builder
+json_ast =
+  lazyBytes . R.encode
+
 {-# INLINE jsonb_bytes #-}
 jsonb_bytes :: ByteString -> Builder
 jsonb_bytes =
   mappend "\1" . bytes
+
+{-# INLINE jsonb_ast #-}
+jsonb_ast :: R.Value -> Builder
+jsonb_ast =
+  mappend "\1" . json_ast
 
 
 -- * Array

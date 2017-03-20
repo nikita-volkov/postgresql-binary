@@ -28,8 +28,12 @@ binary =
   testGroup "Binary format" testList
   where
     testList =
-      other
+      jsonb ++ other
       where
+        jsonb =
+          if version >= 90400
+            then [primitiveRoundtrip "jsonb" Gens.aeson PTI.jsonb A.jsonb_ast B.jsonb_ast]
+            else []
         other =
           [
             let

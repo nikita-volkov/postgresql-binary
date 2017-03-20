@@ -10,6 +10,7 @@ module PostgreSQL.Binary.Data
   module Data.Time,
   module Data.UUID,
   module Data.Vector,
+  module Data.Aeson,
   module Network.IP.Addr,
 )
 where
@@ -20,4 +21,5 @@ import Data.Scientific (Scientific)
 import Data.Time (Day, TimeOfDay, TimeZone, LocalTime, UTCTime, DiffTime)
 import Data.UUID (UUID)
 import Data.Vector (Vector)
+import Data.Aeson (Value)
 import Network.IP.Addr (IP, NetAddr)
