@@ -16,11 +16,11 @@ import qualified Database.PostgreSQL.LibPQ as LibPQ
 
 
 roundtrip :: (Show a, Eq a) => 
-  LibPQ.Oid -> (Bool -> (a -> B.Value)) -> (Bool -> A.Value a) -> a -> Property
+  LibPQ.Oid -> (Bool -> (a -> B.Encoding)) -> (Bool -> A.Value a) -> a -> Property
 roundtrip oid encoder decoder value =
   Right value === unsafePerformIO (IO.roundtrip oid encoder decoder value)
 
-stdRoundtrip :: (Show a, Eq a) => LibPQ.Oid -> (a -> B.Value) -> A.Value a -> a -> Property
+stdRoundtrip :: (Show a, Eq a) => LibPQ.Oid -> (a -> B.Encoding) -> A.Value a -> a -> Property
 stdRoundtrip oid encoder decoder value =
   roundtrip oid (const encoder) (const decoder) value
 

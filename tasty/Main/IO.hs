@@ -31,7 +31,7 @@ textRoundtrip oid encoder decoder value =
         bytes =
           (convert . encoder) value
 
-roundtrip :: LibPQ.Oid -> (Bool -> a -> B.Value) -> (Bool -> A.Value b) -> a -> IO (Either Text b)
+roundtrip :: LibPQ.Oid -> (Bool -> a -> B.Encoding) -> (Bool -> A.Value b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
@@ -43,7 +43,7 @@ roundtrip oid encoder decoder value =
       [ Just ( oid , bytes , LibPQ.Binary ) ]
       where
         bytes =
-          (B.valueBytes . encoder integerDatetimes) value
+          (B.encodingBytes . encoder integerDatetimes) value
 
 parameterlessStatement :: ByteString -> (Bool -> A.Value a) -> a -> IO (Either Text a)
 parameterlessStatement statement decoder value =

@@ -1,11 +1,11 @@
 module PostgreSQL.Binary.Encoding
 (
-  valueBytes,
+  -- * Encoding
+  Encoding,
+  encodingBytes,
 
-  -- * Value
-  Value,
-  primitiveValue,
-  arrayValue,
+  -- * 
+  array,
   array_foldable,
   array_vector,
   nullableArray_vector,
@@ -13,8 +13,7 @@ module PostgreSQL.Binary.Encoding
   hStore_hashMap,
   hStore_map,
 
-  -- * Primitive
-  Primitive,
+  -- * Primitives
   bool,
   int2_int16,
   int2_word16,
@@ -40,7 +39,6 @@ module PostgreSQL.Binary.Encoding
   time_float,
   timetz_int,
   timetz_float,
-  tz,
   timestamp_int,
   timestamp_float,
   timestamptz_int,
@@ -53,7 +51,7 @@ module PostgreSQL.Binary.Encoding
 
   -- * Array
   Array,
-  primitiveArray,
+  encodingArray,
   nullArray,
   dimensionArray,
 )
@@ -69,252 +67,236 @@ import qualified Data.Text.Lazy as L
 import qualified Network.IP.Addr as G
 
 
--- * Value
+type Encoding =
+  C.Builder
+
+{-# INLINE encodingBytes #-}
+encodingBytes :: Encoding -> ByteString
+encodingBytes =
+  C.builderBytes
+
+
+-- * Values
 -------------------------
-
-{-|
-The final encoded value bytes.
--}
-newtype Value =
-  Value { valueBytes :: ByteString {- ^ Get the final encoded strict bytes of a value. -} }
-
-{-|
-Turn an encoded primitive into value.
--}
-{-# INLINE primitiveValue #-}
-primitiveValue :: Primitive -> Value
-primitiveValue =
-  Value . C.builderBytes . primitiveBuilder
 
 {-|
 Turn an array builder into final value.
 The first parameter is OID of the element type.
 -}
-{-# INLINE arrayValue #-}
-arrayValue :: Word32 -> Array -> Value
-arrayValue oid (Array payload dimensions nulls) =
-  Value (C.builderBytes (B.array oid dimensions nulls payload))
+{-# INLINE array #-}
+array :: Word32 -> Array -> Encoding
+array oid (Array payload dimensions nulls) =
+  B.array oid dimensions nulls payload
 
 {-|
 A helper for encoding of arrays of single dimension from foldables.
 The first parameter is OID of the element type.
 -}
 {-# INLINE array_foldable #-}
-array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Primitive) -> foldable element -> Value
-array_foldable oid elementPrimitive =
-  arrayValue oid . dimensionArray (maybe nullArray primitiveArray . elementPrimitive)
+array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Encoding) -> foldable element -> Encoding
+array_foldable oid elementBuilder =
+  array oid . dimensionArray foldl' (maybe nullArray encodingArray . elementBuilder)
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is OID of the element type.
 -}
 {-# INLINE array_vector #-}
-array_vector :: Word32 -> (element -> Primitive) -> Vector element -> Value
-array_vector oid elementPrimitive vector =
-  Value (C.builderBytes (B.array_vector oid (primitiveBuilder . elementPrimitive) vector))
+array_vector :: Word32 -> (element -> Encoding) -> Vector element -> Encoding
+array_vector oid elementBuilder vector =
+  B.array_vector oid elementBuilder vector
 
 {-|
 A helper for encoding of arrays of single dimension from vectors.
 The first parameter is OID of the element type.
 -}
 {-# INLINE nullableArray_vector #-}
-nullableArray_vector :: Word32 -> (element -> Primitive) -> Vector (Maybe element) -> Value
-nullableArray_vector oid elementPrimitive vector =
-  Value (C.builderBytes (B.nullableArray_vector oid (primitiveBuilder . elementPrimitive) vector))
+nullableArray_vector :: Word32 -> (element -> Encoding) -> Vector (Maybe element) -> Encoding
+nullableArray_vector oid elementBuilder vector =
+  B.nullableArray_vector oid elementBuilder vector
 
 {-|
 A polymorphic @HSTORE@ encoder.
 -}
 {-# INLINE hStore_foldable #-}
-hStore_foldable :: Foldable foldable => foldable (Text, Maybe Text) -> Value
+hStore_foldable :: Foldable foldable => foldable (Text, Maybe Text) -> Encoding
 hStore_foldable =
-  Value . C.builderBytes . B.hStoreUsingFoldl foldl
+  B.hStoreUsingFoldl foldl
 
 {-|
 @HSTORE@ encoder from HashMap.
 -}
 {-# INLINE hStore_hashMap #-}
-hStore_hashMap :: HashMap Text (Maybe Text) -> Value
+hStore_hashMap :: HashMap Text (Maybe Text) -> Encoding
 hStore_hashMap =
-  Value . C.builderBytes . B.hStore_hashMap
+  B.hStore_hashMap
 
 {-|
 @HSTORE@ encoder from Map.
 -}
 {-# INLINE hStore_map #-}
-hStore_map :: Map Text (Maybe Text) -> Value
+hStore_map :: Map Text (Maybe Text) -> Encoding
 hStore_map =
-  Value . C.builderBytes . B.hStore_map
+  B.hStore_map
 
 
 -- * Primitive
 -------------------------
 
-{-|
-
--}
-newtype Primitive =
-  Primitive { primitiveBuilder :: C.Builder }
-
 {-# INLINE bool #-}
-bool :: Bool -> Primitive
+bool :: Bool -> Encoding
 bool =
-  Primitive . B.bool
+  B.bool
 
 {-# INLINE int2_int16 #-}
-int2_int16 :: Int16 -> Primitive
+int2_int16 :: Int16 -> Encoding
 int2_int16 =
-  Primitive . B.int2_int16
+  B.int2_int16
 
 {-# INLINE int2_word16 #-}
-int2_word16 :: Word16 -> Primitive
+int2_word16 :: Word16 -> Encoding
 int2_word16 =
-  Primitive . B.int2_word16
+  B.int2_word16
 
 {-# INLINE int4_int32 #-}
-int4_int32 :: Int32 -> Primitive
+int4_int32 :: Int32 -> Encoding
 int4_int32 =
-  Primitive . B.int4_int32
+  B.int4_int32
 
 {-# INLINE int4_word32 #-}
-int4_word32 :: Word32 -> Primitive
+int4_word32 :: Word32 -> Encoding
 int4_word32 =
-  Primitive . B.int4_word32
+  B.int4_word32
 
 {-# INLINE int8_int64 #-}
-int8_int64 :: Int64 -> Primitive
+int8_int64 :: Int64 -> Encoding
 int8_int64 =
-  Primitive . B.int8_int64
+  B.int8_int64
 
 {-# INLINE int8_word64 #-}
-int8_word64 :: Word64 -> Primitive
+int8_word64 :: Word64 -> Encoding
 int8_word64 =
-  Primitive . B.int8_word64
+  B.int8_word64
 
 {-# INLINE float4 #-}
-float4 :: Float -> Primitive
+float4 :: Float -> Encoding
 float4 =
-  Primitive . B.float4
+  B.float4
 
 {-# INLINE float8 #-}
-float8 :: Double -> Primitive
+float8 :: Double -> Encoding
 float8 =
-  Primitive . B.float8
+  B.float8
 
 {-# INLINE numeric #-}
-numeric :: Scientific -> Primitive
+numeric :: Scientific -> Encoding
 numeric =
-  Primitive . B.numeric
+  B.numeric
 
 {-# INLINE uuid #-}
-uuid :: UUID -> Primitive
+uuid :: UUID -> Encoding
 uuid =
-  Primitive . B.uuid
+  B.uuid
 
 {-# INLINE inet #-}
-inet :: G.NetAddr G.IP -> Primitive
+inet :: G.NetAddr G.IP -> Encoding
 inet =
-  Primitive . B.inet
+  B.inet
 
 {-# INLINE char_utf8 #-}
-char_utf8 :: Char -> Primitive
+char_utf8 :: Char -> Encoding
 char_utf8 =
-  Primitive . B.char_utf8
+  B.char_utf8
 
 {-# INLINE text_strict #-}
-text_strict :: Text -> Primitive
+text_strict :: Text -> Encoding
 text_strict =
-  Primitive . B.text_strict
+  B.text_strict
 
 {-# INLINE text_lazy #-}
-text_lazy :: L.Text -> Primitive
+text_lazy :: L.Text -> Encoding
 text_lazy =
-  Primitive . B.text_lazy
+  B.text_lazy
 
 {-# INLINE bytea_strict #-}
-bytea_strict :: ByteString -> Primitive
+bytea_strict :: ByteString -> Encoding
 bytea_strict =
-  Primitive . B.bytea_strict
+  B.bytea_strict
 
 {-# INLINE bytea_lazy #-}
-bytea_lazy :: N.ByteString -> Primitive
+bytea_lazy :: N.ByteString -> Encoding
 bytea_lazy =
-  Primitive . B.bytea_lazy
+  B.bytea_lazy
 
 {-# INLINE bytea_lazyBuilder #-}
-bytea_lazyBuilder :: M.Builder -> Primitive
+bytea_lazyBuilder :: M.Builder -> Encoding
 bytea_lazyBuilder =
-  Primitive . B.bytea_lazyBuilder
+  B.bytea_lazyBuilder
 
 {-# INLINE date #-}
-date :: Day -> Primitive
+date :: Day -> Encoding
 date =
-  Primitive . B.date
+  B.date
 
 {-# INLINE time_int #-}
-time_int :: TimeOfDay -> Primitive
+time_int :: TimeOfDay -> Encoding
 time_int =
-  Primitive . B.time_int
+  B.time_int
 
 {-# INLINE time_float #-}
-time_float :: TimeOfDay -> Primitive
+time_float :: TimeOfDay -> Encoding
 time_float =
-  Primitive . B.time_float
+  B.time_float
 
 {-# INLINE timetz_int #-}
-timetz_int :: (TimeOfDay, TimeZone) -> Primitive
+timetz_int :: (TimeOfDay, TimeZone) -> Encoding
 timetz_int =
-  Primitive . B.timetz_int
+  B.timetz_int
 
 {-# INLINE timetz_float #-}
-timetz_float :: (TimeOfDay, TimeZone) -> Primitive
+timetz_float :: (TimeOfDay, TimeZone) -> Encoding
 timetz_float =
-  Primitive . B.timetz_float
-
-{-# INLINE tz #-}
-tz :: TimeZone -> Primitive
-tz =
-  Primitive . B.tz
+  B.timetz_float
 
 {-# INLINE timestamp_int #-}
-timestamp_int :: LocalTime -> Primitive
+timestamp_int :: LocalTime -> Encoding
 timestamp_int =
-  Primitive . B.timestamp_int
+  B.timestamp_int
 
 {-# INLINE timestamp_float #-}
-timestamp_float :: LocalTime -> Primitive
+timestamp_float :: LocalTime -> Encoding
 timestamp_float =
-  Primitive . B.timestamp_float
+  B.timestamp_float
 
 {-# INLINE timestamptz_int #-}
-timestamptz_int :: UTCTime -> Primitive
+timestamptz_int :: UTCTime -> Encoding
 timestamptz_int =
-  Primitive . B.timestamptz_int
+  B.timestamptz_int
 
 {-# INLINE timestamptz_float #-}
-timestamptz_float :: UTCTime -> Primitive
+timestamptz_float :: UTCTime -> Encoding
 timestamptz_float =
-  Primitive . B.timestamptz_float
+  B.timestamptz_float
 
 {-# INLINE interval_int #-}
-interval_int :: DiffTime -> Primitive
+interval_int :: DiffTime -> Encoding
 interval_int =
-  Primitive . B.interval_int
+  B.interval_int
 
 {-# INLINE interval_float #-}
-interval_float :: DiffTime -> Primitive
+interval_float :: DiffTime -> Encoding
 interval_float =
-  Primitive . B.interval_float
+  B.interval_float
 
 {-# INLINE json_bytes #-}
-json_bytes :: ByteString -> Primitive
+json_bytes :: ByteString -> Encoding
 json_bytes =
-  Primitive . B.json_bytes
+  B.json_bytes
 
 {-# INLINE jsonb_bytes #-}
-jsonb_bytes :: ByteString -> Primitive
+jsonb_bytes :: ByteString -> Encoding
 jsonb_bytes =
-  Primitive . B.jsonb_bytes
+  B.jsonb_bytes
 
 
 -- * Array
@@ -324,18 +306,18 @@ jsonb_bytes =
 Abstraction for encoding into multidimensional array.
 -}
 data Array =
-  Array !C.Builder ![Int32] !Bool
+  Array !Encoding ![Int32] !Bool
 
-primitiveArray :: Primitive -> Array
-primitiveArray primitive =
-  Array (B.sized (primitiveBuilder primitive)) [] False
+encodingArray :: Encoding -> Array
+encodingArray value =
+  Array (B.sized value) [] False
 
 nullArray :: Array
 nullArray =
   Array B.null4 [] True
 
-dimensionArray :: Foldable foldable => (a -> Array) -> foldable a -> Array
-dimensionArray elementArray input =
+dimensionArray :: (forall b. (b -> a -> b) -> b -> c -> b) -> (a -> Array) -> c -> Array
+dimensionArray foldl' elementArray input =
   Array builder dimensions nulls
   where
     dimensions =

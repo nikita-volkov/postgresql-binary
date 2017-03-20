@@ -63,7 +63,7 @@ binary =
               pti =
                 PTI.interval
               encoder integerDatetimes =
-                A.primitiveValue . (bool A.interval_float A.interval_int integerDatetimes)
+                (bool A.interval_float A.interval_int integerDatetimes)
               decoder =
                 (bool B.interval_float B.interval_int)
               value =
@@ -90,7 +90,7 @@ binary =
                   DB.unit "CREATE TABLE a (b TIMESTAMPTZ)" []
                   DB.unit "set timezone to 'America/Los_Angeles'" []
                   let p = (,,) (PTI.oidPQ (PTI.ptiOID PTI.timestamptz))
-                               ((A.valueBytes . A.primitiveValue . encoder) x) 
+                               ((A.encodingBytes . encoder) x) 
                                (LibPQ.Binary)
                       x = read "2011-09-28 00:17:25"
                   DB.unit "insert into a (b) values ($1)" [Just p]
@@ -167,13 +167,13 @@ binary =
             ,
             let
               encoder =
-                A.arrayValue (PTI.oidWord32 (PTI.ptiOID PTI.int8)) . arrayEncoder
+                A.array (PTI.oidWord32 (PTI.ptiOID PTI.int8)) . arrayEncoder
                 where
                   arrayEncoder =
-                    A.dimensionArray $
-                    A.dimensionArray $
-                    A.dimensionArray $
-                    A.primitiveArray . A.int8_int64
+                    A.dimensionArray foldl' $
+                    A.dimensionArray foldl' $
+                    A.dimensionArray foldl' $
+                    A.encodingArray . A.int8_int64
               decoder =
                 B.array $
                 B.dimensionArray replicateM $
@@ -188,13 +188,13 @@ binary =
               pti =
                 PTI.text
               encoder =
-                A.arrayValue (PTI.oidWord32 (PTI.ptiOID pti)) . arrayEncoder
+                A.array (PTI.oidWord32 (PTI.ptiOID pti)) . arrayEncoder
                 where
                   arrayEncoder =
-                    A.dimensionArray $
-                    A.dimensionArray $
-                    A.dimensionArray $
-                    A.primitiveArray . A.text_strict
+                    A.dimensionArray foldl' $
+                    A.dimensionArray foldl' $
+                    A.dimensionArray foldl' $
+                    A.encodingArray . A.text_strict
               decoder =
                 B.array $
                 B.dimensionArray replicateM $
@@ -239,7 +239,7 @@ textual =
 arrayCodec gen encoder decoder =
   QuickCheck.testProperty ("Array codec") $
   QuickCheck.forAll gen $
-  \value -> (QuickCheck.===) (Right value) (B.valueParser decoder ((A.valueBytes . encoder) value))
+  \value -> (QuickCheck.===) (Right value) (B.valueParser decoder ((A.encodingBytes . encoder) value))
 
 arrayRoundtrip gen pti encoder decoder =
   QuickCheck.testProperty ("Array roundtrip") $
@@ -250,11 +250,11 @@ stdRoundtrip typeName gen pti encoder decoder =
   QuickCheck.forAll gen $ Properties.stdRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
 
 primitiveRoundtrip typeName gen pti encoder decoder =
-  stdRoundtrip typeName gen pti (A.primitiveValue . encoder) decoder
+  stdRoundtrip typeName gen pti (encoder) decoder
 
 timeRoundtrip typeName gen pti encoder decoder =
   QuickCheck.testProperty (typeName <> " roundtrip") $
-  QuickCheck.forAll gen $ Properties.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) (\x -> A.primitiveValue . encoder x) decoder
+  QuickCheck.forAll gen $ Properties.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) (\x -> encoder x) decoder
 
 select statement decoder value =
   HUnit.testCase (show statement) $
