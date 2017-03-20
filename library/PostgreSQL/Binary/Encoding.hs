@@ -60,7 +60,7 @@ module PostgreSQL.Binary.Encoding
 where
 
 import PostgreSQL.Binary.Prelude hiding (bool, length)
-import qualified StrictBytesBuilder as C
+import qualified ByteString.StrictBuilder as C
 import qualified Data.Vector as A
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import qualified Data.ByteString.Builder as M

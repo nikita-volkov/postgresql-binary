@@ -2,7 +2,7 @@ module PostgreSQL.Binary.Encoding.Builders
 where
 
 import PostgreSQL.Binary.Prelude hiding (bool)
-import StrictBytesBuilder
+import ByteString.StrictBuilder
 import qualified Data.Vector as A
 import qualified Data.Scientific as D
 import qualified Data.UUID as E
