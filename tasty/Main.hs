@@ -36,7 +36,7 @@ binary =
               sql =
                 "select (1, 'a')"
               decoder _ =
-                B.composite ((,) <$> B.compositeNonNullValue B.int <*> B.compositeNonNullValue B.char)
+                B.composite ((,) <$> B.valueComposite B.int <*> B.valueComposite B.char)
               expected =
                 (1 :: Int64, 'a')
               in select sql decoder expected
@@ -45,7 +45,7 @@ binary =
               sql =
                 "select (1, null)"
               decoder _ =
-                B.composite ((,) <$> B.compositeNonNullValue B.int <*> B.compositeValue B.char)
+                B.composite ((,) <$> B.valueComposite B.int <*> B.nullableValueComposite B.char)
               expected =
                 (1 :: Int64, Nothing :: Maybe Char)
               in select sql decoder expected
@@ -96,7 +96,7 @@ binary =
                   DB.unit "insert into a (b) values ($1)" [Just p]
                   DB.unit "set timezone to 'Europe/Stockholm'" []
                   textual <- DB.oneRow "SELECT * FROM a" [] LibPQ.Text
-                  decoded <- fmap (B.run decoder) (DB.oneRow "SELECT * FROM a" [] LibPQ.Binary)
+                  decoded <- fmap (B.valueParser decoder) (DB.oneRow "SELECT * FROM a" [] LibPQ.Binary)
                   return (textual, decoded)
               HUnit.assertEqual "" ("2011-09-28 02:17:25+02") textual
               HUnit.assertEqual "" (Right (read "2011-09-28 00:17:25")) decoded
@@ -158,9 +158,9 @@ binary =
             let
               decoder =
                 B.array $
-                B.arrayDimension replicateM $
-                B.arrayDimension replicateM $
-                B.arrayNonNullValue $
+                B.dimensionArray replicateM $
+                B.dimensionArray replicateM $
+                B.valueArray $
                 B.int
               in
                 select "SELECT ARRAY[ARRAY[1,2],ARRAY[3,4]]" (const decoder) ([[1,2],[3,4]] :: [[Int]])
@@ -176,10 +176,10 @@ binary =
                     A.primitiveArray . A.int8_int64
               decoder =
                 B.array $
-                B.arrayDimension replicateM $
-                B.arrayDimension replicateM $
-                B.arrayDimension replicateM $
-                B.arrayNonNullValue $
+                B.dimensionArray replicateM $
+                B.dimensionArray replicateM $
+                B.dimensionArray replicateM $
+                B.valueArray $
                 B.int
               in
                 arrayCodec (Gens.array3 Gens.auto) encoder decoder
@@ -197,10 +197,10 @@ binary =
                     A.primitiveArray . A.text_strict
               decoder =
                 B.array $
-                B.arrayDimension replicateM $
-                B.arrayDimension replicateM $
-                B.arrayDimension replicateM $
-                B.arrayNonNullValue $
+                B.dimensionArray replicateM $
+                B.dimensionArray replicateM $
+                B.dimensionArray replicateM $
+                B.valueArray $
                 B.text_strict
               in
                 arrayRoundtrip (Gens.array3 Gens.text) pti encoder decoder
@@ -239,7 +239,7 @@ textual =
 arrayCodec gen encoder decoder =
   QuickCheck.testProperty ("Array codec") $
   QuickCheck.forAll gen $
-  \value -> (QuickCheck.===) (Right value) (B.run decoder ((A.valueBytes . encoder) value))
+  \value -> (QuickCheck.===) (Right value) (B.valueParser decoder ((A.valueBytes . encoder) value))
 
 arrayRoundtrip gen pti encoder decoder =
   QuickCheck.testProperty ("Array roundtrip") $

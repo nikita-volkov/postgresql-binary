@@ -12,18 +12,18 @@ import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import qualified Data.Text.Encoding as Text
-import qualified PostgreSQL.Binary.Encoding as Encoder
-import qualified PostgreSQL.Binary.Decoding as Decoder
+import qualified PostgreSQL.Binary.Decoding as A
+import qualified PostgreSQL.Binary.Encoding as B
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 
 
-textRoundtrip :: LibPQ.Oid -> TextEncoder.Encoder a -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
+textRoundtrip :: LibPQ.Oid -> TextEncoder.Encoder a -> (Bool -> A.Value a) -> a -> IO (Either Text a)
 textRoundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
     bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) LibPQ.Binary
-    return $ Decoder.run (decoder integerDatetimes) bytes
+    return $ A.valueParser (decoder integerDatetimes) bytes
   where
     params integerDatetimes =
       [ Just ( oid , bytes , LibPQ.Text ) ]
@@ -31,24 +31,24 @@ textRoundtrip oid encoder decoder value =
         bytes =
           (convert . encoder) value
 
-roundtrip :: LibPQ.Oid -> (Bool -> a -> Encoder.Value) -> (Bool -> Decoder.Decoder b) -> a -> IO (Either Text b)
+roundtrip :: LibPQ.Oid -> (Bool -> a -> B.Value) -> (Bool -> A.Value b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
     bytes <- DB.oneRow "SELECT $1" (params integerDatetimes) LibPQ.Binary
-    return $ Decoder.run (decoder integerDatetimes) bytes
+    return $ A.valueParser (decoder integerDatetimes) bytes
   where
     params integerDatetimes =
       [ Just ( oid , bytes , LibPQ.Binary ) ]
       where
         bytes =
-          (Encoder.valueBytes . encoder integerDatetimes) value
+          (B.valueBytes . encoder integerDatetimes) value
 
-parameterlessStatement :: ByteString -> (Bool -> Decoder.Decoder a) -> a -> IO (Either Text a)
+parameterlessStatement :: ByteString -> (Bool -> A.Value a) -> a -> IO (Either Text a)
 parameterlessStatement statement decoder value =
   fmap (either (Left . Text.decodeUtf8) id) $
   DB.session $ do
     integerDatetimes <- DB.integerDatetimes
     bytes <- DB.oneRow statement [] LibPQ.Binary
-    return $ Decoder.run (decoder integerDatetimes) bytes
+    return $ A.valueParser (decoder integerDatetimes) bytes

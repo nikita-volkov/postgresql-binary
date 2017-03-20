@@ -12,11 +12,11 @@ main =
     [
       b "bool" D.bool ((E.valueBytes . E.primitiveValue . E.bool) True)
       ,
-      b "int2" (D.int :: D.Decoder Int16) ((E.valueBytes . E.primitiveValue . E.int2_int16) 1000)
+      b "int2" (D.int :: D.Value Int16) ((E.valueBytes . E.primitiveValue . E.int2_int16) 1000)
       ,
-      b "int4" (D.int :: D.Decoder Int32) ((E.valueBytes . E.primitiveValue . E.int4_int32) 1000)
+      b "int4" (D.int :: D.Value Int32) ((E.valueBytes . E.primitiveValue . E.int4_int32) 1000)
       ,
-      b "int8" (D.int :: D.Decoder Int64) ((E.valueBytes . E.primitiveValue . E.int8_int64) 1000)
+      b "int8" (D.int :: D.Value Int64) ((E.valueBytes . E.primitiveValue . E.int8_int64) 1000)
       ,
       b "float4" D.float4 ((E.valueBytes . E.primitiveValue . E.float4) 12.65468468)
       ,
@@ -49,12 +49,12 @@ main =
           E.arrayValue 23 . E.dimensionArray (E.primitiveArray . E.int4_int32)
         decoder =
           D.array $
-          D.arrayDimension replicateM $
-          D.arrayNonNullValue $
-          (D.int :: D.Decoder Int32)
+          D.dimensionArray replicateM $
+          D.valueArray $
+          (D.int :: D.Value Int32)
         in
           b "array" decoder (E.valueBytes (encoder [1,2,3,4]))
     ]
   where
     b name decoder value = 
-      bench name $ nf (D.run decoder) value
+      bench name $ nf (D.valueParser decoder) value
