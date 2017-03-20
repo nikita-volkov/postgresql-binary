@@ -18,7 +18,7 @@ nanSignCode :: Word16
 nanSignCode = 0xC000
 
 {-# INLINE extractComponents #-}
-extractComponents :: Integral a => a -> [Int16]
+extractComponents :: Integral a => a -> [Word16]
 extractComponents =
   (reverse .) . (. abs) . unfoldr $ \case
     0 -> Nothing

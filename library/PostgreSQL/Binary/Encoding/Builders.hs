@@ -28,12 +28,12 @@ import qualified PostgreSQL.Binary.Interval as P
 {-# NOINLINE null4 #-}
 null4 :: Builder
 null4 =
-  int4FromInt (-1)
+  int4_int (-1)
 
 {-# INLINE sized #-}
 sized :: Builder -> Builder
 sized payload =
-  int4FromInt (builderLength payload) <>
+  int4_int (builderLength payload) <>
   payload
 
 {-# INLINE sizedMaybe #-}
@@ -70,16 +70,6 @@ bool :: Bool -> Builder
 bool =
   B.bool false1 true1
 
-{-# INLINE intFromInt8 #-}
-intFromInt8 :: Int8 -> Builder
-intFromInt8 =
-  int8
-
-{-# INLINE intFromWord8 #-}
-intFromWord8 :: Word8 -> Builder
-intFromWord8 =
-  word8
-
 {-# INLINE int2_int16 #-}
 int2_int16 :: Int16 -> Builder
 int2_int16 =
@@ -100,9 +90,9 @@ int4_word32 :: Word32 -> Builder
 int4_word32 =
   word32BE
 
-{-# INLINE int4FromInt #-}
-int4FromInt :: Int -> Builder
-int4FromInt =
+{-# INLINE int4_int #-}
+int4_int :: Int -> Builder
+int4_int =
   int4_int32 . fromIntegral
 
 {-# INLINE int8_int64 #-}
@@ -128,11 +118,11 @@ float8 =
 {-# INLINABLE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =
-  int2_int16 (fromIntegral componentsAmount) <>
-  int2_int16 (fromIntegral pointIndex) <>
+  word16BE (fromIntegral componentsAmount) <>
+  word16BE (fromIntegral pointIndex) <>
   signCode <>
-  int2_int16 (fromIntegral trimmedExponent) <>
-  foldMap int2_int16 components
+  word16BE (fromIntegral trimmedExponent) <>
+  foldMap word16BE components
   where
     componentsAmount = 
       length components
@@ -177,7 +167,7 @@ uuid uuid =
 ip4 :: G.IP4 -> Builder
 ip4 x =
   case G.ip4ToOctets x of
-    (w1, w2, w3, w4) -> intFromWord8 w1 <> intFromWord8 w2 <> intFromWord8 w3 <> intFromWord8 w4
+    (w1, w2, w3, w4) -> word8 w1 <> word8 w2 <> word8 w3 <> word8 w4
 
 {-# INLINABLE ip6 #-}
 ip6 :: G.IP6 -> Builder
@@ -195,29 +185,29 @@ inet i =
     G.IPv6 x -> inet6AddressFamily <> netLength <> isCidr <> ip6Size <> ip6 x
     where
       netLength =
-        intFromWord8 (G.netLength i)
+        word8 (G.netLength i)
       isCidr =
         false1
 
 {-# NOINLINE inetAddressFamily #-}
 inetAddressFamily :: Builder
 inetAddressFamily =
-  intFromWord8 H.inetAddressFamily
+  word8 H.inetAddressFamily
 
 {-# NOINLINE inet6AddressFamily #-}
 inet6AddressFamily :: Builder
 inet6AddressFamily =
-  intFromWord8 H.inet6AddressFamily
+  word8 H.inet6AddressFamily
 
 {-# NOINLINE ip4Size #-}
 ip4Size :: Builder
 ip4Size =
-  intFromInt8 4
+  word8 4
 
 {-# NOINLINE ip6Size #-}
 ip6Size :: Builder
 ip6Size =
-  intFromInt8 16
+  word8 16
 
 
 -- * Text
@@ -296,7 +286,7 @@ timetz_float (timeX, tzX) =
 {-# INLINE tz #-}
 tz :: TimeZone -> Builder
 tz =
-  int4FromInt . (*60) . negate . timeZoneMinutes
+  int4_int . (*60) . negate . timeZoneMinutes
 
 {-# INLINE timestamp_int #-}
 timestamp_int :: LocalTime -> Builder
@@ -383,7 +373,7 @@ nullableArray_vector oid elementBuilder vector =
 {-# INLINABLE array #-}
 array :: Word32 -> [Int32] -> Bool -> Builder -> Builder
 array oid dimensions nulls payload =
-  int4FromInt (B.length dimensions) <>
+  int4_int (B.length dimensions) <>
   B.bool false4 true4 nulls <>
   int4_word32 oid <>
   foldMap arrayDimension dimensions <>
@@ -425,17 +415,17 @@ hStoreUsingFoldl foldl =
     progress (!count, !payload) (key, value) =
       (succ count, payload <> hStoreRow key value)
     exit (count, payload) =
-      int4FromInt count <> payload
+      int4_int count <> payload
 
 {-# INLINE hStoreUsingFoldMapAndSize #-}
 hStoreUsingFoldMapAndSize :: (forall a. Monoid a => ((Text, Maybe Text) -> a) -> b -> a) -> Int -> b -> Builder
 hStoreUsingFoldMapAndSize foldMap size input =
-  int4FromInt size <> foldMap (uncurry hStoreRow) input
+  int4_int size <> foldMap (uncurry hStoreRow) input
 
 {-# INLINE hStoreFromFoldMapAndSize #-}
 hStoreFromFoldMapAndSize :: (forall a. Monoid a => (Text -> Maybe Text -> a) -> a) -> Int -> Builder
 hStoreFromFoldMapAndSize foldMap size =
-  int4FromInt size <> foldMap hStoreRow
+  int4_int size <> foldMap hStoreRow
 
 {-# INLINE hStoreRow #-}
 hStoreRow :: Text -> Maybe Text -> Builder
@@ -445,11 +435,11 @@ hStoreRow key value =
 {-# INLINE hStore_hashMap #-}
 hStore_hashMap :: HashMap Text (Maybe Text) -> Builder
 hStore_hashMap input =
-  int4FromInt (F.size input) <>
+  int4_int (F.size input) <>
   F.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
 
 {-# INLINE hStore_map #-}
 hStore_map :: Map Text (Maybe Text) -> Builder
 hStore_map input =
-  int4FromInt (Q.size input) <>
+  int4_int (Q.size input) <>
   Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
