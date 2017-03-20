@@ -48,6 +48,14 @@ import Data.UUID as Exports (UUID)
 -------------------------
 import Data.Time as Exports
 
+-- unordered-containers
+-------------------------
+import Data.HashMap.Strict as Exports (HashMap)
+
+-- containers
+-------------------------
+import Data.Map.Strict as Exports (Map)
+
 -- placeholders
 -------------------------
 import Development.Placeholders as Exports

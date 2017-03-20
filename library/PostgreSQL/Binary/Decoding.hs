@@ -1,7 +1,8 @@
-module PostgreSQL.Binary.Decoder
+module PostgreSQL.Binary.Decoding
 (
-  Decoder,
-  run,
+  valueParser,
+  -- 
+  Value,
   -- * Primitive
   int,
   float4,
@@ -36,16 +37,16 @@ module PostgreSQL.Binary.Decoder
   interval_float,
   -- * Exotic
   -- ** Array
-  ArrayDecoder,
+  Array,
   array,
-  arrayDimension,
-  arrayValue,
-  arrayNonNullValue,
+  valueArray,
+  nullableValueArray,
+  dimensionArray,
   -- ** Composite
-  CompositeDecoder,
+  Composite,
   composite,
-  compositeValue,
-  compositeNonNullValue,
+  valueComposite,
+  nullableValueComposite,
   -- ** HStore
   hstore,
   -- **
@@ -55,7 +56,6 @@ where
 
 import PostgreSQL.Binary.Prelude hiding (take, bool, drop, state, fail, failure)
 import BinaryParser
-import qualified PostgreSQL.Binary.Data as Data
 import qualified PostgreSQL.Binary.Integral as Integral
 import qualified PostgreSQL.Binary.Interval as Interval
 import qualified PostgreSQL.Binary.Numeric as Numeric
@@ -73,9 +73,12 @@ import qualified Data.Aeson as Aeson
 import qualified Network.IP.Addr as IPAddr
 
 
-type Decoder =
+type Value =
   BinaryParser
 
+valueParser :: Value a -> ByteString -> Either Text a
+valueParser =
+  BinaryParser.run
 
 -- * Helpers
 -------------------------
@@ -83,12 +86,12 @@ type Decoder =
 -- |
 -- Any int number of a limited byte-size.
 {-# INLINE intOfSize #-}
-intOfSize :: (Integral a, Bits a) => Int -> Decoder a
+intOfSize :: (Integral a, Bits a) => Int -> Value a
 intOfSize x =
   fmap Integral.pack (bytesOfSize x)
 
 {-# INLINABLE onContent #-}
-onContent :: Decoder a -> Decoder ( Maybe a )
+onContent :: Value a -> Value ( Maybe a )
 onContent decoder =
   size >>=
   \case
@@ -96,17 +99,17 @@ onContent decoder =
     n -> fmap Just (sized (fromIntegral n) decoder)
   where
     size =
-      intOfSize 4 :: Decoder Int32
+      intOfSize 4 :: Value Int32
 
 {-# INLINABLE content #-}
-content :: Decoder (Maybe ByteString)
+content :: Value (Maybe ByteString)
 content =
   intOfSize 4 >>= \case
     (-1) -> pure Nothing
     n -> fmap Just (bytesOfSize n)
 
 {-# INLINE nonNull #-}
-nonNull :: Maybe a -> Decoder a
+nonNull :: Maybe a -> Value a
 nonNull =
   maybe (failure "Unexpected NULL") return
 
@@ -117,30 +120,30 @@ nonNull =
 -- |
 -- Lifts a custom decoder implementation.
 {-# INLINE fn #-}
-fn :: (ByteString -> Either Text a) -> Decoder a
+fn :: (ByteString -> Either Text a) -> Value a
 fn fn =
   BinaryParser.remainders >>= either BinaryParser.failure return . fn
 
 {-# INLINE int #-}
-int :: (Integral a, Bits a) => Decoder a
+int :: (Integral a, Bits a) => Value a
 int =
   fmap Integral.pack remainders
 
-float4 :: Decoder Float
+float4 :: Value Float
 float4 =
-  unsafeCoerce (int :: Decoder Int32)
+  unsafeCoerce (int :: Value Int32)
 
-float8 :: Decoder Double
+float8 :: Value Double
 float8 =
-  unsafeCoerce (int :: Decoder Int64)
+  unsafeCoerce (int :: Value Int64)
 
 {-# INLINE bool #-}
-bool :: Decoder Bool
+bool :: Value Bool
 bool =
   fmap (== 1) byte
 
 {-# NOINLINE numeric #-}
-numeric :: Decoder Scientific
+numeric :: Value Scientific
 numeric =
   do
     componentsAmount <- intOfSize 2
@@ -151,22 +154,22 @@ numeric =
     either failure return (Numeric.scientific pointIndex signCode components)
 
 {-# INLINABLE uuid #-}
-uuid :: Decoder UUID
+uuid :: Value UUID
 uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
 
 {-# INLINE ip4 #-}
-ip4 :: Decoder IPAddr.IP4
+ip4 :: Value IPAddr.IP4
 ip4 =
   IPAddr.ip4FromOctets <$> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1
 
 {-# INLINE ip6 #-}
-ip6 :: Decoder IPAddr.IP6
+ip6 :: Value IPAddr.IP6
 ip6 =
   IPAddr.ip6FromWords <$> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2
 
 {-# INLINABLE inet #-}
-inet :: Decoder (IPAddr.NetAddr IPAddr.IP)
+inet :: Value (IPAddr.NetAddr IPAddr.IP)
 inet = do
   af <- intOfSize 1
   netmask <- intOfSize 1
@@ -184,7 +187,7 @@ inet = do
     inetFromBytes _ netmask _ _ ip = IPAddr.netAddr ip netmask
 
 {-# INLINABLE json_ast #-}
-json_ast :: Decoder Aeson.Value
+json_ast :: Value Aeson.Value
 json_ast =
   bytea_strict >>= either (BinaryParser.failure . fromString) pure . Aeson.eitherDecodeStrict'
 
@@ -192,7 +195,7 @@ json_ast =
 -- Given a function, which parses a plain UTF-8 JSON string encoded as a byte-array,
 -- produces a decoder.
 {-# INLINABLE json_bytes #-}
-json_bytes :: (ByteString -> Either Text a) -> Decoder a
+json_bytes :: (ByteString -> Either Text a) -> Value a
 json_bytes cont =
   getAllBytes >>= parseJSON
   where
@@ -202,7 +205,7 @@ json_bytes cont =
       either BinaryParser.failure return . cont
 
 {-# INLINABLE jsonb_ast #-}
-jsonb_ast :: Decoder Aeson.Value
+jsonb_ast :: Value Aeson.Value
 jsonb_ast =
   jsonb_bytes $ mapLeft fromString . Aeson.eitherDecodeStrict'
 
@@ -214,7 +217,7 @@ jsonb_ast =
 -- JSONB is encoded as plain JSON string in the binary format of Postgres.
 -- Sad, but true.
 {-# INLINABLE jsonb_bytes #-}
-jsonb_bytes :: (ByteString -> Either Text a) -> Decoder a
+jsonb_bytes :: (ByteString -> Either Text a) -> Value a
 jsonb_bytes cont =
   getAllBytes >>= trimBytes >>= parseJSON
   where
@@ -233,7 +236,7 @@ jsonb_bytes cont =
 -- |
 -- A UTF-8-decoded char.
 {-# INLINABLE char #-}
-char :: Decoder Char
+char :: Value Char
 char =
   fmap Text.uncons text_strict >>= \case
     Just (c, "") -> return c
@@ -244,7 +247,7 @@ char =
 -- Any of the variable-length character types:
 -- BPCHAR, VARCHAR, NAME and TEXT.
 {-# INLINABLE text_strict #-}
-text_strict :: Decoder Text
+text_strict :: Value Text
 text_strict =
   remainders >>= either (failure . exception) return . Text.decodeUtf8'
   where
@@ -257,7 +260,7 @@ text_strict =
 -- Any of the variable-length character types:
 -- BPCHAR, VARCHAR, NAME and TEXT.
 {-# INLINABLE text_lazy #-}
-text_lazy :: Decoder LazyText
+text_lazy :: Value LazyText
 text_lazy =
   bytea_lazy >>= either (failure . exception) return . LazyText.decodeUtf8'
   where
@@ -269,14 +272,14 @@ text_lazy =
 -- |
 -- BYTEA or any other type in its undecoded form.
 {-# INLINE bytea_strict #-}
-bytea_strict :: Decoder ByteString
+bytea_strict :: Value ByteString
 bytea_strict =
   remainders
 
 -- |
 -- BYTEA or any other type in its undecoded form.
 {-# INLINE bytea_lazy #-}
-bytea_lazy :: Decoder LazyByteString
+bytea_lazy :: Value LazyByteString
 bytea_lazy =
   fmap LazyByteString.fromStrict remainders
 
@@ -286,66 +289,66 @@ bytea_lazy =
 
 -- |
 -- @DATE@ values decoding.
-date :: Decoder Day
+date :: Value Day
 date =
-  fmap (Time.postgresJulianToDay . fromIntegral) (int :: Decoder Int32)
+  fmap (Time.postgresJulianToDay . fromIntegral) (int :: Value Int32)
 
 -- |
 -- @TIME@ values decoding for servers, which have @integer_datetimes@ enabled.
-time_int :: Decoder TimeOfDay
+time_int :: Value TimeOfDay
 time_int =
   fmap Time.microsToTimeOfDay int
 
 -- |
 -- @TIME@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-time_float :: Decoder TimeOfDay
+time_float :: Value TimeOfDay
 time_float =
   fmap Time.secsToTimeOfDay float8
 
 -- |
 -- @TIMETZ@ values decoding for servers, which have @integer_datetimes@ enabled.
-timetz_int :: Decoder (TimeOfDay, TimeZone)
+timetz_int :: Value (TimeOfDay, TimeZone)
 timetz_int =
   (,) <$> sized 8 time_int <*> tz
 
 -- |
 -- @TIMETZ@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-timetz_float :: Decoder (TimeOfDay, TimeZone)
+timetz_float :: Value (TimeOfDay, TimeZone)
 timetz_float =
   (,) <$> sized 8 time_float <*> tz
 
 {-# INLINE tz #-}
-tz :: Decoder TimeZone
+tz :: Value TimeZone
 tz =
-  fmap (minutesToTimeZone . negate . (flip div 60) . fromIntegral) (int :: Decoder Int32)
+  fmap (minutesToTimeZone . negate . (flip div 60) . fromIntegral) (int :: Value Int32)
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which have @integer_datetimes@ enabled.
-timestamp_int :: Decoder LocalTime
+timestamp_int :: Value LocalTime
 timestamp_int =
   fmap Time.microsToLocalTime int
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-timestamp_float :: Decoder LocalTime
+timestamp_float :: Value LocalTime
 timestamp_float =
   fmap Time.secsToLocalTime float8
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which have @integer_datetimes@ enabled.
-timestamptz_int :: Decoder UTCTime
+timestamptz_int :: Value UTCTime
 timestamptz_int =
   fmap Time.microsToUTC int
 
 -- |
 -- @TIMESTAMP@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-timestamptz_float :: Decoder UTCTime
+timestamptz_float :: Value UTCTime
 timestamptz_float =
   fmap Time.secsToUTC float8
 
 -- |
 -- @INTERVAL@ values decoding for servers, which don't have @integer_datetimes@ enabled.
-interval_int :: Decoder DiffTime
+interval_int :: Value DiffTime
 interval_int =
   do
     u <- sized 8 int
@@ -355,7 +358,7 @@ interval_int =
 
 -- |
 -- @INTERVAL@ values decoding for servers, which have @integer_datetimes@ enabled.
-interval_float :: Decoder DiffTime
+interval_float :: Value DiffTime
 interval_float =
   do
     u <- sized 8 (fmap (round . (*(10^6)) . toRational) float8)
@@ -366,41 +369,6 @@ interval_float =
 
 -- * Exotic
 -------------------------
-
--- |
--- A lower-level array data parser,
--- which aggregates the intermediate data representation as per the Postgres format.
--- 
--- Only use this if 'array' doesn't fit your case.
-{-# INLINABLE arrayRep #-}
-arrayRep :: Decoder Data.Array
-arrayRep =
-  do
-    dimensionsAmount <- intOfSize 4
-    nullsValue <- nulls
-    oid <- intOfSize 4
-    dimensions <- Vector.replicateM dimensionsAmount dimension
-    let valuesAmount = (Vector.product . Vector.map fst) dimensions
-    values <- Vector.replicateM (fromIntegral valuesAmount) content
-    return (dimensions, values, nullsValue, oid)
-  where
-    dimension =
-      (,) <$> intOfSize 4 <*> intOfSize 4
-    nulls =
-      intOfSize 4 >>= \(x :: Word32) -> case x of
-        0 -> return False
-        1 -> return True
-        w -> failure $ "Invalid value: " <> (fromString . show) w
-
-{-# INLINABLE compositeRep #-}
-compositeRep :: Decoder Data.Composite
-compositeRep =
-  do
-    componentsAmount <- intOfSize 4
-    Vector.replicateM componentsAmount component
-  where
-    component =
-      (,) <$> intOfSize 4 <*> content
 
 -- |
 -- A function for generic in place parsing of an HStore value.
@@ -418,13 +386,13 @@ compositeRep =
 -- Here's how you can use it to produce a parser to list:
 -- 
 -- @
--- hstoreAsList :: Decoder [ ( Text , Maybe Text ) ]
+-- hstoreAsList :: Value [ ( Text , Maybe Text ) ]
 -- hstoreAsList =
 --   hstore replicateM text text
 -- @
 -- 
 {-# INLINABLE hstore #-}
-hstore :: ( forall m. Monad m => Int -> m ( k , Maybe v ) -> m r ) -> Decoder k -> Decoder v -> Decoder r
+hstore :: ( forall m. Monad m => Int -> m ( k , Maybe v ) -> m r ) -> Value k -> Value v -> Value r
 hstore replicateM keyContent valueContent =
   do
     componentsAmount <- intOfSize 4
@@ -438,53 +406,40 @@ hstore replicateM keyContent valueContent =
         value =
           onContent valueContent
 
-{-# INLINABLE hstoreRep #-}
-hstoreRep :: Decoder Data.HStore
-hstoreRep =
-  do
-    componentsAmount <- intOfSize 4
-    Vector.replicateM componentsAmount component
-  where
-    component =
-      (,) <$> key <*> content
-      where
-        key =
-          intOfSize 4 >>= bytesOfSize
-
 
 -- * Composite
 -------------------------
 
-newtype CompositeDecoder a =
-  CompositeDecoder ( Decoder a )
+newtype Composite a =
+  Composite ( Value a )
   deriving ( Functor , Applicative , Monad )
 
 -- |
--- Unlift a 'CompositeDecoder' to a value 'Decoder'.
+-- Unlift a 'Composite' to a value 'Value'.
 {-# INLINE composite #-}
-composite :: CompositeDecoder a -> Decoder a
-composite (CompositeDecoder decoder) =
+composite :: Composite a -> Value a
+composite (Composite decoder) =
   numOfComponents *> decoder
   where
     numOfComponents =
       unitOfSize 4
 
 -- |
--- Lift a value 'Decoder' into 'CompositeDecoder'.
-{-# INLINE compositeValue #-}
-compositeValue :: Decoder a -> CompositeDecoder ( Maybe a )
-compositeValue valueDecoder =
-  CompositeDecoder (skipOid *> onContent valueDecoder)
+-- Lift a value 'Value' into 'Composite'.
+{-# INLINE nullableValueComposite #-}
+nullableValueComposite :: Value a -> Composite ( Maybe a )
+nullableValueComposite valueValue =
+  Composite (skipOid *> onContent valueValue)
   where
     skipOid =
       unitOfSize 4
 
 -- |
--- Lift a non-nullable value 'Decoder' into 'CompositeDecoder'.
-{-# INLINE compositeNonNullValue #-}
-compositeNonNullValue :: Decoder a -> CompositeDecoder a
-compositeNonNullValue valueDecoder =
-  CompositeDecoder (skipOid *> onContent valueDecoder >>= maybe (failure "Unexpected NULL") return)
+-- Lift a non-nullable value 'Value' into 'Composite'.
+{-# INLINE valueComposite #-}
+valueComposite :: Value a -> Composite a
+valueComposite valueValue =
+  Composite (skipOid *> onContent valueValue >>= maybe (failure "Unexpected NULL") return)
   where
     skipOid =
       unitOfSize 4
@@ -500,20 +455,20 @@ compositeNonNullValue valueDecoder =
 -- Here's how you can use it to produce a specific array value decoder:
 -- 
 -- @
--- x :: Decoder [ [ Text ] ]
+-- x :: Value [ [ Text ] ]
 -- x =
---   array (arrayDimension replicateM (fmap catMaybes (arrayDimension replicateM (arrayValue text))))
+--   array (dimensionArray replicateM (fmap catMaybes (dimensionArray replicateM (nullableValueArray text))))
 -- @
 -- 
-newtype ArrayDecoder a =
-  ArrayDecoder ( [ Word32 ] -> Decoder a )
+newtype Array a =
+  Array ( [ Word32 ] -> Value a )
   deriving ( Functor )
 
 -- |
--- Unlift an 'ArrayDecoder' to a value 'Decoder'.
+-- Unlift an 'Array' to a value 'Value'.
 {-# INLINE array #-}
-array :: ArrayDecoder a -> Decoder a
-array (ArrayDecoder decoder) =
+array :: Array a -> Value a
+array (Array decoder) =
   do
     dimensionsAmount <- intOfSize 4
     if dimensionsAmount /= 0
@@ -536,28 +491,28 @@ array (ArrayDecoder decoder) =
 -- (@Control.Monad.'Control.Monad.replicateM'@, @Data.Vector.'Data.Vector.replicateM'@),
 -- which determines the output value.
 -- 
--- * A decoder of its components, which can be either another 'arrayDimension' or 'arrayValue'.
+-- * A decoder of its components, which can be either another 'dimensionArray' or 'nullableValueArray'.
 -- 
-{-# INLINE arrayDimension #-}
-arrayDimension :: ( forall m. Monad m => Int -> m a -> m b ) -> ArrayDecoder a -> ArrayDecoder b
-arrayDimension replicateM (ArrayDecoder component) =
-  ArrayDecoder $ \case
+{-# INLINE dimensionArray #-}
+dimensionArray :: ( forall m. Monad m => Int -> m a -> m b ) -> Array a -> Array b
+dimensionArray replicateM (Array component) =
+  Array $ \case
     head : tail -> replicateM (fromIntegral head) (component tail)
     _ -> failure "A missing dimension length"
 
 -- |
--- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of nullable leaf values.
-{-# INLINE arrayValue #-}
-arrayValue :: Decoder a -> ArrayDecoder ( Maybe a )
-arrayValue =
-  ArrayDecoder . const . onContent
+-- Lift a value 'Value' into 'Array' for parsing of nullable leaf values.
+{-# INLINE nullableValueArray #-}
+nullableValueArray :: Value a -> Array ( Maybe a )
+nullableValueArray =
+  Array . const . onContent
 
 -- |
--- Lift a value 'Decoder' into 'ArrayDecoder' for parsing of non-nullable leaf values.
-{-# INLINE arrayNonNullValue #-}
-arrayNonNullValue :: Decoder a -> ArrayDecoder a
-arrayNonNullValue =
-  ArrayDecoder . const . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
+-- Lift a value 'Value' into 'Array' for parsing of non-nullable leaf values.
+{-# INLINE valueArray #-}
+valueArray :: Value a -> Array a
+valueArray =
+  Array . const . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
 
 
 -- * Enum
@@ -567,7 +522,7 @@ arrayNonNullValue =
 -- Given a partial mapping from text to value,
 -- produces a decoder of that value.
 {-# INLINE enum #-}
-enum :: (Text -> Maybe a) -> Decoder a
+enum :: (Text -> Maybe a) -> Value a
 enum mapping =
   text_strict >>= onText
   where
