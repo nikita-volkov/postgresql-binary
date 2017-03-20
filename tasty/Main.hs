@@ -9,7 +9,7 @@ import qualified Test.Tasty.SmallCheck as SmallCheck
 import qualified Test.Tasty.QuickCheck as QuickCheck
 import qualified Test.QuickCheck as QuickCheck
 import qualified PostgreSQL.Binary.Encoding as A
-import qualified PostgreSQL.Binary.Decoder as B
+import qualified PostgreSQL.Binary.Decoding as B
 import qualified Data.ByteString as ByteString
 import qualified Main.DB as DB
 import qualified Main.Gens as Gens

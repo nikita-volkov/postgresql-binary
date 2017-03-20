@@ -4,7 +4,7 @@ import Prelude
 import Criterion
 import Criterion.Main
 import qualified PostgreSQL.Binary.Encoding as E
-import qualified PostgreSQL.Binary.Decoder as D
+import qualified PostgreSQL.Binary.Decoding as D
 
 
 main =

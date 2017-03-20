@@ -1,4 +1,4 @@
-module PostgreSQL.Binary.Decoder
+module PostgreSQL.Binary.Decoding
 (
   Decoder,
   run,
