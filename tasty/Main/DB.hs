@@ -10,21 +10,20 @@ where
 
 import Main.Prelude
 import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Either
 import Control.Monad.IO.Class
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import qualified Data.ByteString as ByteString; import Data.ByteString (ByteString)
 
 
 type Session =
-  EitherT ByteString (ReaderT LibPQ.Connection IO)
+  ExceptT ByteString (ReaderT LibPQ.Connection IO)
 
 session :: Session a -> IO (Either ByteString a)
 session m =
   do
     c <- connect
     initConnection c
-    r <- runReaderT (runEitherT m) c
+    r <- runReaderT (runExceptT m) c
     LibPQ.finish c
     return r
 
@@ -42,13 +41,13 @@ unit statement params =
 result :: ByteString -> [Maybe (LibPQ.Oid, ByteString, LibPQ.Format)] -> LibPQ.Format -> Session (Maybe LibPQ.Result)
 result statement params outFormat =
   do
-    result <- EitherT $ ReaderT $ \connection -> fmap Right $ LibPQ.execParams connection statement params outFormat
+    result <- ExceptT $ ReaderT $ \connection -> fmap Right $ LibPQ.execParams connection statement params outFormat
     checkResult result
     return result
 
 checkResult :: Maybe LibPQ.Result -> Session ()
 checkResult result =
-  EitherT $ ReaderT $ \connection -> do
+  ExceptT $ ReaderT $ \connection -> do
     case result of
       Just result -> do
         LibPQ.resultErrorField result LibPQ.DiagMessagePrimary >>= maybe (return (Right ())) (return . Left)
