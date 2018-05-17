@@ -35,6 +35,12 @@ binary =
             else []
         other =
           [
+            select "select (234 :: int8)" (const B.int) (234 :: Int32)
+            ,
+            select "select (-234 :: int8)" (const B.int) (-234 :: Int32)
+            ,
+            select "select (0 :: int8)" (const B.int) (0 :: Int32)
+            ,
             let
               sql =
                 "select (1, 'a')"
