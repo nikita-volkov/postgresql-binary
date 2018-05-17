@@ -5,7 +5,6 @@ import Control.Monad.IO.Class
 import Test.QuickCheck.Instances
 import Test.Tasty
 import qualified Test.Tasty.HUnit as HUnit
-import qualified Test.Tasty.SmallCheck as SmallCheck
 import qualified Test.Tasty.QuickCheck as QuickCheck
 import qualified Test.QuickCheck as QuickCheck
 import qualified PostgreSQL.Binary.Encoding as A
