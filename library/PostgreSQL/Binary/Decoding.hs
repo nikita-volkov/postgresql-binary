@@ -51,6 +51,7 @@ module PostgreSQL.Binary.Decoding
   hstore,
   -- **
   enum,
+  refine
 )
 where
 
@@ -533,3 +534,13 @@ enum mapping =
           failure ("No mapping for text \"" <> text <> "\"")
         onJust =
           pure
+
+-- * Refining values
+-------------------------
+
+-- | Given additional constraints when
+-- using an existing value decoder, produces
+-- a decoder of that value.
+{-# INLINE refine #-}
+refine :: (a -> Either Text b) -> Value a -> Value b
+refine fn m = m >>= (either failure pure . fn)
