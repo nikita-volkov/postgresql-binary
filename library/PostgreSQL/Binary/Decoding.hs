@@ -249,11 +249,13 @@ char =
 {-# INLINABLE text_strict #-}
 text_strict :: Value Text
 text_strict =
-  remainders >>= either (failure . exception) return . Text.decodeUtf8'
+  do
+    input <- remainders
+    either (failure . exception input) return (Text.decodeUtf8' input)
   where
-    exception =
+    exception input =
       \case
-        Text.DecodeError message byte -> fromString message
+        Text.DecodeError _ _ -> fromString ("Failed to decode the following bytes in UTF-8: " <> show input)
         _ -> $bug "Unexpected unicode exception"
 
 -- |
@@ -262,11 +264,13 @@ text_strict =
 {-# INLINABLE text_lazy #-}
 text_lazy :: Value LazyText
 text_lazy =
-  bytea_lazy >>= either (failure . exception) return . LazyText.decodeUtf8'
+  do
+    input <- bytea_lazy
+    either (failure . exception input ) return (LazyText.decodeUtf8' input)
   where
-    exception =
+    exception input =
       \case
-        Text.DecodeError message byte -> fromString message
+        Text.DecodeError _ _ -> fromString ("Failed to decode the following bytes in UTF-8: " <> show input)
         _ -> $bug "Unexpected unicode exception"
 
 -- |
