@@ -51,7 +51,7 @@ module PostgreSQL.Binary.Decoding
   hstore,
   -- **
   enum,
-  refine
+  refine,
 )
 where
 
