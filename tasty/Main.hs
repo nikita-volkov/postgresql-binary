@@ -1,6 +1,6 @@
 module Main where
 
-import Main.Prelude hiding (assert, isRight, isLeft)
+import Main.Prelude hiding (assert, isRight, isLeft, select)
 import Control.Monad.IO.Class
 import Test.QuickCheck.Instances
 import Test.Tasty
