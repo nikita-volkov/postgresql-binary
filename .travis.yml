@@ -5,9 +5,14 @@ env:
   - ghc=8.2.2
   - ghc=8.4.2
   - ghc=8.6.5
-  - ghc=8.8.1 benchmarks=1 tests=1 postgres_version=8.4.0 postgres_integer_datetimes=0
+  - ghc=8.8.1 benchmarks=1 tests=1 postgres_version=8.4.9 postgres_integer_datetimes=0
+  - ghc=8.8.1 benchmarks=1 tests=1 postgres_version=9.0.0 postgres_integer_datetimes=0
   - ghc=8.8.1 benchmarks=1 tests=1 postgres_version=12.1 postgres_integer_datetimes=1
   - ghc=8.8.1 benchmarks=1 tests=1
+
+jobs:
+  allow_failures:
+    - env: ghc=8.8.1 benchmarks=1 tests=1 postgres_version=8.4.9 postgres_integer_datetimes=0
 
 services:
   - postgresql
