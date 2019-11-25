@@ -101,14 +101,14 @@ binary =
                   let p = (,,) (PTI.oidPQ (PTI.ptiOID PTI.timestamptz))
                                ((A.encodingBytes . encoder) x) 
                                (LibPQ.Binary)
-                      x = read "2011-09-28 00:17:25"
+                      x = read "2011-09-28 00:17:25Z"
                   DB.unit "insert into a (b) values ($1)" [Just p]
                   DB.unit "set timezone to 'Europe/Stockholm'" []
                   textual <- DB.oneRow "SELECT * FROM a" [] LibPQ.Text
                   decoded <- fmap (B.valueParser decoder) (DB.oneRow "SELECT * FROM a" [] LibPQ.Binary)
                   return (textual, decoded)
               HUnit.assertEqual "" ("2011-09-28 02:17:25+02") textual
-              HUnit.assertEqual "" (Right (read "2011-09-28 00:17:25")) decoded
+              HUnit.assertEqual "" (Right (read "2011-09-28 00:17:25Z")) decoded
             ,
             timeRoundtrip "timestamptz" (fmap Apx Gens.auto) PTI.timestamptz
             ((. unApx) . bool A.timestamptz_float A.timestamptz_int)
