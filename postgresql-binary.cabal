@@ -89,8 +89,8 @@ library
     placeholders ==0.1.*,
     -- general:
     transformers >=0.3 && <0.6,
-    base-prelude >=0.1.19 && <2,
-    base >=4.6 && <5
+    base-prelude >=1.4 && <2,
+    base >=4.9 && <5
 
 -- This test-suite must be executed in a single-thread.
 test-suite tasty

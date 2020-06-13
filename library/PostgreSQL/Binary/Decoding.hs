@@ -417,7 +417,7 @@ hstore replicateM keyContent valueContent =
 
 newtype Composite a =
   Composite ( Value a )
-  deriving ( Functor , Applicative , Monad )
+  deriving ( Functor , Applicative , Monad , MonadFail )
 
 -- |
 -- Unlift a 'Composite' to a value 'Value'.
