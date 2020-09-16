@@ -8,7 +8,7 @@ module Main.DB
 )
 where
 
-import Main.Prelude
+import Main.Prelude hiding (unit)
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
 import qualified Database.PostgreSQL.LibPQ as LibPQ
