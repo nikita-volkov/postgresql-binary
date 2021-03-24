@@ -70,7 +70,7 @@ library
     PostgreSQL.Binary.BuilderPrim
   build-depends:
     -- parsing:
-    binary-parser >=0.5.6 && <0.6,
+    binary-parser >=0.5.7 && <0.6,
     -- building:
     bytestring-strict-builder >=0.4.5.3 && <0.5,
     -- data:
