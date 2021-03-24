@@ -5,8 +5,6 @@ module Main.Prelude
   ByteStringBuilder,
   LazyText,
   TextBuilder,
-  bug,
-  bottom,
 )
 where
 
@@ -21,21 +19,12 @@ import Conversion as Exports
 import Conversion.Text ()
 import Conversion.ByteString ()
 
--- placeholders
--------------------------
-import Development.Placeholders as Exports
-
--- loch-th
--------------------------
-import Debug.Trace.LocationTH as Exports
-
 -- custom
 -------------------------
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Builder
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Builder
-import qualified Debug.Trace.LocationTH
 
 
 type LazyByteString =
@@ -50,9 +39,3 @@ type LazyText =
 type TextBuilder =
   Data.Text.Lazy.Builder.Builder
 
-
-bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
-  where
-    msg = "A \"postgresql-binary\" package bug: " :: String
-
-bottom = [e| $bug "Bottom evaluated" |]

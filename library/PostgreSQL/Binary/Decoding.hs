@@ -257,7 +257,7 @@ text_strict =
     exception input =
       \case
         Text.DecodeError _ _ -> fromString ("Failed to decode the following bytes in UTF-8: " <> show input)
-        _ -> $bug "Unexpected unicode exception"
+        _ -> error "Unexpected unicode exception"
 
 -- |
 -- Any of the variable-length character types:
@@ -272,7 +272,7 @@ text_lazy =
     exception input =
       \case
         Text.DecodeError _ _ -> fromString ("Failed to decode the following bytes in UTF-8: " <> show input)
-        _ -> $bug "Unexpected unicode exception"
+        _ -> error "Unexpected unicode exception"
 
 -- |
 -- BYTEA or any other type in its undecoded form.

@@ -5,8 +5,6 @@ module PostgreSQL.Binary.Prelude
   ByteStringBuilder,
   LazyText,
   TextBuilder,
-  bug,
-  bottom,
   mapLeft,
   joinMap,
 )
@@ -56,21 +54,12 @@ import Data.HashMap.Strict as Exports (HashMap)
 -------------------------
 import Data.Map.Strict as Exports (Map)
 
--- placeholders
--------------------------
-import Development.Placeholders as Exports
-
--- loch-th
--------------------------
-import Debug.Trace.LocationTH as Exports
-
 -- custom
 -------------------------
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Builder
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Builder
-import qualified Debug.Trace.LocationTH
 
 
 type LazyByteString =
@@ -85,12 +74,6 @@ type LazyText =
 type TextBuilder =
   Data.Text.Lazy.Builder.Builder
 
-
-bug = [e| $(Debug.Trace.LocationTH.failure) . (msg <>) |]
-  where
-    msg = "A \"postgresql-binary\" package bug: " :: String
-
-bottom = [e| $bug "Bottom evaluated" |]
 
 {-# INLINE mapLeft #-}
 mapLeft :: (a -> b) -> Either a x -> Either b x
