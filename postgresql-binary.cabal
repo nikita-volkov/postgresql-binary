@@ -8,7 +8,7 @@ description:
   An API for dealing with PostgreSQL's binary data format.
   .
   It can be used to implement performant bindings to Postgres.
-  E.g., <http://hackage.haskell.org/package/hasql "hasql">
+  E.g., <http://hackage.haskell.org/package/hasql hasql>
   is based on this library.
   .
   It supports all Postgres versions starting from 8.3 
