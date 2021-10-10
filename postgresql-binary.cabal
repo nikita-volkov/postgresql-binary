@@ -64,7 +64,7 @@ library
     PostgreSQL.Binary.Inet
     PostgreSQL.Binary.BuilderPrim
   build-depends:
-    aeson >=1.5 && <2,
+    aeson >=2 && <3,
     base >=4.12 && <5,
     binary-parser >=0.5.7 && <0.6,
     bytestring >=0.10.4 && <0.12,

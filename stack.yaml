@@ -1,0 +1,9 @@
+resolver: nightly-2021-10-07
+extra-deps:
+  - aeson-2.0.1.0
+  - conversion-1.2.1
+  - conversion-bytestring-1.0.1
+  - conversion-text-1.0.1
+  - criterion-1.5.11.0
+  - json-ast-0.3.1
+  - microstache-1.0.2
