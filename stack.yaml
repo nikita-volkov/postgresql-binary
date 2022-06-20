@@ -1,4 +1,4 @@
-resolver: nightly-2022-05-03
+resolver: nightly-2022-06-20
 extra-deps:
   - conversion-1.2.1
   - conversion-bytestring-1.0.1.1
