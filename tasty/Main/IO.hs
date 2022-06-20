@@ -15,6 +15,8 @@ import qualified Data.Text.Encoding as Text
 import qualified PostgreSQL.Binary.Decoding as A
 import qualified PostgreSQL.Binary.Encoding as B
 import qualified Database.PostgreSQL.LibPQ as LibPQ
+import qualified Data.ByteString.Builder as ByteStringBuilder
+import qualified Data.ByteString.Lazy as ByteStringLazy
 
 
 textRoundtrip :: LibPQ.Oid -> TextEncoder.Encoder a -> (Bool -> A.Value a) -> a -> IO (Either Text a)
@@ -29,7 +31,7 @@ textRoundtrip oid encoder decoder value =
       [ Just ( oid , bytes , LibPQ.Text ) ]
       where
         bytes =
-          (convert . encoder) value
+          (ByteStringLazy.toStrict . ByteStringBuilder.toLazyByteString . encoder) value
 
 roundtrip :: LibPQ.Oid -> (Bool -> a -> B.Encoding) -> (Bool -> A.Value b) -> a -> IO (Either Text b)
 roundtrip oid encoder decoder value =

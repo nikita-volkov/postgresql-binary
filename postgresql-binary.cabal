@@ -101,11 +101,7 @@ test-suite tasty
   default-language:
     Haskell2010
   build-depends:
-    aeson,
-    conversion ==1.*,
-    conversion-bytestring ==1.*,
-    conversion-text ==1.*,
-    json-ast ==0.3.*,
+    aeson >=2 && <3,
     network-ip >=0.2 && <1,
     postgresql-binary,
     postgresql-libpq ==0.9.*,

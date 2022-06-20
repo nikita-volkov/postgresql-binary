@@ -3,7 +3,6 @@ module Main.Gens where
 import Main.Prelude hiding (assert, isRight, isLeft, choose)
 import Test.QuickCheck hiding (vector)
 import Test.QuickCheck.Instances
-import JSONAST
 import qualified Main.PTI as PTI
 import qualified Data.Scientific as Scientific
 import qualified Data.UUID as UUID
@@ -12,6 +11,8 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified PostgreSQL.Binary.Encoding as Encoder
 import qualified Data.Text as Text
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import qualified Data.Aeson.Key as AesonKey
 import qualified Network.IP.Addr as IPAddr
 
 
@@ -22,8 +23,19 @@ auto :: Arbitrary a => Gen a
 auto =
   arbitrary
 
-json :: Gen JSON
-json =
+vector :: Gen a -> Gen (Vector a)
+vector element =
+  join $ Vector.replicateM <$> arbitrary <*> pure element
+
+hashMap :: (Eq a, Hashable a) => Gen a -> Gen b -> Gen (HashMap a b)
+hashMap key value =
+  fmap HashMap.fromList $ join $ replicateM <$> arbitrary <*> pure row
+  where
+    row =
+      (,) <$> key <*> value
+
+aeson :: Gen Aeson.Value
+aeson =
   byDepth 0
   where
     byDepth depth =
@@ -40,34 +52,27 @@ json =
             freq =
               maxFreq - depth
         maxFreq =
-          6
+          4
         null =
-          pure JSON_Null
+          pure Aeson.Null
         bool =
-          fmap JSON_Bool arbitrary
+          fmap Aeson.Bool arbitrary
         number =
-          fmap JSON_Number arbitrary
+          fmap Aeson.Number arbitrary
         string =
-          fmap JSON_String text
+          fmap Aeson.String text
         array =
-          fmap JSON_Array (vector (byDepth (succ depth)))
+          fmap Aeson.Array (vector (byDepth (succ depth)))
         object =
-          fmap JSON_Object (hashMap text (byDepth (succ depth)))
-
-vector :: Gen a -> Gen (Vector a)
-vector element =
-  join $ Vector.replicateM <$> arbitrary <*> pure element
-
-hashMap :: (Eq a, Hashable a) => Gen a -> Gen b -> Gen (HashMap a b)
-hashMap key value =
-  fmap HashMap.fromList $ join $ replicateM <$> arbitrary <*> pure row
-  where
-    row =
-      (,) <$> key <*> value
-
-aeson :: Gen Aeson.Value
-aeson =
-  fmap unsafeCoerce json
+          Aeson.Object . AesonKeyMap.fromList <$> listOf pair
+          where
+            pair =
+              (,) <$> key <*> value
+              where
+                key =
+                  AesonKey.fromText <$> text
+                value =
+                  byDepth (succ depth)
 
 postgresInt :: (Bounded a, Ord a, Integral a, Arbitrary a) => Gen a
 postgresInt =

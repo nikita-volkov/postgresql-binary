@@ -17,6 +17,7 @@ import qualified Main.IO as IO
 import qualified Main.PTI as PTI
 import qualified Main.TextEncoder as TextEncoder
 import qualified Database.PostgreSQL.LibPQ as LibPQ
+import qualified Data.Text.Lazy as TextLazy
 import Main.Apx (Apx(..))
 
 
@@ -138,7 +139,7 @@ binary =
             ,
             primitiveRoundtrip "text_strict" Gens.text PTI.text A.text_strict B.text_strict
             ,
-            primitiveRoundtrip "text_lazy" (fmap convert Gens.text) PTI.text A.text_lazy B.text_lazy
+            primitiveRoundtrip "text_lazy" (fmap TextLazy.fromStrict Gens.text) PTI.text A.text_lazy B.text_lazy
             ,
             primitiveRoundtrip "bytea_strict" Gens.auto PTI.bytea A.bytea_strict B.bytea_strict
             ,

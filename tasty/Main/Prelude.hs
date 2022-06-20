@@ -13,12 +13,6 @@ where
 -------------------------
 import Prelude as Exports hiding (assert, Data, fail, check)
 
--- conversion
--------------------------
-import Conversion as Exports
-import Conversion.Text ()
-import Conversion.ByteString ()
-
 -- custom
 -------------------------
 import qualified Data.ByteString.Lazy

@@ -3,35 +3,7 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    pantry-tree:
-      sha256: f199f459ee8ab2ce5f41cb8199ca60a7ad4f7897a5c474e10126dff6035ca4e9
-      size: 267
-    hackage: conversion-1.2.1@sha256:8db4210950736e54be5cd7f7076c19e05d06fb48673eb23638093246a1e7199e,2155
-  original:
-    hackage: conversion-1.2.1
-- completed:
-    pantry-tree:
-      sha256: 685c2790f97e313d1d28305dcbec8d2d4673357f2f7b1d12071cc20067cdaccc
-      size: 242
-    hackage: conversion-bytestring-1.0.1.1@sha256:65513d369524b79d080c1e995a8771231a31309ca64ccbe684b454a2bccd9a4d,1610
-  original:
-    hackage: conversion-bytestring-1.0.1.1
-- completed:
-    pantry-tree:
-      sha256: b4a88316975436226eaa34296bae5a55cb1a136ec56f6693818cfef7a66e76fd
-      size: 230
-    hackage: conversion-text-1.0.1.1@sha256:c117d4f3c78e94991799898bf59689d8c690da08253b1446eb265cedf0e99f6f,1640
-  original:
-    hackage: conversion-text-1.0.1.1
-- completed:
-    pantry-tree:
-      sha256: 6564a37b749c38715fd6969ee480d939f9006d90eff635d80af2c1fb0313b773
-      size: 209
-    hackage: json-ast-0.3.1@sha256:b0338a0be2c1665f62003e40e3c6b422d2091f4b346234422631806380884af9,921
-  original:
-    hackage: json-ast-0.3.1
+packages: []
 snapshots:
 - completed:
     sha256: 6935ec7d6f8306ab967fd8edcc9d0773dfeee59345103cb021ebedacd19c5c6b
