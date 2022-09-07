@@ -342,6 +342,11 @@ json_bytes :: ByteString -> Builder
 json_bytes =
   bytes
 
+{-# INLINE json_bytes_lazy #-}
+json_bytes_lazy :: N.ByteString -> Builder
+json_bytes_lazy =
+  lazyBytes
+
 {-# INLINE json_ast #-}
 json_ast :: R.Value -> Builder
 json_ast =
@@ -351,6 +356,11 @@ json_ast =
 jsonb_bytes :: ByteString -> Builder
 jsonb_bytes =
   mappend "\1" . bytes
+
+{-# INLINE jsonb_bytes_lazy #-}
+jsonb_bytes_lazy :: N.ByteString -> Builder
+jsonb_bytes_lazy =
+  mappend "\1" . lazyBytes
 
 {-# INLINE jsonb_ast #-}
 jsonb_ast :: R.Value -> Builder
