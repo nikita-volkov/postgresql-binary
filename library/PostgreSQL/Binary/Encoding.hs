@@ -47,8 +47,10 @@ module PostgreSQL.Binary.Encoding
   interval_float,
   -- ** JSON
   json_bytes,
+  json_bytes_lazy,
   json_ast,
   jsonb_bytes,
+  jsonb_bytes_lazy,
   jsonb_ast,
 
   -- * Array
@@ -296,6 +298,11 @@ json_bytes :: ByteString -> Encoding
 json_bytes =
   B.json_bytes
 
+{-# INLINE json_bytes_lazy #-}
+json_bytes_lazy :: N.ByteString -> Encoding
+json_bytes_lazy =
+  B.json_bytes_lazy
+
 {-# INLINE json_ast #-}
 json_ast :: R.Value -> Encoding
 json_ast =
@@ -305,6 +312,11 @@ json_ast =
 jsonb_bytes :: ByteString -> Encoding
 jsonb_bytes =
   B.jsonb_bytes
+
+{-# INLINE jsonb_bytes_lazy #-}
+jsonb_bytes_lazy :: N.ByteString -> Encoding
+jsonb_bytes_lazy =
+  B.jsonb_bytes_lazy
 
 {-# INLINE jsonb_ast #-}
 jsonb_ast :: R.Value -> Encoding
