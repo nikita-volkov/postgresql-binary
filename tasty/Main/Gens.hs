@@ -15,6 +15,10 @@ import qualified PostgreSQL.Binary.Encoding as Encoder
 import Test.QuickCheck hiding (vector)
 import Test.QuickCheck.Instances
 
+maybeOf :: Gen a -> Gen (Maybe a)
+maybeOf gen =
+  oneof [Just <$> gen, pure Nothing]
+
 -- * Generators
 
 auto :: Arbitrary a => Gen a

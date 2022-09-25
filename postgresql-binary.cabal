@@ -89,7 +89,8 @@ test-suite tasty
   main-is:
     Main.hs
   other-modules:
-    Main.TextEncoder 
+    Main.Composite 
+    Main.TextEncoder
     Main.DB
     Main.Apx
     Main.IO

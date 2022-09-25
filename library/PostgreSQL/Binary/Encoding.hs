@@ -2,6 +2,7 @@ module PostgreSQL.Binary.Encoding
   ( -- * Encoding
     Encoding,
     encodingBytes,
+    composite,
     array,
     array_foldable,
     array_vector,
@@ -58,6 +59,11 @@ module PostgreSQL.Binary.Encoding
     encodingArray,
     nullArray,
     dimensionArray,
+
+    -- * Composite
+    Composite,
+    field,
+    nullField,
   )
 where
 
@@ -80,6 +86,11 @@ encodingBytes =
   C.builderBytes
 
 -- * Values
+
+{-# INLINE composite #-}
+composite :: Composite -> Encoding
+composite (Composite size fields) =
+  B.int4_int size <> fields
 
 -- |
 -- Turn an array builder into final value.
@@ -342,3 +353,23 @@ dimensionArray foldl' elementArray input =
           where
             Array elementBuilder elementDimensions elementNulls =
               elementArray element
+
+-- * Composite
+
+data Composite
+  = Composite !Int !Encoding
+
+instance Semigroup Composite where
+  Composite lSize lFields <> Composite rSize rFields =
+    Composite (lSize + rSize) (lFields <> rFields)
+
+instance Monoid Composite where
+  mempty = Composite 0 mempty
+
+field :: Word32 -> Encoding -> Composite
+field oid value =
+  Composite 1 (B.int4_word32 oid <> B.sized value)
+
+nullField :: Word32 -> Composite
+nullField oid =
+  Composite 1 (B.int4_word32 oid <> B.null4)

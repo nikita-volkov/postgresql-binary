@@ -5,6 +5,7 @@ import qualified Data.ByteString as ByteString
 import qualified Data.Text.Lazy as TextLazy
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Main.Apx (Apx (..))
+import qualified Main.Composite as Composite
 import qualified Main.DB as DB
 import qualified Main.Gens as Gens
 import qualified Main.IO as IO
@@ -17,8 +18,8 @@ import qualified PostgreSQL.Binary.Encoding as A
 import qualified Test.QuickCheck as QuickCheck
 import Test.QuickCheck.Instances
 import Test.Tasty
-import qualified Test.Tasty.HUnit as HUnit
-import qualified Test.Tasty.QuickCheck as QuickCheck
+import Test.Tasty.HUnit as HUnit
+import Test.Tasty.QuickCheck as QuickCheck
 
 main =
   defaultMain (testGroup "" [binary, textual])
@@ -34,7 +35,9 @@ binary =
             then [primitiveRoundtrip "jsonb" Gens.aeson PTI.jsonb A.jsonb_ast B.jsonb_ast]
             else []
         other =
-          [ select "select (234 :: int8)" (const B.int) (234 :: Int32),
+          [ testProperty ("Composite roundtrip") $ \value ->
+              Composite.decodingProperty value (Composite.encodeToByteString value),
+            select "select (234 :: int8)" (const B.int) (234 :: Int32),
             select "select (-234 :: int8)" (const B.int) (-234 :: Int32),
             select "select (0 :: int8)" (const B.int) (0 :: Int32),
             let sql =
@@ -214,6 +217,14 @@ arrayRoundtrip gen pti encoder decoder =
   QuickCheck.testProperty ("Array roundtrip") $
     QuickCheck.forAll gen $ Properties.stdRoundtrip (PTI.oidPQ (fromJust (PTI.ptiArrayOID pti))) encoder decoder
 
+stdRoundtrip ::
+  (Eq a, Show a) =>
+  TestName ->
+  QuickCheck.Gen a ->
+  PTI.PTI ->
+  (a -> A.Encoding) ->
+  B.Value a ->
+  TestTree
 stdRoundtrip typeName gen pti encoder decoder =
   QuickCheck.testProperty (typeName <> " roundtrip") $
     QuickCheck.forAll gen $ Properties.stdRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
