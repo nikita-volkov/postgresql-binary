@@ -1,19 +1,18 @@
 module Main.DB
-(
-  session,
-  oneRow,
-  unit,
-  integerDatetimes,
-  serverVersion,
-)
+  ( session,
+    oneRow,
+    unit,
+    integerDatetimes,
+    serverVersion,
+  )
 where
 
-import Main.Prelude hiding (unit)
-import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Reader
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as ByteString
 import qualified Database.PostgreSQL.LibPQ as LibPQ
-import qualified Data.ByteString as ByteString; import Data.ByteString (ByteString)
-
+import Main.Prelude hiding (unit)
 
 type Session =
   ExceptT ByteString (ReaderT LibPQ.Connection IO)
@@ -47,13 +46,14 @@ result statement params outFormat =
 
 checkResult :: Maybe LibPQ.Result -> Session ()
 checkResult result =
-  ExceptT $ ReaderT $ \connection -> do
-    case result of
-      Just result -> do
-        LibPQ.resultErrorField result LibPQ.DiagMessagePrimary >>= maybe (return (Right ())) (return . Left)
-      Nothing -> do
-        m <- LibPQ.errorMessage connection
-        return $ Left $ maybe "Fatal PQ error" (\m -> "Fatal PQ error: " <> m) m
+  ExceptT $
+    ReaderT $ \connection -> do
+      case result of
+        Just result -> do
+          LibPQ.resultErrorField result LibPQ.DiagMessagePrimary >>= maybe (return (Right ())) (return . Left)
+        Nothing -> do
+          m <- LibPQ.errorMessage connection
+          return $ Left $ maybe "Fatal PQ error" (\m -> "Fatal PQ error: " <> m) m
 
 integerDatetimes :: Session Bool
 integerDatetimes =
@@ -63,19 +63,15 @@ serverVersion :: Session Int
 serverVersion =
   lift (ReaderT LibPQ.serverVersion)
 
--- *
--------------------------
-
 connect :: IO LibPQ.Connection
 connect =
   LibPQ.connectdb bs
   where
-    bs = 
+    bs =
       ByteString.intercalate " " components
       where
-        components = 
-          [
-            "host=" <> host,
+        components =
+          [ "host=" <> host,
             "port=" <> (fromString . show) port,
             "user=" <> user,
             "password=" <> password,
@@ -90,18 +86,20 @@ connect =
 
 initConnection :: LibPQ.Connection -> IO ()
 initConnection c =
-  void $ LibPQ.exec c $ mconcat $ map (<> ";") $ 
-    [ 
-      "SET client_min_messages TO WARNING",
-      "SET client_encoding = 'UTF8'",
-      "SET intervalstyle = 'postgres'"
-    ]
+  void $
+    LibPQ.exec c $
+      mconcat $
+        map (<> ";") $
+          [ "SET client_min_messages TO WARNING",
+            "SET client_encoding = 'UTF8'",
+            "SET intervalstyle = 'postgres'"
+          ]
 
 getIntegerDatetimes :: LibPQ.Connection -> IO Bool
 getIntegerDatetimes c =
   fmap parseResult $ LibPQ.parameterStatus c "integer_datetimes"
   where
-    parseResult = 
+    parseResult =
       \case
         Just "on" -> True
         _ -> False

@@ -1,76 +1,75 @@
 module PostgreSQL.Binary.Encoding
-(
-  -- * Encoding
-  Encoding,
-  encodingBytes,
+  ( -- * Encoding
+    Encoding,
+    encodingBytes,
+    array,
+    array_foldable,
+    array_vector,
+    nullableArray_vector,
+    hStore_foldable,
+    hStore_hashMap,
+    hStore_map,
 
-  -- * 
-  array,
-  array_foldable,
-  array_vector,
-  nullableArray_vector,
-  hStore_foldable,
-  hStore_hashMap,
-  hStore_map,
+    -- * Primitives
+    bool,
+    int2_int16,
+    int2_word16,
+    int4_int32,
+    int4_word32,
+    int8_int64,
+    int8_word64,
+    float4,
+    float8,
+    numeric,
+    uuid,
+    inet,
+    char_utf8,
+    text_strict,
+    text_lazy,
+    bytea_strict,
+    bytea_lazy,
 
-  -- * Primitives
-  bool,
-  int2_int16,
-  int2_word16,
-  int4_int32,
-  int4_word32,
-  int8_int64,
-  int8_word64,
-  float4,
-  float8,
-  numeric,
-  uuid,
-  inet,
-  char_utf8,
-  text_strict,
-  text_lazy,
-  bytea_strict,
-  bytea_lazy,
-  -- ** Time
-  -- | Some of the functions in this section are distinguished based
-  -- on the @integer_datetimes@ setting of the server.
-  date,
-  time_int,
-  time_float,
-  timetz_int,
-  timetz_float,
-  timestamp_int,
-  timestamp_float,
-  timestamptz_int,
-  timestamptz_float,
-  interval_int,
-  interval_float,
-  -- ** JSON
-  json_bytes,
-  json_bytes_lazy,
-  json_ast,
-  jsonb_bytes,
-  jsonb_bytes_lazy,
-  jsonb_ast,
+    -- ** Time
 
-  -- * Array
-  Array,
-  encodingArray,
-  nullArray,
-  dimensionArray,
-)
+    -- | Some of the functions in this section are distinguished based
+    -- on the @integer_datetimes@ setting of the server.
+    date,
+    time_int,
+    time_float,
+    timetz_int,
+    timetz_float,
+    timestamp_int,
+    timestamp_float,
+    timestamptz_int,
+    timestamptz_float,
+    interval_int,
+    interval_float,
+
+    -- ** JSON
+    json_bytes,
+    json_bytes_lazy,
+    json_ast,
+    jsonb_bytes,
+    jsonb_bytes_lazy,
+    jsonb_ast,
+
+    -- * Array
+    Array,
+    encodingArray,
+    nullArray,
+    dimensionArray,
+  )
 where
 
-import PostgreSQL.Binary.Prelude hiding (bool, length)
 import qualified ByteString.StrictBuilder as C
-import qualified Data.Vector as A
-import qualified PostgreSQL.Binary.Encoding.Builders as B
+import qualified Data.Aeson as R
 import qualified Data.ByteString.Builder as M
 import qualified Data.ByteString.Lazy as N
 import qualified Data.Text.Lazy as L
-import qualified Data.Aeson as R
+import qualified Data.Vector as A
 import qualified Network.IP.Addr as G
-
+import qualified PostgreSQL.Binary.Encoding.Builders as B
+import PostgreSQL.Binary.Prelude hiding (bool, length)
 
 type Encoding =
   C.Builder
@@ -80,73 +79,62 @@ encodingBytes :: Encoding -> ByteString
 encodingBytes =
   C.builderBytes
 
-
 -- * Values
--------------------------
 
-{-|
-Turn an array builder into final value.
-The first parameter is OID of the element type.
--}
+-- |
+-- Turn an array builder into final value.
+-- The first parameter is OID of the element type.
 {-# INLINE array #-}
 array :: Word32 -> Array -> Encoding
 array oid (Array payload dimensions nulls) =
   B.array oid dimensions nulls payload
 
-{-|
-A helper for encoding of arrays of single dimension from foldables.
-The first parameter is OID of the element type.
--}
+-- |
+-- A helper for encoding of arrays of single dimension from foldables.
+-- The first parameter is OID of the element type.
 {-# INLINE array_foldable #-}
 array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Encoding) -> foldable element -> Encoding
 array_foldable oid elementBuilder =
   array oid . dimensionArray foldl' (maybe nullArray encodingArray . elementBuilder)
 
-{-|
-A helper for encoding of arrays of single dimension from vectors.
-The first parameter is OID of the element type.
--}
+-- |
+-- A helper for encoding of arrays of single dimension from vectors.
+-- The first parameter is OID of the element type.
 {-# INLINE array_vector #-}
 array_vector :: Word32 -> (element -> Encoding) -> Vector element -> Encoding
 array_vector oid elementBuilder vector =
   B.array_vector oid elementBuilder vector
 
-{-|
-A helper for encoding of arrays of single dimension from vectors.
-The first parameter is OID of the element type.
--}
+-- |
+-- A helper for encoding of arrays of single dimension from vectors.
+-- The first parameter is OID of the element type.
 {-# INLINE nullableArray_vector #-}
 nullableArray_vector :: Word32 -> (element -> Encoding) -> Vector (Maybe element) -> Encoding
 nullableArray_vector oid elementBuilder vector =
   B.nullableArray_vector oid elementBuilder vector
 
-{-|
-A polymorphic @HSTORE@ encoder.
--}
+-- |
+-- A polymorphic @HSTORE@ encoder.
 {-# INLINE hStore_foldable #-}
 hStore_foldable :: Foldable foldable => foldable (Text, Maybe Text) -> Encoding
 hStore_foldable =
   B.hStoreUsingFoldl foldl
 
-{-|
-@HSTORE@ encoder from HashMap.
--}
+-- |
+-- @HSTORE@ encoder from HashMap.
 {-# INLINE hStore_hashMap #-}
 hStore_hashMap :: HashMap Text (Maybe Text) -> Encoding
 hStore_hashMap =
   B.hStore_hashMap
 
-{-|
-@HSTORE@ encoder from Map.
--}
+-- |
+-- @HSTORE@ encoder from Map.
 {-# INLINE hStore_map #-}
 hStore_map :: Map Text (Maybe Text) -> Encoding
 hStore_map =
   B.hStore_map
 
-
 -- * Primitive
--------------------------
 
 {-# INLINE bool #-}
 bool :: Bool -> Encoding
@@ -323,15 +311,12 @@ jsonb_ast :: R.Value -> Encoding
 jsonb_ast =
   B.jsonb_ast
 
-
 -- * Array
--------------------------
 
-{-|
-Abstraction for encoding into multidimensional array.
--}
-data Array =
-  Array !Encoding ![Int32] !Bool
+-- |
+-- Abstraction for encoding into multidimensional array.
+data Array
+  = Array !Encoding ![Int32] !Bool
 
 encodingArray :: Encoding -> Array
 encodingArray value =

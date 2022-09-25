@@ -1,9 +1,8 @@
 module PostgreSQL.Binary.Numeric where
 
-import PostgreSQL.Binary.Prelude
-import qualified Data.Vector as Vector
 import qualified Data.Scientific as Scientific
-
+import qualified Data.Vector as Vector
+import PostgreSQL.Binary.Prelude
 
 {-# INLINE posSignCode #-}
 posSignCode :: Word16
@@ -27,12 +26,12 @@ extractComponents =
 
 {-# INLINE mergeComponents #-}
 mergeComponents :: Integral a => Vector a -> Integer
-mergeComponents = 
+mergeComponents =
   Vector.foldl' (\l r -> l * 10000 + fromIntegral r) 0
 
 {-# INLINE mergeDigits #-}
 mergeDigits :: Integral a => Vector a -> a
-mergeDigits = 
+mergeDigits =
   Vector.foldl' (\l r -> l * 10 + r) 0
 
 -- |
@@ -47,13 +46,13 @@ componentDigits =
     d <- get
     return $ [a, b, c, d]
 
-{-# INLINABLE componentsReplicateM #-}
+{-# INLINEABLE componentsReplicateM #-}
 componentsReplicateM :: (Integral a, Applicative m) => Int -> m a -> m a
-componentsReplicateM amount component = 
+componentsReplicateM amount component =
   foldl' folder (pure 0) (replicate amount component)
   where
     folder acc component =
-      liftA2 (+) (fmap (*10000) acc) component
+      liftA2 (+) (fmap (* 10000) acc) component
 
 {-# INLINE signer #-}
 signer :: Integral a => Word16 -> Either Text (a -> a)

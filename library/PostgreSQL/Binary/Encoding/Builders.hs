@@ -1,30 +1,27 @@
-module PostgreSQL.Binary.Encoding.Builders
-where
+module PostgreSQL.Binary.Encoding.Builders where
 
-import PostgreSQL.Binary.Prelude hiding (bool)
 import ByteString.StrictBuilder
-import qualified Data.Vector as A
-import qualified Data.Scientific as D
-import qualified Data.UUID as E
+import qualified Data.Aeson as R
 import qualified Data.ByteString.Builder as M
 import qualified Data.ByteString.Lazy as N
+import qualified Data.HashMap.Strict as F
+import qualified Data.Map.Strict as Q
+import qualified Data.Scientific as D
 import qualified Data.Text.Encoding as J
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as K
-import qualified Data.HashMap.Strict as F
-import qualified Data.Map.Strict as Q
-import qualified Data.Aeson as R
+import qualified Data.UUID as E
+import qualified Data.Vector as A
 import qualified Network.IP.Addr as G
-import qualified PostgreSQL.Binary.Prelude as B
-import qualified PostgreSQL.Binary.Numeric as C
-import qualified PostgreSQL.Binary.Inet as H
 import qualified PostgreSQL.Binary.BuilderPrim as I
-import qualified PostgreSQL.Binary.Time as O
+import qualified PostgreSQL.Binary.Inet as H
 import qualified PostgreSQL.Binary.Interval as P
-
+import qualified PostgreSQL.Binary.Numeric as C
+import PostgreSQL.Binary.Prelude hiding (bool)
+import qualified PostgreSQL.Binary.Prelude as B
+import qualified PostgreSQL.Binary.Time as O
 
 -- * Helpers
--------------------------
 
 {-# NOINLINE null4 #-}
 null4 :: Builder
@@ -34,8 +31,8 @@ null4 =
 {-# INLINE sized #-}
 sized :: Builder -> Builder
 sized payload =
-  int4_int (builderLength payload) <>
-  payload
+  int4_int (builderLength payload)
+    <> payload
 
 {-# INLINE sizedMaybe #-}
 sizedMaybe :: (element -> Builder) -> Maybe element -> Builder
@@ -62,9 +59,7 @@ false4 :: Builder
 false4 =
   int4_word32 0
 
-
 -- * Primitives
--------------------------
 
 {-# INLINE bool #-}
 bool :: Bool -> Builder
@@ -116,22 +111,22 @@ float8 :: Double -> Builder
 float8 =
   int8_int64 . unsafeCoerce
 
-{-# INLINABLE numeric #-}
+{-# INLINEABLE numeric #-}
 numeric :: Scientific -> Builder
 numeric x =
-  word16BE (fromIntegral componentsAmount) <>
-  word16BE (fromIntegral pointIndex) <>
-  signCode <>
-  word16BE (fromIntegral trimmedExponent) <>
-  foldMap word16BE components
+  word16BE (fromIntegral componentsAmount)
+    <> word16BE (fromIntegral pointIndex)
+    <> signCode
+    <> word16BE (fromIntegral trimmedExponent)
+    <> foldMap word16BE components
   where
-    componentsAmount = 
+    componentsAmount =
       length components
     coefficient =
       D.coefficient x
-    exponent = 
+    exponent =
       D.base10Exponent x
-    components = 
+    components =
       C.extractComponents tunedCoefficient
     pointIndex =
       componentsAmount + (tunedExponent `div` 4) - 1
@@ -164,31 +159,34 @@ uuid uuid =
   case E.toWords uuid of
     (w1, w2, w3, w4) -> int4_word32 w1 <> int4_word32 w2 <> int4_word32 w3 <> int4_word32 w4
 
-{-# INLINABLE ip4 #-}
+{-# INLINEABLE ip4 #-}
 ip4 :: G.IP4 -> Builder
 ip4 x =
   case G.ip4ToOctets x of
     (w1, w2, w3, w4) -> word8 w1 <> word8 w2 <> word8 w3 <> word8 w4
 
-{-# INLINABLE ip6 #-}
+{-# INLINEABLE ip6 #-}
 ip6 :: G.IP6 -> Builder
 ip6 x =
   case G.ip6ToWords x of
     (w1, w2, w3, w4, w5, w6, w7, w8) ->
-      int2_word16 w1 <> int2_word16 w2 <> int2_word16 w3 <> int2_word16 w4 <>
-      int2_word16 w5 <> int2_word16 w6 <> int2_word16 w7 <> int2_word16 w8
+      int2_word16 w1 <> int2_word16 w2 <> int2_word16 w3 <> int2_word16 w4
+        <> int2_word16 w5
+        <> int2_word16 w6
+        <> int2_word16 w7
+        <> int2_word16 w8
 
-{-# INLINABLE inet #-}
+{-# INLINEABLE inet #-}
 inet :: G.NetAddr G.IP -> Builder
 inet i =
   case G.netHost i of
     G.IPv4 x -> inetAddressFamily <> netLength <> isCidr <> ip4Size <> ip4 x
     G.IPv6 x -> inet6AddressFamily <> netLength <> isCidr <> ip6Size <> ip6 x
-    where
-      netLength =
-        word8 (G.netLength i)
-      isCidr =
-        false1
+  where
+    netLength =
+      word8 (G.netLength i)
+    isCidr =
+      false1
 
 {-# NOINLINE inetAddressFamily #-}
 inetAddressFamily :: Builder
@@ -210,18 +208,16 @@ ip6Size :: Builder
 ip6Size =
   word8 16
 
-
 -- * Text
--------------------------
 
 -- |
 -- A UTF-8-encoded char.
--- 
+--
 -- Note that since it's UTF-8-encoded
 -- not the \"char\" but the \"text\" OID should be used with it.
 {-# INLINE char_utf8 #-}
 char_utf8 :: Char -> Builder
-char_utf8 = 
+char_utf8 =
   utf8Char
 
 {-# INLINE text_strict #-}
@@ -249,30 +245,26 @@ bytea_lazyBuilder :: M.Builder -> Builder
 bytea_lazyBuilder =
   lazyBytes . M.toLazyByteString
 
-
 -- * Time
--------------------------
 
 {-# INLINE date #-}
 date :: Day -> Builder
 date =
   int4_int32 . fromIntegral . O.dayToPostgresJulian
 
-{-# INLINABLE time_int #-}
+{-# INLINEABLE time_int #-}
 time_int :: TimeOfDay -> Builder
 time_int (TimeOfDay h m s) =
-  let
-    p = unsafeCoerce s :: Integer
-    u = p `div` (10^6)
-    in int8_int64 (fromIntegral u + 10^6 * 60 * (fromIntegral m + 60 * fromIntegral h))
+  let p = unsafeCoerce s :: Integer
+      u = p `div` (10 ^ 6)
+   in int8_int64 (fromIntegral u + 10 ^ 6 * 60 * (fromIntegral m + 60 * fromIntegral h))
 
-{-# INLINABLE time_float #-}
+{-# INLINEABLE time_float #-}
 time_float :: TimeOfDay -> Builder
 time_float (TimeOfDay h m s) =
-  let
-    p = unsafeCoerce s :: Integer
-    u = p `div` (10^6)
-    in float8 (fromIntegral u / 10^6 + 60 * (fromIntegral m + 60 * (fromIntegral h)))
+  let p = unsafeCoerce s :: Integer
+      u = p `div` (10 ^ 6)
+   in float8 (fromIntegral u / 10 ^ 6 + 60 * (fromIntegral m + 60 * (fromIntegral h)))
 
 {-# INLINE timetz_int #-}
 timetz_int :: (TimeOfDay, TimeZone) -> Builder
@@ -287,7 +279,7 @@ timetz_float (timeX, tzX) =
 {-# INLINE tz #-}
 tz :: TimeZone -> Builder
 tz =
-  int4_int . (*60) . negate . timeZoneMinutes
+  int4_int . (* 60) . negate . timeZoneMinutes
 
 {-# INLINE timestamp_int #-}
 timestamp_int :: LocalTime -> Builder
@@ -309,33 +301,31 @@ timestamptz_float :: UTCTime -> Builder
 timestamptz_float =
   float8 . O.utcToSecs
 
-{-# INLINABLE interval_int #-}
+{-# INLINEABLE interval_int #-}
 interval_int :: DiffTime -> Builder
 interval_int x =
-  int64BE u <>
-  int32BE d <>
-  int32BE m
+  int64BE u
+    <> int32BE d
+    <> int32BE m
   where
-    P.Interval u d m = 
+    P.Interval u d m =
       fromMaybe (error ("Too large DiffTime value for an interval " <> show x)) $
-      P.fromDiffTime x
+        P.fromDiffTime x
 
-{-# INLINABLE interval_float #-}
+{-# INLINEABLE interval_float #-}
 interval_float :: DiffTime -> Builder
 interval_float x =
-  float8 s <>
-  int32BE d <>
-  int32BE m
+  float8 s
+    <> int32BE d
+    <> int32BE m
   where
-    P.Interval u d m = 
+    P.Interval u d m =
       fromMaybe (error ("Too large DiffTime value for an interval " <> show x)) $
-      P.fromDiffTime x
+        P.fromDiffTime x
     s =
-      fromIntegral u / (10^6)
-
+      fromIntegral u / (10 ^ 6)
 
 -- * JSON
--------------------------
 
 {-# INLINE json_bytes #-}
 json_bytes :: ByteString -> Builder
@@ -367,9 +357,7 @@ jsonb_ast :: R.Value -> Builder
 jsonb_ast =
   mappend "\1" . json_ast
 
-
 -- * Array
--------------------------
 
 {-# INLINE array_vector #-}
 array_vector :: Word32 -> (element -> Builder) -> Vector element -> Builder
@@ -391,42 +379,39 @@ nullableArray_vector oid elementBuilder vector =
     payload =
       foldMap (sizedMaybe elementBuilder) vector
 
-{-# INLINABLE array #-}
+{-# INLINEABLE array #-}
 array :: Word32 -> [Int32] -> Bool -> Builder -> Builder
 array oid dimensions nulls payload =
-  int4_int (B.length dimensions) <>
-  B.bool false4 true4 nulls <>
-  int4_word32 oid <>
-  foldMap arrayDimension dimensions <>
-  payload
+  int4_int (B.length dimensions)
+    <> B.bool false4 true4 nulls
+    <> int4_word32 oid
+    <> foldMap arrayDimension dimensions
+    <> payload
 
 {-# INLINE arrayDimension #-}
 arrayDimension :: Int32 -> Builder
 arrayDimension dimension =
   int4_int32 dimension <> true4
 
-
 -- * HStore
--------------------------
 
-{-|
-A polymorphic in-place @HSTORE@ encoder.
-
-Accepts:
-
-* An implementation of the @foldl@ function
-(e.g., @Data.Foldable.'foldl''@),
-which determines the input value.
-
-Here's how you can use it to produce a specific encoder:
-
-@
-hashMapHStore :: Data.HashMap.Strict.HashMap Text (Maybe Text) -> Builder
-hashMapHStore =
-  hStoreUsingFoldl foldl'
-@
--}
-{-# INLINABLE hStoreUsingFoldl #-}
+-- |
+-- A polymorphic in-place @HSTORE@ encoder.
+--
+-- Accepts:
+--
+-- * An implementation of the @foldl@ function
+-- (e.g., @Data.Foldable.'foldl''@),
+-- which determines the input value.
+--
+-- Here's how you can use it to produce a specific encoder:
+--
+-- @
+-- hashMapHStore :: Data.HashMap.Strict.HashMap Text (Maybe Text) -> Builder
+-- hashMapHStore =
+--   hStoreUsingFoldl foldl'
+-- @
+{-# INLINEABLE hStoreUsingFoldl #-}
 hStoreUsingFoldl :: (forall a. (a -> (Text, Maybe Text) -> a) -> a -> b -> a) -> b -> Builder
 hStoreUsingFoldl foldl =
   exit . foldl progress enter
@@ -456,11 +441,11 @@ hStoreRow key value =
 {-# INLINE hStore_hashMap #-}
 hStore_hashMap :: HashMap Text (Maybe Text) -> Builder
 hStore_hashMap input =
-  int4_int (F.size input) <>
-  F.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
+  int4_int (F.size input)
+    <> F.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
 
 {-# INLINE hStore_map #-}
 hStore_map :: Map Text (Maybe Text) -> Builder
 hStore_map input =
-  int4_int (Q.size input) <>
-  Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
+  int4_int (Q.size input)
+    <> Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input

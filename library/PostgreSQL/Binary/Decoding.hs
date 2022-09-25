@@ -1,68 +1,68 @@
 module PostgreSQL.Binary.Decoding
-(
-  valueParser,
-  -- 
-  Value,
-  -- * Primitive
-  int,
-  float4,
-  float8,
-  bool,
-  bytea_strict,
-  bytea_lazy,
-  -- * Textual
-  text_strict,
-  text_lazy,
-  char,
-  -- * Misc
-  fn,
-  numeric,
-  uuid,
-  inet,
-  json_ast,
-  json_bytes,
-  jsonb_ast,
-  jsonb_bytes,
-  -- * Time
-  date,
-  time_int,
-  time_float,
-  timetz_int,
-  timetz_float,
-  timestamp_int,
-  timestamp_float,
-  timestamptz_int,
-  timestamptz_float,
-  interval_int,
-  interval_float,
-  -- * Exotic
-  -- ** Array
-  Array,
-  array,
-  valueArray,
-  nullableValueArray,
-  dimensionArray,
-  -- ** Composite
-  Composite,
-  composite,
-  valueComposite,
-  nullableValueComposite,
-  -- ** HStore
-  hstore,
-  -- **
-  enum,
-  refine,
-)
+  ( valueParser,
+    --
+    Value,
+
+    -- * Primitive
+    int,
+    float4,
+    float8,
+    bool,
+    bytea_strict,
+    bytea_lazy,
+
+    -- * Textual
+    text_strict,
+    text_lazy,
+    char,
+
+    -- * Misc
+    fn,
+    numeric,
+    uuid,
+    inet,
+    json_ast,
+    json_bytes,
+    jsonb_ast,
+    jsonb_bytes,
+
+    -- * Time
+    date,
+    time_int,
+    time_float,
+    timetz_int,
+    timetz_float,
+    timestamp_int,
+    timestamp_float,
+    timestamptz_int,
+    timestamptz_float,
+    interval_int,
+    interval_float,
+
+    -- * Exotic
+
+    -- ** Array
+    Array,
+    array,
+    valueArray,
+    nullableValueArray,
+    dimensionArray,
+
+    -- ** Composite
+    Composite,
+    composite,
+    valueComposite,
+    nullableValueComposite,
+
+    -- ** HStore
+    hstore,
+    enum,
+    refine,
+  )
 where
 
-import PostgreSQL.Binary.Prelude hiding (take, bool, drop, state, fail, failure)
 import BinaryParser
-import qualified PostgreSQL.Binary.Integral as Integral
-import qualified PostgreSQL.Binary.Interval as Interval
-import qualified PostgreSQL.Binary.Numeric as Numeric
-import qualified PostgreSQL.Binary.Time as Time
-import qualified PostgreSQL.Binary.Inet as Inet
-import qualified Data.Vector as Vector
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.Text as Text
@@ -70,9 +70,14 @@ import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.UUID as UUID
-import qualified Data.Aeson as Aeson
+import qualified Data.Vector as Vector
 import qualified Network.IP.Addr as IPAddr
-
+import qualified PostgreSQL.Binary.Inet as Inet
+import qualified PostgreSQL.Binary.Integral as Integral
+import qualified PostgreSQL.Binary.Interval as Interval
+import qualified PostgreSQL.Binary.Numeric as Numeric
+import PostgreSQL.Binary.Prelude hiding (bool, drop, fail, failure, state, take)
+import qualified PostgreSQL.Binary.Time as Time
 
 type Value =
   BinaryParser
@@ -82,7 +87,6 @@ valueParser =
   BinaryParser.run
 
 -- * Helpers
--------------------------
 
 -- |
 -- Any int number of a limited byte-size.
@@ -91,18 +95,18 @@ intOfSize :: (Integral a, Bits a) => Int -> Value a
 intOfSize x =
   fmap Integral.pack (bytesOfSize x)
 
-{-# INLINABLE onContent #-}
-onContent :: Value a -> Value ( Maybe a )
+{-# INLINEABLE onContent #-}
+onContent :: Value a -> Value (Maybe a)
 onContent decoder =
-  size >>=
-  \case
-    (-1) -> pure Nothing
-    n -> fmap Just (sized (fromIntegral n) decoder)
+  size
+    >>= \case
+      (-1) -> pure Nothing
+      n -> fmap Just (sized (fromIntegral n) decoder)
   where
     size =
       intOfSize 4 :: Value Int32
 
-{-# INLINABLE content #-}
+{-# INLINEABLE content #-}
 content :: Value (Maybe ByteString)
 content =
   intOfSize 4 >>= \case
@@ -114,9 +118,7 @@ nonNull :: Maybe a -> Value a
 nonNull =
   maybe (failure "Unexpected NULL") return
 
-
 -- * Primitive
--------------------------
 
 -- |
 -- Lifts a custom decoder implementation.
@@ -154,7 +156,7 @@ numeric =
     components <- Vector.replicateM componentsAmount (intOfSize 2)
     either failure return (Numeric.scientific pointIndex signCode components)
 
-{-# INLINABLE uuid #-}
+{-# INLINEABLE uuid #-}
 uuid :: Value UUID
 uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
@@ -169,25 +171,28 @@ ip6 :: Value IPAddr.IP6
 ip6 =
   IPAddr.ip6FromWords <$> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2
 
-{-# INLINABLE inet #-}
+{-# INLINEABLE inet #-}
 inet :: Value (IPAddr.NetAddr IPAddr.IP)
 inet = do
   af <- intOfSize 1
   netmask <- intOfSize 1
   isCidr <- intOfSize 1
   ipSize <- intOfSize 1
-  if | af == Inet.inetAddressFamily ->
-       do ip <- ip4
-          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
-     | af == Inet.inet6AddressFamily ->
-       do ip <- ip6
-          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
-     | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
+  if
+      | af == Inet.inetAddressFamily ->
+          do
+            ip <- ip4
+            return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
+      | af == Inet.inet6AddressFamily ->
+          do
+            ip <- ip6
+            return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
+      | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
   where
     inetFromBytes :: Word8 -> Word8 -> Word8 -> Int8 -> IPAddr.IP -> IPAddr.NetAddr IPAddr.IP
     inetFromBytes _ netmask _ _ ip = IPAddr.netAddr ip netmask
 
-{-# INLINABLE json_ast #-}
+{-# INLINEABLE json_ast #-}
 json_ast :: Value Aeson.Value
 json_ast =
   bytea_strict >>= either (BinaryParser.failure . fromString) pure . Aeson.eitherDecodeStrict'
@@ -195,7 +200,7 @@ json_ast =
 -- |
 -- Given a function, which parses a plain UTF-8 JSON string encoded as a byte-array,
 -- produces a decoder.
-{-# INLINABLE json_bytes #-}
+{-# INLINEABLE json_bytes #-}
 json_bytes :: (ByteString -> Either Text a) -> Value a
 json_bytes cont =
   getAllBytes >>= parseJSON
@@ -205,7 +210,7 @@ json_bytes cont =
     parseJSON =
       either BinaryParser.failure return . cont
 
-{-# INLINABLE jsonb_ast #-}
+{-# INLINEABLE jsonb_ast #-}
 jsonb_ast :: Value Aeson.Value
 jsonb_ast =
   jsonb_bytes $ mapLeft fromString . Aeson.eitherDecodeStrict'
@@ -213,11 +218,11 @@ jsonb_ast =
 -- |
 -- Given a function, which parses a plain UTF-8 JSON string encoded as a byte-array,
 -- produces a decoder.
--- 
+--
 -- For those wondering, yes,
 -- JSONB is encoded as plain JSON string in the binary format of Postgres.
 -- Sad, but true.
-{-# INLINABLE jsonb_bytes #-}
+{-# INLINEABLE jsonb_bytes #-}
 jsonb_bytes :: (ByteString -> Either Text a) -> Value a
 jsonb_bytes cont =
   getAllBytes >>= trimBytes >>= parseJSON
@@ -225,18 +230,17 @@ jsonb_bytes cont =
     getAllBytes =
       BinaryParser.remainders
     trimBytes =
-      maybe (BinaryParser.failure "Empty input") return .
-      fmap snd . ByteString.uncons
+      maybe (BinaryParser.failure "Empty input") return
+        . fmap snd
+        . ByteString.uncons
     parseJSON =
       either BinaryParser.failure return . cont
 
-
 -- ** Textual
--------------------------
 
 -- |
 -- A UTF-8-decoded char.
-{-# INLINABLE char #-}
+{-# INLINEABLE char #-}
 char :: Value Char
 char =
   fmap Text.uncons text_strict >>= \case
@@ -247,7 +251,7 @@ char =
 -- |
 -- Any of the variable-length character types:
 -- BPCHAR, VARCHAR, NAME and TEXT.
-{-# INLINABLE text_strict #-}
+{-# INLINEABLE text_strict #-}
 text_strict :: Value Text
 text_strict =
   do
@@ -262,12 +266,12 @@ text_strict =
 -- |
 -- Any of the variable-length character types:
 -- BPCHAR, VARCHAR, NAME and TEXT.
-{-# INLINABLE text_lazy #-}
+{-# INLINEABLE text_lazy #-}
 text_lazy :: Value LazyText
 text_lazy =
   do
     input <- bytea_lazy
-    either (failure . exception input ) return (LazyText.decodeUtf8' input)
+    either (failure . exception input) return (LazyText.decodeUtf8' input)
   where
     exception input =
       \case
@@ -288,9 +292,7 @@ bytea_lazy :: Value LazyByteString
 bytea_lazy =
   fmap LazyByteString.fromStrict remainders
 
-
 -- * Date and Time
--------------------------
 
 -- |
 -- @DATE@ values decoding.
@@ -366,38 +368,35 @@ interval_int =
 interval_float :: Value DiffTime
 interval_float =
   do
-    u <- sized 8 (fmap (round . (*(10^6)) . toRational) float8)
+    u <- sized 8 (fmap (round . (* (10 ^ 6)) . toRational) float8)
     d <- sized 4 int
     m <- int
     return $ Interval.toDiffTime $ Interval.Interval u d m
 
-
 -- * Exotic
--------------------------
 
 -- |
 -- A function for generic in place parsing of an HStore value.
--- 
+--
 -- Accepts:
--- 
+--
 -- * An implementation of the @replicateM@ function
 -- (@Control.Monad.'Control.Monad.replicateM'@, @Data.Vector.'Data.Vector.replicateM'@),
 -- which determines how to produce the final datastructure from the rows.
--- 
+--
 -- * A decoder for keys.
--- 
+--
 -- * A decoder for values.
--- 
+--
 -- Here's how you can use it to produce a parser to list:
--- 
+--
 -- @
 -- hstoreAsList :: Value [ ( Text , Maybe Text ) ]
 -- hstoreAsList =
 --   hstore replicateM text text
 -- @
--- 
-{-# INLINABLE hstore #-}
-hstore :: ( forall m. Monad m => Int -> m ( k , Maybe v ) -> m r ) -> Value k -> Value v -> Value r
+{-# INLINEABLE hstore #-}
+hstore :: (forall m. Monad m => Int -> m (k, Maybe v) -> m r) -> Value k -> Value v -> Value r
 hstore replicateM keyContent valueContent =
   do
     componentsAmount <- intOfSize 4
@@ -411,13 +410,11 @@ hstore replicateM keyContent valueContent =
         value =
           onContent valueContent
 
-
 -- * Composite
--------------------------
 
-newtype Composite a =
-  Composite ( Value a )
-  deriving ( Functor , Applicative , Monad , MonadFail )
+newtype Composite a
+  = Composite (Value a)
+  deriving (Functor, Applicative, Monad, MonadFail)
 
 -- |
 -- Unlift a 'Composite' to a value 'Value'.
@@ -432,7 +429,7 @@ composite (Composite decoder) =
 -- |
 -- Lift a value 'Value' into 'Composite'.
 {-# INLINE nullableValueComposite #-}
-nullableValueComposite :: Value a -> Composite ( Maybe a )
+nullableValueComposite :: Value a -> Composite (Maybe a)
 nullableValueComposite valueValue =
   Composite (skipOid *> onContent valueValue)
   where
@@ -449,25 +446,22 @@ valueComposite valueValue =
     skipOid =
       unitOfSize 4
 
-
 -- * Array
--------------------------
 
 -- |
 -- An efficient generic array decoder,
 -- which constructs the result value in place while parsing.
--- 
+--
 -- Here's how you can use it to produce a specific array value decoder:
--- 
+--
 -- @
 -- x :: Value [ [ Text ] ]
 -- x =
 --   array (dimensionArray replicateM (fmap catMaybes (dimensionArray replicateM (nullableValueArray text))))
 -- @
--- 
-newtype Array a =
-  Array ( [ Word32 ] -> Value a )
-  deriving ( Functor )
+newtype Array a
+  = Array ([Word32] -> Value a)
+  deriving (Functor)
 
 -- |
 -- Unlift an 'Array' to a value 'Value'.
@@ -489,17 +483,16 @@ array (Array decoder) =
 -- |
 -- A function for parsing a dimension of an array.
 -- Provides support for multi-dimensional arrays.
--- 
+--
 -- Accepts:
--- 
+--
 -- * An implementation of the @replicateM@ function
 -- (@Control.Monad.'Control.Monad.replicateM'@, @Data.Vector.'Data.Vector.replicateM'@),
 -- which determines the output value.
--- 
+--
 -- * A decoder of its components, which can be either another 'dimensionArray' or 'nullableValueArray'.
--- 
 {-# INLINE dimensionArray #-}
-dimensionArray :: ( forall m. Monad m => Int -> m a -> m b ) -> Array a -> Array b
+dimensionArray :: (forall m. Monad m => Int -> m a -> m b) -> Array a -> Array b
 dimensionArray replicateM (Array component) =
   Array $ \case
     head : tail -> replicateM (fromIntegral head) (component tail)
@@ -508,7 +501,7 @@ dimensionArray replicateM (Array component) =
 -- |
 -- Lift a value 'Value' into 'Array' for parsing of nullable leaf values.
 {-# INLINE nullableValueArray #-}
-nullableValueArray :: Value a -> Array ( Maybe a )
+nullableValueArray :: Value a -> Array (Maybe a)
 nullableValueArray =
   Array . const . onContent
 
@@ -519,9 +512,7 @@ valueArray :: Value a -> Array a
 valueArray =
   Array . const . join . fmap (maybe (failure "Unexpected NULL") return) . onContent
 
-
 -- * Enum
--------------------------
 
 -- |
 -- Given a partial mapping from text to value,
@@ -540,7 +531,6 @@ enum mapping =
           pure
 
 -- * Refining values
--------------------------
 
 -- | Given additional constraints when
 -- using an existing value decoder, produces

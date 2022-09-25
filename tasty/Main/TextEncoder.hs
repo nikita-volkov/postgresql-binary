@@ -1,12 +1,12 @@
 -- |
 -- Encoders to text format.
-module Main.TextEncoder  where
+module Main.TextEncoder where
 
-import Main.Prelude hiding (maybe, bool)
 import Data.ByteString.Builder
 import qualified Data.ByteString.Builder.Scientific
 import qualified Data.Text.Encoding
 import qualified Data.UUID
+import Main.Prelude hiding (bool, maybe)
 import qualified Main.Prelude as Prelude
 
 type Encoder a =
@@ -19,11 +19,11 @@ bool =
 int2_int16 :: Encoder Int16
 int2_int16 =
   int16Dec
- 
+
 int4_int32 :: Encoder Int32
 int4_int32 =
   int32Dec
- 
+
 int8_int64 :: Encoder Int64
 int8_int64 =
   int64Dec
@@ -31,11 +31,11 @@ int8_int64 =
 int2_word16 :: Encoder Word16
 int2_word16 =
   word16Dec
- 
+
 int4_word32 :: Encoder Word32
 int4_word32 =
   word32Dec
- 
+
 int8_word64 :: Encoder Word64
 int8_word64 =
   word64Dec
@@ -59,4 +59,3 @@ uuid =
 bytea_strict :: Encoder ByteString
 bytea_strict =
   byteString
-

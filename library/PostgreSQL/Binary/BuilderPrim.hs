@@ -1,8 +1,7 @@
 module PostgreSQL.Binary.BuilderPrim where
 
-import PostgreSQL.Binary.Prelude
 import qualified Data.ByteString.Builder.Prim as A
-
+import PostgreSQL.Binary.Prelude
 
 {-# INLINE nullByteIgnoringBoundedPrim #-}
 nullByteIgnoringBoundedPrim :: A.BoundedPrim Word8

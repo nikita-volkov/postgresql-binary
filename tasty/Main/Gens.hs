@@ -1,23 +1,21 @@
 module Main.Gens where
 
-import Main.Prelude hiding (assert, isRight, isLeft, choose)
-import Test.QuickCheck hiding (vector)
-import Test.QuickCheck.Instances
-import qualified Main.PTI as PTI
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Scientific as Scientific
+import qualified Data.Text as Text
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
-import qualified Data.HashMap.Strict as HashMap
-import qualified PostgreSQL.Binary.Encoding as Encoder
-import qualified Data.Text as Text
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.KeyMap as AesonKeyMap
-import qualified Data.Aeson.Key as AesonKey
+import qualified Main.PTI as PTI
+import Main.Prelude hiding (assert, choose, isLeft, isRight)
 import qualified Network.IP.Addr as IPAddr
-
+import qualified PostgreSQL.Binary.Encoding as Encoder
+import Test.QuickCheck hiding (vector)
+import Test.QuickCheck.Instances
 
 -- * Generators
--------------------------
 
 auto :: Arbitrary a => Gen a
 auto =
@@ -95,11 +93,13 @@ scientific =
 
 microsTimeOfDay :: Gen TimeOfDay
 microsTimeOfDay =
-  fmap timeToTimeOfDay $ fmap picosecondsToDiffTime $ fmap (* (10^6)) $ 
-    choose (0, (10^6)*24*60*60)
+  fmap timeToTimeOfDay $
+    fmap picosecondsToDiffTime $
+      fmap (* (10 ^ 6)) $
+        choose (0, (10 ^ 6) * 24 * 60 * 60)
 
 microsLocalTime :: Gen LocalTime
-microsLocalTime = 
+microsLocalTime =
   LocalTime <$> arbitrary <*> microsTimeOfDay
 
 microsUTCTime :: Gen UTCTime
@@ -108,14 +108,14 @@ microsUTCTime =
 
 intervalDiffTime :: Gen DiffTime
 intervalDiffTime = do
-  unsafeCoerce ((* (10^6)) <$> choose (uMin, uMax) :: Gen Integer)
+  unsafeCoerce ((* (10 ^ 6)) <$> choose (uMin, uMax) :: Gen Integer)
   where
-    uMin = unsafeCoerce minInterval `div` 10^6
-    uMax = unsafeCoerce maxInterval `div` 10^6
+    uMin = unsafeCoerce minInterval `div` 10 ^ 6
+    uMax = unsafeCoerce maxInterval `div` 10 ^ 6
 
 timeZone :: Gen TimeZone
 timeZone =
-  minutesToTimeZone <$> choose (- 60 * 12 + 1, 60 * 12)
+  minutesToTimeZone <$> choose (-60 * 12 + 1, 60 * 12)
 
 timetz :: Gen (TimeOfDay, TimeZone)
 timetz =
@@ -129,8 +129,14 @@ inet :: Gen (IPAddr.NetAddr IPAddr.IP)
 inet = do
   ipv6 <- choose (True, False)
   if ipv6
-    then IPAddr.netAddr <$> (IPAddr.IPv6 <$> (IPAddr.ip6FromWords <$>
-         arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 128)
+    then
+      IPAddr.netAddr
+        <$> ( IPAddr.IPv6
+                <$> ( IPAddr.ip6FromWords
+                        <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+                    )
+            )
+        <*> choose (0, 128)
     else IPAddr.netAddr <$> (IPAddr.IPv4 <$> (IPAddr.ip4FromOctets <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 32)
 
 array3 :: Gen a -> Gen [[[a]]]
@@ -141,13 +147,11 @@ array3 gen =
     width3 <- choose (1, 10)
     replicateM width1 (replicateM width2 (replicateM width3 gen))
 
-
 -- * Constants
--------------------------
 
-maxInterval :: DiffTime = 
-  unsafeCoerce $ 
+maxInterval :: DiffTime =
+  unsafeCoerce $
     (truncate (1780000 * 365.2425 * 24 * 60 * 60 * 10 ^ 12 :: Rational) :: Integer)
 
-minInterval :: DiffTime = 
+minInterval :: DiffTime =
   negate maxInterval

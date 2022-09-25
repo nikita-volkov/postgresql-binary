@@ -2,33 +2,31 @@ module Main.Apx where
 
 import Main.Prelude
 
-
 -- |
 -- A wrapper which provides a type-specific 'Eq' instance
 -- with approximate comparison.
-newtype Apx a =
-  Apx { unApx :: a }
+newtype Apx a = Apx {unApx :: a}
   deriving (Show)
 
 instance (Eq (Apx a), Eq (Apx b)) => Eq (Apx (a, b)) where
   (==) (Apx (a1, a2)) (Apx (b1, b2)) =
-    Apx a1 == Apx b1 &&
-    Apx a2 == Apx b2
+    Apx a1 == Apx b1
+      && Apx a2 == Apx b2
 
 instance Eq (Apx LocalTime) where
   (==) (Apx a) (Apx b) =
-    Apx (localTimeToSeconds a) ==
-    Apx (localTimeToSeconds b)
+    Apx (localTimeToSeconds a)
+      == Apx (localTimeToSeconds b)
 
 instance Eq (Apx UTCTime) where
   (==) (Apx a) (Apx b) =
-    Apx (utcTimeToSeconds a) ==
-    Apx (utcTimeToSeconds b)
+    Apx (utcTimeToSeconds a)
+      == Apx (utcTimeToSeconds b)
 
 instance Eq (Apx TimeOfDay) where
   (==) (Apx a) (Apx b) =
-    Apx (timeOfDayToSeconds a) ==
-    Apx (timeOfDayToSeconds b)
+    Apx (timeOfDayToSeconds a)
+      == Apx (timeOfDayToSeconds b)
 
 instance Eq (Apx TimeZone) where
   (==) (Apx a) (Apx b) =
@@ -40,12 +38,11 @@ instance Eq (Apx Double) where
 
 instance Eq (Apx Rational) where
   (==) (Apx a) (Apx b) =
-    a + error >= b &&
-    a - error <= b
+    a + error >= b
+      && a - error <= b
     where
       error =
         10 ^^ negate 3
-
 
 utcTimeToSeconds :: UTCTime -> Rational
 utcTimeToSeconds (UTCTime days diffTime) =
@@ -61,8 +58,8 @@ dayToSeconds (ModifiedJulianDay day) =
 
 localTimeToSeconds :: LocalTime -> Rational
 localTimeToSeconds (LocalTime day tod) =
-  dayToSeconds day +
-  timeOfDayToSeconds tod
+  dayToSeconds day
+    + timeOfDayToSeconds tod
 
 timeOfDayToSeconds :: TimeOfDay -> Rational
 timeOfDayToSeconds (TimeOfDay h m s) =
