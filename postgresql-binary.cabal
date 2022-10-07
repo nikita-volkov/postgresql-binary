@@ -56,14 +56,14 @@ library
     PostgreSQL.Binary.Decoding
     PostgreSQL.Binary.Encoding
   other-modules:
+    PostgreSQL.Binary.BuilderPrim
     PostgreSQL.Binary.Encoding.Builders
-    PostgreSQL.Binary.Prelude
+    PostgreSQL.Binary.Inet
     PostgreSQL.Binary.Integral
     PostgreSQL.Binary.Interval
     PostgreSQL.Binary.Numeric
+    PostgreSQL.Binary.Prelude
     PostgreSQL.Binary.Time
-    PostgreSQL.Binary.Inet
-    PostgreSQL.Binary.BuilderPrim
   build-depends:
     aeson >=2 && <3,
     base >=4.12 && <5,
