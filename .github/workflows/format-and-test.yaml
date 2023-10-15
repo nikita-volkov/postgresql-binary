@@ -80,7 +80,7 @@ jobs:
         run: cabal build all --enable-tests --enable-benchmarks -j +RTS -A128m -n2m -N -RTS --ghc-options="${{ matrix.ghc-options }}"
 
       - name: Test
-        run: cabal test all --test-show-details always -j +RTS -A128m -n2m -N -RTS --ghc-options="${{ matrix.ghc-options }}"
+        run: cabal test all --test-show-details streaming -j +RTS -A128m -n2m -N -RTS --ghc-options="${{ matrix.ghc-options }}"
 
       - name: Build docs
         run: cabal haddock -j +RTS -A128m -n2m -N -RTS --ghc-options="${{ matrix.ghc-options }}"
