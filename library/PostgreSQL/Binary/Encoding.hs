@@ -69,10 +69,8 @@ where
 
 import qualified ByteString.StrictBuilder as C
 import qualified Data.Aeson as R
-import qualified Data.ByteString.Builder as M
 import qualified Data.ByteString.Lazy as N
 import qualified Data.Text.Lazy as L
-import qualified Data.Vector as A
 import qualified Network.IP.Addr as G
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import PostgreSQL.Binary.Prelude hiding (bool, length)
@@ -104,7 +102,7 @@ array oid (Array payload dimensions nulls) =
 -- A helper for encoding of arrays of single dimension from foldables.
 -- The first parameter is OID of the element type.
 {-# INLINE array_foldable #-}
-array_foldable :: Foldable foldable => Word32 -> (element -> Maybe Encoding) -> foldable element -> Encoding
+array_foldable :: (Foldable foldable) => Word32 -> (element -> Maybe Encoding) -> foldable element -> Encoding
 array_foldable oid elementBuilder =
   array oid . dimensionArray foldl' (maybe nullArray encodingArray . elementBuilder)
 
@@ -127,7 +125,7 @@ nullableArray_vector oid elementBuilder vector =
 -- |
 -- A polymorphic @HSTORE@ encoder.
 {-# INLINE hStore_foldable #-}
-hStore_foldable :: Foldable foldable => foldable (Text, Maybe Text) -> Encoding
+hStore_foldable :: (Foldable foldable) => foldable (Text, Maybe Text) -> Encoding
 hStore_foldable =
   B.hStoreUsingFoldl foldl
 
@@ -231,11 +229,6 @@ bytea_strict =
 bytea_lazy :: N.ByteString -> Encoding
 bytea_lazy =
   B.bytea_lazy
-
-{-# INLINE bytea_lazyBuilder #-}
-bytea_lazyBuilder :: M.Builder -> Encoding
-bytea_lazyBuilder =
-  B.bytea_lazyBuilder
 
 {-# INLINE date #-}
 date :: Day -> Encoding

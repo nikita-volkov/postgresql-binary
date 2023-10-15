@@ -11,6 +11,7 @@ import qualified Data.ByteString.Builder
 import qualified Data.ByteString.Lazy
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Builder
+import Test.QuickCheck.Instances ()
 import Prelude as Exports hiding (Data, assert, check, fail)
 
 type LazyByteString =

@@ -1,18 +1,12 @@
 module Main.Properties where
 
-import qualified Data.Scientific as Scientific
-import qualified Data.UUID as UUID
-import qualified Data.Vector as Vector
 import qualified Database.PostgreSQL.LibPQ as LibPQ
-import qualified Main.DB as DB
 import qualified Main.IO as IO
-import qualified Main.PTI as PTI
-import Main.Prelude hiding (assert, isLeft, isRight)
+import Main.Prelude hiding (isLeft, isRight)
 import qualified Main.TextEncoder as C
 import qualified PostgreSQL.Binary.Decoding as A
 import qualified PostgreSQL.Binary.Encoding as B
 import Test.QuickCheck
-import Test.QuickCheck.Instances
 
 roundtrip ::
   (Show a, Eq a) =>

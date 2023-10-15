@@ -1,7 +1,5 @@
 module Main where
 
-import Control.Monad.IO.Class
-import qualified Data.ByteString as ByteString
 import qualified Data.Text.Lazy as TextLazy
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Main.Apx (Apx (..))
@@ -10,20 +8,20 @@ import qualified Main.DB as DB
 import qualified Main.Gens as Gens
 import qualified Main.IO as IO
 import qualified Main.PTI as PTI
-import Main.Prelude hiding (assert, isLeft, isRight, select)
+import Main.Prelude hiding (isLeft, isRight, select)
 import qualified Main.Properties as Properties
 import qualified Main.TextEncoder as TextEncoder
 import qualified PostgreSQL.Binary.Decoding as B
 import qualified PostgreSQL.Binary.Encoding as A
-import qualified Test.QuickCheck as QuickCheck
-import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit as HUnit
 import Test.Tasty.QuickCheck as QuickCheck
 
+main :: IO ()
 main =
   defaultMain (testGroup "" [binary, textual])
 
+binary :: TestTree
 binary =
   testGroup "Binary format" testList
   where
@@ -62,17 +60,17 @@ binary =
               "SELECT '10 seconds' :: interval"
               (bool B.interval_float B.interval_int)
               (10 :: DiffTime),
-            HUnit.testCase "Interval encoder: 10 seconds" $
-              let pti =
-                    PTI.interval
-                  encoder integerDatetimes =
-                    (bool A.interval_float A.interval_int integerDatetimes)
-                  decoder =
-                    (bool B.interval_float B.interval_int)
-                  value =
-                    (10 :: DiffTime)
-               in HUnit.assertEqual "" (Right value)
-                    =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "Interval encoder: 10 seconds"
+              $ let pti =
+                      PTI.interval
+                    encoder integerDatetimes =
+                      (bool A.interval_float A.interval_int integerDatetimes)
+                    decoder =
+                      (bool B.interval_float B.interval_int)
+                    value =
+                      (10 :: DiffTime)
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
             timeRoundtrip
               "interval"
               Gens.intervalDiffTime
@@ -147,27 +145,28 @@ binary =
             primitiveRoundtrip "bool" Gens.auto PTI.bool A.bool B.bool,
             primitiveRoundtrip "date" Gens.auto PTI.date A.date B.date,
             let decoder =
-                  B.array $
-                    B.dimensionArray replicateM $
-                      B.dimensionArray replicateM $
-                        B.valueArray $
-                          B.int
+                  B.array
+                    $ B.dimensionArray replicateM
+                    $ B.dimensionArray replicateM
+                    $ B.valueArray
+                    $ B.int
              in select "SELECT ARRAY[ARRAY[1,2],ARRAY[3,4]]" (const decoder) ([[1, 2], [3, 4]] :: [[Int]]),
             let encoder =
                   A.array (PTI.oidWord32 (PTI.ptiOID PTI.int8)) . arrayEncoder
                   where
                     arrayEncoder =
-                      A.dimensionArray foldl' $
-                        A.dimensionArray foldl' $
-                          A.dimensionArray foldl' $
-                            A.encodingArray . A.int8_int64
+                      A.dimensionArray foldl'
+                        $ A.dimensionArray foldl'
+                        $ A.dimensionArray foldl'
+                        $ A.encodingArray
+                        . A.int8_int64
                 decoder =
-                  B.array $
-                    B.dimensionArray replicateM $
-                      B.dimensionArray replicateM $
-                        B.dimensionArray replicateM $
-                          B.valueArray $
-                            B.int
+                  B.array
+                    $ B.dimensionArray replicateM
+                    $ B.dimensionArray replicateM
+                    $ B.dimensionArray replicateM
+                    $ B.valueArray
+                    $ B.int
              in arrayCodec (Gens.array3 Gens.auto) encoder decoder,
             let pti =
                   PTI.text
@@ -175,47 +174,53 @@ binary =
                   A.array (PTI.oidWord32 (PTI.ptiOID pti)) . arrayEncoder
                   where
                     arrayEncoder =
-                      A.dimensionArray foldl' $
-                        A.dimensionArray foldl' $
-                          A.dimensionArray foldl' $
-                            A.encodingArray . A.text_strict
+                      A.dimensionArray foldl'
+                        $ A.dimensionArray foldl'
+                        $ A.dimensionArray foldl'
+                        $ A.encodingArray
+                        . A.text_strict
                 decoder =
-                  B.array $
-                    B.dimensionArray replicateM $
-                      B.dimensionArray replicateM $
-                        B.dimensionArray replicateM $
-                          B.valueArray $
-                            B.text_strict
+                  B.array
+                    $ B.dimensionArray replicateM
+                    $ B.dimensionArray replicateM
+                    $ B.dimensionArray replicateM
+                    $ B.valueArray
+                    $ B.text_strict
              in arrayRoundtrip (Gens.array3 Gens.text) pti encoder decoder
           ]
 
+textual :: TestTree
 textual =
-  testGroup "Textual format" $
-    [ test "numeric" Gens.scientific PTI.numeric TextEncoder.numeric (const B.numeric),
-      test "float4" Gens.auto PTI.float4 TextEncoder.float4 (const B.float4),
-      test "float8" Gens.auto PTI.float8 TextEncoder.float8 (const B.float8),
-      test "uuid" Gens.uuid PTI.uuid TextEncoder.uuid (const B.uuid),
-      test "int2_int16" Gens.auto PTI.int2 TextEncoder.int2_int16 (const B.int),
-      test "int2_word16" Gens.postgresInt PTI.int2 TextEncoder.int2_word16 (const B.int),
-      test "int4_int32" Gens.auto PTI.int4 TextEncoder.int4_int32 (const B.int),
-      test "int4_word32" Gens.postgresInt PTI.int4 TextEncoder.int4_word32 (const B.int),
-      test "int8_int64" Gens.auto PTI.int8 TextEncoder.int8_int64 (const B.int),
-      test "int8_word64" Gens.postgresInt PTI.int8 TextEncoder.int8_word64 (const B.int),
-      test "bool" Gens.auto PTI.bool TextEncoder.bool (const B.bool)
-    ]
+  testGroup "Textual format"
+    $ [ test "numeric" Gens.scientific PTI.numeric TextEncoder.numeric (const B.numeric),
+        test "float4" Gens.auto PTI.float4 TextEncoder.float4 (const B.float4),
+        test "float8" Gens.auto PTI.float8 TextEncoder.float8 (const B.float8),
+        test "uuid" Gens.uuid PTI.uuid TextEncoder.uuid (const B.uuid),
+        test "int2_int16" Gens.auto PTI.int2 TextEncoder.int2_int16 (const B.int),
+        test "int2_word16" Gens.postgresInt PTI.int2 TextEncoder.int2_word16 (const B.int),
+        test "int4_int32" Gens.auto PTI.int4 TextEncoder.int4_int32 (const B.int),
+        test "int4_word32" Gens.postgresInt PTI.int4 TextEncoder.int4_word32 (const B.int),
+        test "int8_int64" Gens.auto PTI.int8 TextEncoder.int8_int64 (const B.int),
+        test "int8_word64" Gens.postgresInt PTI.int8 TextEncoder.int8_word64 (const B.int),
+        test "bool" Gens.auto PTI.bool TextEncoder.bool (const B.bool)
+      ]
   where
     test typeName gen pti encoder decoder =
-      QuickCheck.testProperty (typeName <> " roundtrip") $
-        QuickCheck.forAll gen $ Properties.textRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
+      QuickCheck.testProperty (typeName <> " roundtrip")
+        $ QuickCheck.forAll gen
+        $ Properties.textRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
 
+arrayCodec :: (Show t, Eq t) => Gen t -> (t -> A.Encoding) -> B.Value t -> TestTree
 arrayCodec gen encoder decoder =
-  QuickCheck.testProperty ("Array codec") $
-    QuickCheck.forAll gen $
-      \value -> (QuickCheck.===) (Right value) (B.valueParser decoder ((A.encodingBytes . encoder) value))
+  QuickCheck.testProperty ("Array codec")
+    $ QuickCheck.forAll gen
+    $ \value -> (QuickCheck.===) (Right value) (B.valueParser decoder ((A.encodingBytes . encoder) value))
 
+arrayRoundtrip :: (Show a, Eq a) => Gen a -> PTI.PTI -> (a -> A.Encoding) -> B.Value a -> TestTree
 arrayRoundtrip gen pti encoder decoder =
-  QuickCheck.testProperty ("Array roundtrip") $
-    QuickCheck.forAll gen $ Properties.stdRoundtrip (PTI.oidPQ (fromJust (PTI.ptiArrayOID pti))) encoder decoder
+  QuickCheck.testProperty ("Array roundtrip")
+    $ QuickCheck.forAll gen
+    $ Properties.stdRoundtrip (PTI.oidPQ (fromJust (PTI.ptiArrayOID pti))) encoder decoder
 
 stdRoundtrip ::
   (Eq a, Show a) =>
@@ -226,25 +231,31 @@ stdRoundtrip ::
   B.Value a ->
   TestTree
 stdRoundtrip typeName gen pti encoder decoder =
-  QuickCheck.testProperty (typeName <> " roundtrip") $
-    QuickCheck.forAll gen $ Properties.stdRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
+  QuickCheck.testProperty (typeName <> " roundtrip")
+    $ QuickCheck.forAll gen
+    $ Properties.stdRoundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder
 
+primitiveRoundtrip :: (Eq a, Show a) => TestName -> Gen a -> PTI.PTI -> (a -> A.Encoding) -> B.Value a -> TestTree
 primitiveRoundtrip typeName gen pti encoder decoder =
   stdRoundtrip typeName gen pti (encoder) decoder
 
+timeRoundtrip :: (Show a, Eq a) => TestName -> Gen a -> PTI.PTI -> (Bool -> a -> A.Encoding) -> (Bool -> B.Value a) -> TestTree
 timeRoundtrip typeName gen pti encoder decoder =
-  QuickCheck.testProperty (typeName <> " roundtrip") $
-    QuickCheck.forAll gen $ Properties.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) (\x -> encoder x) decoder
+  QuickCheck.testProperty (typeName <> " roundtrip")
+    $ QuickCheck.forAll gen
+    $ Properties.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) (\x -> encoder x) decoder
 
+select :: (Eq b, Show b) => ByteString -> (Bool -> B.Value b) -> b -> TestTree
 select statement decoder value =
-  HUnit.testCase (show statement) $
-    HUnit.assertEqual "" (Right value) $
-      unsafePerformIO $ IO.parameterlessStatement statement decoder value
+  HUnit.testCase (show statement)
+    $ HUnit.assertEqual "" (Right value)
+    $ unsafePerformIO
+    $ IO.parameterlessStatement statement decoder value
 
 {-# NOINLINE version #-}
 version :: Int
 version =
-  either (error . show) id $
-    unsafePerformIO $
-      DB.session $
-        DB.serverVersion
+  either (error . show) id
+    $ unsafePerformIO
+    $ DB.session
+    $ DB.serverVersion

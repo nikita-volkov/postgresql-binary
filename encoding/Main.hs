@@ -5,6 +5,7 @@ import Criterion.Main
 import qualified PostgreSQL.Binary.Encoding as E
 import Prelude
 
+main :: IO ()
 main =
   defaultMain
     [ value "bool" E.bool True,

@@ -76,7 +76,7 @@ import qualified PostgreSQL.Binary.Inet as Inet
 import qualified PostgreSQL.Binary.Integral as Integral
 import qualified PostgreSQL.Binary.Interval as Interval
 import qualified PostgreSQL.Binary.Numeric as Numeric
-import PostgreSQL.Binary.Prelude hiding (bool, drop, fail, failure, state, take)
+import PostgreSQL.Binary.Prelude hiding (bool, drop, fail, state, take)
 import qualified PostgreSQL.Binary.Time as Time
 
 type Value =
@@ -105,13 +105,6 @@ onContent decoder =
   where
     size =
       intOfSize 4 :: Value Int32
-
-{-# INLINEABLE content #-}
-content :: Value (Maybe ByteString)
-content =
-  intOfSize 4 >>= \case
-    (-1) -> pure Nothing
-    n -> fmap Just (bytesOfSize n)
 
 {-# INLINE nonNull #-}
 nonNull :: Maybe a -> Value a
@@ -179,15 +172,15 @@ inet = do
   isCidr <- intOfSize 1
   ipSize <- intOfSize 1
   if
-      | af == Inet.inetAddressFamily ->
-          do
-            ip <- ip4
-            return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
-      | af == Inet.inet6AddressFamily ->
-          do
-            ip <- ip6
-            return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
-      | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
+    | af == Inet.inetAddressFamily ->
+        do
+          ip <- ip4
+          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
+    | af == Inet.inet6AddressFamily ->
+        do
+          ip <- ip6
+          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
+    | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
   where
     inetFromBytes :: Word8 -> Word8 -> Word8 -> Int8 -> IPAddr.IP -> IPAddr.NetAddr IPAddr.IP
     inetFromBytes _ netmask _ _ ip = IPAddr.netAddr ip netmask
@@ -396,7 +389,7 @@ interval_float =
 --   hstore replicateM text text
 -- @
 {-# INLINEABLE hstore #-}
-hstore :: (forall m. Monad m => Int -> m (k, Maybe v) -> m r) -> Value k -> Value v -> Value r
+hstore :: (forall m. (Monad m) => Int -> m (k, Maybe v) -> m r) -> Value k -> Value v -> Value r
 hstore replicateM keyContent valueContent =
   do
     componentsAmount <- intOfSize 4
@@ -492,7 +485,7 @@ array (Array decoder) =
 --
 -- * A decoder of its components, which can be either another 'dimensionArray' or 'nullableValueArray'.
 {-# INLINE dimensionArray #-}
-dimensionArray :: (forall m. Monad m => Int -> m a -> m b) -> Array a -> Array b
+dimensionArray :: (forall m. (Monad m) => Int -> m a -> m b) -> Array a -> Array b
 dimensionArray replicateM (Array component) =
   Array $ \case
     head : tail -> replicateM (fromIntegral head) (component tail)

@@ -4,7 +4,6 @@ module Main.TextEncoder where
 
 import Data.ByteString.Builder
 import qualified Data.ByteString.Builder.Scientific
-import qualified Data.Text.Encoding
 import qualified Data.UUID
 import Main.Prelude hiding (bool, maybe)
 import qualified Main.Prelude as Prelude

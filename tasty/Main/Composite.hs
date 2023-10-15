@@ -1,20 +1,12 @@
 module Main.Composite where
 
 import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Key as AesonKey
-import qualified Data.Aeson.KeyMap as AesonKeyMap
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
-import qualified Data.UUID as UUID
-import qualified Data.Vector as Vector
 import qualified Main.Gens as Gens
-import Main.Prelude hiding (assert, choose, isLeft, isRight)
-import qualified Network.IP.Addr as IPAddr
+import Main.Prelude hiding (choose, isLeft, isRight)
 import qualified PostgreSQL.Binary.Decoding as Decoding
 import qualified PostgreSQL.Binary.Encoding as Encoding
 import Test.QuickCheck hiding (vector)
-import Test.QuickCheck.Instances
 
 newtype Composite = Composite [CompositeFieldValue]
   deriving (Show, Eq, Ord)

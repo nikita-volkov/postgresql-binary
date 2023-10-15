@@ -8,12 +8,9 @@ import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
-import qualified Main.PTI as PTI
-import Main.Prelude hiding (assert, choose, isLeft, isRight)
+import Main.Prelude hiding (choose, isLeft, isRight)
 import qualified Network.IP.Addr as IPAddr
-import qualified PostgreSQL.Binary.Encoding as Encoder
 import Test.QuickCheck hiding (vector)
-import Test.QuickCheck.Instances
 
 maybeOf :: Gen a -> Gen (Maybe a)
 maybeOf gen =
@@ -21,7 +18,7 @@ maybeOf gen =
 
 -- * Generators
 
-auto :: Arbitrary a => Gen a
+auto :: (Arbitrary a) => Gen a
 auto =
   arbitrary
 
@@ -29,7 +26,7 @@ vector :: Gen a -> Gen (Vector a)
 vector element =
   join $ Vector.replicateM <$> arbitrary <*> pure element
 
-hashMap :: (Eq a, Hashable a) => Gen a -> Gen b -> Gen (HashMap a b)
+hashMap :: (Hashable a) => Gen a -> Gen b -> Gen (HashMap a b)
 hashMap key value =
   fmap HashMap.fromList $ join $ replicateM <$> arbitrary <*> pure row
   where
@@ -76,7 +73,7 @@ aeson =
                 value =
                   byDepth (succ depth)
 
-postgresInt :: (Bounded a, Ord a, Integral a, Arbitrary a) => Gen a
+postgresInt :: (Bounded a, Integral a, Arbitrary a) => Gen a
 postgresInt =
   arbitrary >>= \x -> if x > halfMaxBound then postgresInt else pure x
   where
@@ -97,10 +94,10 @@ scientific =
 
 microsTimeOfDay :: Gen TimeOfDay
 microsTimeOfDay =
-  fmap timeToTimeOfDay $
-    fmap picosecondsToDiffTime $
-      fmap (* (10 ^ 6)) $
-        choose (0, (10 ^ 6) * 24 * 60 * 60)
+  fmap timeToTimeOfDay
+    $ fmap picosecondsToDiffTime
+    $ fmap (* (10 ^ 6))
+    $ choose (0, (10 ^ 6) * 24 * 60 * 60)
 
 microsLocalTime :: Gen LocalTime
 microsLocalTime =
@@ -137,7 +134,14 @@ inet = do
       IPAddr.netAddr
         <$> ( IPAddr.IPv6
                 <$> ( IPAddr.ip6FromWords
-                        <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+                        <$> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
+                        <*> arbitrary
                     )
             )
         <*> choose (0, 128)
@@ -153,9 +157,11 @@ array3 gen =
 
 -- * Constants
 
-maxInterval :: DiffTime =
-  unsafeCoerce $
-    (truncate (1780000 * 365.2425 * 24 * 60 * 60 * 10 ^ 12 :: Rational) :: Integer)
+maxInterval :: DiffTime
+maxInterval =
+  unsafeCoerce
+    $ (truncate (1780000 * 365.2425 * 24 * 60 * 60 * 10 ^ 12 :: Rational) :: Integer)
 
-minInterval :: DiffTime =
+minInterval :: DiffTime
+minInterval =
   negate maxInterval

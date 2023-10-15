@@ -9,7 +9,6 @@ where
 
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Main.Prelude hiding (unit)
@@ -46,8 +45,9 @@ result statement params outFormat =
 
 checkResult :: Maybe LibPQ.Result -> Session ()
 checkResult result =
-  ExceptT $
-    ReaderT $ \connection -> do
+  ExceptT
+    $ ReaderT
+    $ \connection -> do
       case result of
         Just result -> do
           LibPQ.resultErrorField result LibPQ.DiagMessagePrimary >>= maybe (return (Right ())) (return . Left)
@@ -86,14 +86,14 @@ connect =
 
 initConnection :: LibPQ.Connection -> IO ()
 initConnection c =
-  void $
-    LibPQ.exec c $
-      mconcat $
-        map (<> ";") $
-          [ "SET client_min_messages TO WARNING",
-            "SET client_encoding = 'UTF8'",
-            "SET intervalstyle = 'postgres'"
-          ]
+  void
+    $ LibPQ.exec c
+    $ mconcat
+    $ map (<> ";")
+    $ [ "SET client_min_messages TO WARNING",
+        "SET client_encoding = 'UTF8'",
+        "SET intervalstyle = 'postgres'"
+      ]
 
 getIntegerDatetimes :: LibPQ.Connection -> IO Bool
 getIntegerDatetimes c =

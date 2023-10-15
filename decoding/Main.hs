@@ -6,6 +6,7 @@ import qualified PostgreSQL.Binary.Decoding as D
 import qualified PostgreSQL.Binary.Encoding as E
 import Prelude
 
+main :: IO ()
 main =
   defaultMain
     [ b "bool" D.bool ((E.encodingBytes . E.bool) True),
@@ -28,10 +29,10 @@ main =
       let encoder =
             E.array 23 . E.dimensionArray foldl' (E.encodingArray . E.int4_int32)
           decoder =
-            D.array $
-              D.dimensionArray replicateM $
-                D.valueArray $
-                  (D.int :: D.Value Int32)
+            D.array
+              $ D.dimensionArray replicateM
+              $ D.valueArray
+              $ (D.int :: D.Value Int32)
        in b "array" decoder (E.encodingBytes (encoder [1, 2, 3, 4]))
     ]
   where

@@ -37,7 +37,7 @@ import Data.Either as Exports
 import Data.Fixed as Exports
 import Data.Foldable as Exports
 import Data.Function as Exports hiding (id, (.))
-import Data.Functor as Exports
+import Data.Functor as Exports hiding (unzip)
 import Data.Functor.Identity as Exports
 import Data.HashMap.Strict as Exports (HashMap)
 import Data.IORef as Exports
@@ -85,8 +85,6 @@ import System.IO.Unsafe as Exports
 import System.Mem as Exports
 import System.Mem.StableName as Exports
 import System.Timeout as Exports
-import Text.ParserCombinators.ReadP as Exports (ReadP, ReadS, readP_to_S, readS_to_P)
-import Text.ParserCombinators.ReadPrec as Exports (ReadPrec, readP_to_Prec, readPrec_to_P, readPrec_to_S, readS_to_Prec)
 import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
 import Unsafe.Coerce as Exports
@@ -109,6 +107,6 @@ mapLeft :: (a -> b) -> Either a x -> Either b x
 mapLeft f =
   either (Left . f) Right
 
-joinMap :: Monad m => (a -> m b) -> m a -> m b
+joinMap :: (Monad m) => (a -> m b) -> m a -> m b
 joinMap f =
   join . liftM f

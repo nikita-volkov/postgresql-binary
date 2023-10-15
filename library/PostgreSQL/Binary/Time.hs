@@ -1,6 +1,5 @@
 module PostgreSQL.Binary.Time where
 
-import Data.Time.Calendar.Julian
 import PostgreSQL.Binary.Prelude hiding (second)
 
 {-# INLINEABLE dayToPostgresJulian #-}
@@ -9,7 +8,7 @@ dayToPostgresJulian =
   (+ (2400001 - 2451545)) . toModifiedJulianDay
 
 {-# INLINEABLE postgresJulianToDay #-}
-postgresJulianToDay :: Integral a => a -> Day
+postgresJulianToDay :: (Integral a) => a -> Day
 postgresJulianToDay =
   ModifiedJulianDay . fromIntegral . subtract (2400001 - 2451545)
 
@@ -20,8 +19,8 @@ microsToTimeOfDay =
     h <- state $ flip divMod $ 10 ^ 6 * 60 * 60
     m <- state $ flip divMod $ 10 ^ 6 * 60
     u <- get
-    return $
-      TimeOfDay (fromIntegral h) (fromIntegral m) (microsToPico u)
+    return
+      $ TimeOfDay (fromIntegral h) (fromIntegral m) (microsToPico u)
 
 {-# INLINEABLE microsToUTC #-}
 microsToUTC :: Int64 -> UTCTime
@@ -29,8 +28,8 @@ microsToUTC =
   evalState $ do
     d <- state $ flip divMod $ 10 ^ 6 * 60 * 60 * 24
     u <- get
-    return $
-      UTCTime (postgresJulianToDay d) (microsToDiffTime u)
+    return
+      $ UTCTime (postgresJulianToDay d) (microsToDiffTime u)
 
 {-# INLINEABLE microsToPico #-}
 microsToPico :: Int64 -> Pico
@@ -48,8 +47,8 @@ microsToLocalTime =
   evalState $ do
     d <- state $ flip divMod $ 10 ^ 6 * 60 * 60 * 24
     u <- get
-    return $
-      LocalTime (postgresJulianToDay d) (microsToTimeOfDay u)
+    return
+      $ LocalTime (postgresJulianToDay d) (microsToTimeOfDay u)
 
 {-# INLINEABLE secsToTimeOfDay #-}
 secsToTimeOfDay :: Double -> TimeOfDay
@@ -58,8 +57,8 @@ secsToTimeOfDay =
     h <- state $ flip divMod' $ 60 * 60
     m <- state $ flip divMod' $ 60
     s <- get
-    return $
-      TimeOfDay (fromIntegral h) (fromIntegral m) (secsToPico s)
+    return
+      $ TimeOfDay (fromIntegral h) (fromIntegral m) (secsToPico s)
 
 {-# INLINEABLE secsToUTC #-}
 secsToUTC :: Double -> UTCTime
@@ -67,8 +66,8 @@ secsToUTC =
   evalState $ do
     d <- state $ flip divMod' $ 60 * 60 * 24
     s <- get
-    return $
-      UTCTime (postgresJulianToDay d) (secsToDiffTime s)
+    return
+      $ UTCTime (postgresJulianToDay d) (secsToDiffTime s)
 
 {-# INLINEABLE secsToLocalTime #-}
 secsToLocalTime :: Double -> LocalTime
@@ -76,8 +75,8 @@ secsToLocalTime =
   evalState $ do
     d <- state $ flip divMod' $ 60 * 60 * 24
     s <- get
-    return $
-      LocalTime (postgresJulianToDay d) (secsToTimeOfDay s)
+    return
+      $ LocalTime (postgresJulianToDay d) (secsToTimeOfDay s)
 
 {-# INLINEABLE secsToPico #-}
 secsToPico :: Double -> Pico
@@ -123,12 +122,17 @@ utcToSecs (UTCTime dayX diffTimeX) =
 -- http://www.postgresql.org/docs/9.1/static/datatype-datetime.html
 -- Postgres uses Julian dates internally
 
-yearMicros :: Int64 = truncate (365.2425 * fromIntegral dayMicros :: Rational)
+yearMicros :: Int64
+yearMicros = truncate (365.2425 * fromIntegral dayMicros :: Rational)
 
-dayMicros :: Int64 = 24 * hourMicros
+dayMicros :: Int64
+dayMicros = 24 * hourMicros
 
-hourMicros :: Int64 = 60 * minuteMicros
+hourMicros :: Int64
+hourMicros = 60 * minuteMicros
 
-minuteMicros :: Int64 = 60 * secondMicros
+minuteMicros :: Int64
+minuteMicros = 60 * secondMicros
 
-secondMicros :: Int64 = 10 ^ 6
+secondMicros :: Int64
+secondMicros = 10 ^ 6
