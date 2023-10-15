@@ -81,7 +81,7 @@ connect =
             host = "localhost"
             port = 5432
             user = "postgres"
-            password = "postgres"
+            password = ""
             db = "postgres"
 
 initConnection :: LibPQ.Connection -> IO ()
