@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module PostgreSQL.Binary.Prelude
   ( module Exports,
     LazyByteString,
@@ -37,7 +38,11 @@ import Data.Either as Exports
 import Data.Fixed as Exports
 import Data.Foldable as Exports
 import Data.Function as Exports hiding (id, (.))
+#if MIN_VERSION_base(4,19,0)
+import Data.Functor as Exports hiding (unzip)
+#else
 import Data.Functor as Exports
+#endif
 import Data.Functor.Identity as Exports
 import Data.HashMap.Strict as Exports (HashMap)
 import Data.IORef as Exports
