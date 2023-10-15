@@ -10,8 +10,10 @@ newtype Apx a = Apx {unApx :: a}
 
 instance (Eq (Apx a), Eq (Apx b)) => Eq (Apx (a, b)) where
   (==) (Apx (a1, a2)) (Apx (b1, b2)) =
-    Apx a1 == Apx b1
-      && Apx a2 == Apx b2
+    Apx a1
+      == Apx b1
+      && Apx a2
+      == Apx b2
 
 instance Eq (Apx LocalTime) where
   (==) (Apx a) (Apx b) =
@@ -38,8 +40,12 @@ instance Eq (Apx Double) where
 
 instance Eq (Apx Rational) where
   (==) (Apx a) (Apx b) =
-    a + error >= b
-      && a - error <= b
+    a
+      + error
+      >= b
+      && a
+      - error
+      <= b
     where
       error =
         10 ^^ negate 3

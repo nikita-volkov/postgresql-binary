@@ -170,7 +170,10 @@ ip6 :: G.IP6 -> Builder
 ip6 x =
   case G.ip6ToWords x of
     (w1, w2, w3, w4, w5, w6, w7, w8) ->
-      int2_word16 w1 <> int2_word16 w2 <> int2_word16 w3 <> int2_word16 w4
+      int2_word16 w1
+        <> int2_word16 w2
+        <> int2_word16 w3
+        <> int2_word16 w4
         <> int2_word16 w5
         <> int2_word16 w6
         <> int2_word16 w7
@@ -309,8 +312,8 @@ interval_int x =
     <> int32BE m
   where
     P.Interval u d m =
-      fromMaybe (error ("Too large DiffTime value for an interval " <> show x)) $
-        P.fromDiffTime x
+      fromMaybe (error ("Too large DiffTime value for an interval " <> show x))
+        $ P.fromDiffTime x
 
 {-# INLINEABLE interval_float #-}
 interval_float :: DiffTime -> Builder
@@ -320,8 +323,8 @@ interval_float x =
     <> int32BE m
   where
     P.Interval u d m =
-      fromMaybe (error ("Too large DiffTime value for an interval " <> show x)) $
-        P.fromDiffTime x
+      fromMaybe (error ("Too large DiffTime value for an interval " <> show x))
+        $ P.fromDiffTime x
     s =
       fromIntegral u / (10 ^ 6)
 
@@ -424,12 +427,12 @@ hStoreUsingFoldl foldl =
       int4_int count <> payload
 
 {-# INLINE hStoreUsingFoldMapAndSize #-}
-hStoreUsingFoldMapAndSize :: (forall a. Monoid a => ((Text, Maybe Text) -> a) -> b -> a) -> Int -> b -> Builder
+hStoreUsingFoldMapAndSize :: (forall a. (Monoid a) => ((Text, Maybe Text) -> a) -> b -> a) -> Int -> b -> Builder
 hStoreUsingFoldMapAndSize foldMap size input =
   int4_int size <> foldMap (uncurry hStoreRow) input
 
 {-# INLINE hStoreFromFoldMapAndSize #-}
-hStoreFromFoldMapAndSize :: (forall a. Monoid a => (Text -> Maybe Text -> a) -> a) -> Int -> Builder
+hStoreFromFoldMapAndSize :: (forall a. (Monoid a) => (Text -> Maybe Text -> a) -> a) -> Int -> Builder
 hStoreFromFoldMapAndSize foldMap size =
   int4_int size <> foldMap hStoreRow
 

@@ -17,7 +17,7 @@ nanSignCode :: Word16
 nanSignCode = 0xC000
 
 {-# INLINE extractComponents #-}
-extractComponents :: Integral a => a -> [Word16]
+extractComponents :: (Integral a) => a -> [Word16]
 extractComponents =
   (reverse .) . (. abs) . unfoldr $ \case
     0 -> Nothing
@@ -25,12 +25,12 @@ extractComponents =
       (d, m) -> Just (fromIntegral m, d)
 
 {-# INLINE mergeComponents #-}
-mergeComponents :: Integral a => Vector a -> Integer
+mergeComponents :: (Integral a) => Vector a -> Integer
 mergeComponents =
   Vector.foldl' (\l r -> l * 10000 + fromIntegral r) 0
 
 {-# INLINE mergeDigits #-}
-mergeDigits :: Integral a => Vector a -> a
+mergeDigits :: (Integral a) => Vector a -> a
 mergeDigits =
   Vector.foldl' (\l r -> l * 10 + r) 0
 
@@ -55,7 +55,7 @@ componentsReplicateM amount component =
       liftA2 (+) (fmap (* 10000) acc) component
 
 {-# INLINE signer #-}
-signer :: Integral a => Word16 -> Either Text (a -> a)
+signer :: (Integral a) => Word16 -> Either Text (a -> a)
 signer =
   \case
     0x0000 -> return id
