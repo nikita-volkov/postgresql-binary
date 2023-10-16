@@ -12,6 +12,7 @@ jobs:
       matrix:
         include:
           - ghc: 8.8.1
+            ghc-options: ""
           - ghc: latest
 
     runs-on: ubuntu-latest
