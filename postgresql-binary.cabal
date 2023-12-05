@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               postgresql-binary
-version:            0.13.1.1
+version:            0.13.1.2
 synopsis:           Encoders and decoders for the PostgreSQL's binary format
 description:
   An API for dealing with PostgreSQL's binary data format.
@@ -87,9 +87,9 @@ library
     , aeson >=2 && <3
     , base >=4.12 && <5
     , binary-parser >=0.5.7 && <0.6
-    , bytestring >=0.10.4 && <0.12
+    , bytestring >=0.10.4 && <0.13
     , bytestring-strict-builder >=0.4.5.4 && <0.5
-    , containers >=0.5 && <0.7
+    , containers >=0.5 && <0.8
     , network-ip >=0.3 && <0.4
     , scientific >=0.3 && <0.4
     , text >=1.2 && <3
