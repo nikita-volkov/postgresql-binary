@@ -65,13 +65,13 @@ import BinaryParser
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
+import qualified Data.IP as IP
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
-import qualified Network.IP.Addr as IPAddr
 import qualified PostgreSQL.Binary.Inet as Inet
 import qualified PostgreSQL.Binary.Integral as Integral
 import qualified PostgreSQL.Binary.Interval as Interval
@@ -155,35 +155,32 @@ uuid =
   UUID.fromWords <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4
 
 {-# INLINE ip4 #-}
-ip4 :: Value IPAddr.IP4
+ip4 :: Value IP.IPv4
 ip4 =
-  IPAddr.ip4FromOctets <$> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1 <*> intOfSize 1
+  IP.toIPv4w <$> intOfSize 4
 
 {-# INLINE ip6 #-}
-ip6 :: Value IPAddr.IP6
+ip6 :: Value IP.IPv6
 ip6 =
-  IPAddr.ip6FromWords <$> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2 <*> intOfSize 2
+  IP.toIPv6w <$> ((,,,) <$> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4 <*> intOfSize 4)
 
 {-# INLINEABLE inet #-}
-inet :: Value (IPAddr.NetAddr IPAddr.IP)
+inet :: Value IP.IPRange
 inet = do
   af <- intOfSize 1
   netmask <- intOfSize 1
-  isCidr <- intOfSize 1
-  ipSize <- intOfSize 1
+  isCidr <- intOfSize 1 :: Value Int -- unused
+  ipSize <- intOfSize 1 :: Value Int -- unused
   if
     | af == Inet.inetAddressFamily ->
         do
           ip <- ip4
-          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv4 ip)
+          return . IP.IPv4Range $ IP.makeAddrRange ip netmask
     | af == Inet.inet6AddressFamily ->
         do
           ip <- ip6
-          return $ inetFromBytes af netmask isCidr ipSize (IPAddr.IPv6 ip)
+          return . IP.IPv6Range $ IP.makeAddrRange ip netmask
     | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
-  where
-    inetFromBytes :: Word8 -> Word8 -> Word8 -> Int8 -> IPAddr.IP -> IPAddr.NetAddr IPAddr.IP
-    inetFromBytes _ netmask _ _ ip = IPAddr.netAddr ip netmask
 
 {-# INLINEABLE json_ast #-}
 json_ast :: Value Aeson.Value
