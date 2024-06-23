@@ -136,6 +136,8 @@ binary =
             primitiveRoundtrip "bytea_lazy" Gens.auto PTI.bytea A.bytea_lazy B.bytea_lazy,
             primitiveRoundtrip "uuid" Gens.uuid PTI.uuid A.uuid B.uuid,
             primitiveRoundtrip "inet" Gens.inet PTI.inet A.inet B.inet,
+            select "SELECT '127.0.0.1' :: inet" (const B.inet) (read "127.0.0.1"),
+            select "SELECT '::1' :: inet" (const B.inet) (read "::1"),
             primitiveRoundtrip "int2_int16" Gens.auto PTI.int2 A.int2_int16 B.int,
             primitiveRoundtrip "int2_word16" Gens.auto PTI.int2 A.int2_word16 B.int,
             primitiveRoundtrip "int4_int32" Gens.auto PTI.int4 A.int4_int32 B.int,

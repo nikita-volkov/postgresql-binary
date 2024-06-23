@@ -4,12 +4,12 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.IP as IP
 import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
 import qualified Data.UUID as UUID
 import qualified Data.Vector as Vector
 import Main.Prelude hiding (choose, isLeft, isRight)
-import qualified Network.IP.Addr as IPAddr
 import Test.QuickCheck hiding (vector)
 
 maybeOf :: Gen a -> Gen (Maybe a)
@@ -126,26 +126,24 @@ uuid :: Gen UUID.UUID
 uuid =
   UUID.fromWords <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-inet :: Gen (IPAddr.NetAddr IPAddr.IP)
+inet :: Gen IP.IPRange
 inet = do
   ipv6 <- choose (True, False)
   if ipv6
     then
-      IPAddr.netAddr
-        <$> ( IPAddr.IPv6
-                <$> ( IPAddr.ip6FromWords
-                        <$> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
-                        <*> arbitrary
+      IP.IPv6Range
+        <$> ( IP.makeAddrRange
+                <$> ( IP.toIPv6w
+                        <$> ( (,,,)
+                                <$> arbitrary
+                                <*> arbitrary
+                                <*> arbitrary
+                                <*> arbitrary
+                            )
                     )
+                <*> choose (0, 128)
             )
-        <*> choose (0, 128)
-    else IPAddr.netAddr <$> (IPAddr.IPv4 <$> (IPAddr.ip4FromOctets <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)) <*> choose (0, 32)
+    else IP.IPv4Range <$> (IP.makeAddrRange <$> (IP.toIPv4w <$> arbitrary) <*> choose (0, 32))
 
 array3 :: Gen a -> Gen [[[a]]]
 array3 gen =

@@ -70,8 +70,8 @@ where
 import qualified ByteString.StrictBuilder as C
 import qualified Data.Aeson as R
 import qualified Data.ByteString.Lazy as N
+import qualified Data.IP as G
 import qualified Data.Text.Lazy as L
-import qualified Network.IP.Addr as G
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import PostgreSQL.Binary.Prelude hiding (bool, length)
 
@@ -201,7 +201,7 @@ uuid =
   B.uuid
 
 {-# INLINE inet #-}
-inet :: G.NetAddr G.IP -> Encoding
+inet :: G.IPRange -> Encoding
 inet =
   B.inet
 

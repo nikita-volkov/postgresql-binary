@@ -5,6 +5,7 @@ import qualified Data.Aeson as R
 import qualified Data.ByteString.Builder as M
 import qualified Data.ByteString.Lazy as N
 import qualified Data.HashMap.Strict as F
+import qualified Data.IP as G
 import qualified Data.Map.Strict as Q
 import qualified Data.Scientific as D
 import qualified Data.Text.Encoding as J
@@ -12,7 +13,6 @@ import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as K
 import qualified Data.UUID as E
 import qualified Data.Vector as A
-import qualified Network.IP.Addr as G
 import qualified PostgreSQL.Binary.BuilderPrim as I
 import qualified PostgreSQL.Binary.Inet as H
 import qualified PostgreSQL.Binary.Interval as P
@@ -160,36 +160,42 @@ uuid uuid =
     (w1, w2, w3, w4) -> int4_word32 w1 <> int4_word32 w2 <> int4_word32 w3 <> int4_word32 w4
 
 {-# INLINEABLE ip4 #-}
-ip4 :: G.IP4 -> Builder
-ip4 x =
-  case G.ip4ToOctets x of
-    (w1, w2, w3, w4) -> word8 w1 <> word8 w2 <> word8 w3 <> word8 w4
+ip4 :: G.IPv4 -> Builder
+ip4 =
+  int4_word32 . G.fromIPv4w
 
 {-# INLINEABLE ip6 #-}
-ip6 :: G.IP6 -> Builder
+ip6 :: G.IPv6 -> Builder
 ip6 x =
-  case G.ip6ToWords x of
-    (w1, w2, w3, w4, w5, w6, w7, w8) ->
-      int2_word16 w1
-        <> int2_word16 w2
-        <> int2_word16 w3
-        <> int2_word16 w4
-        <> int2_word16 w5
-        <> int2_word16 w6
-        <> int2_word16 w7
-        <> int2_word16 w8
+  case G.fromIPv6w x of
+    (w1, w2, w3, w4) -> int4_word32 w1 <> int4_word32 w2 <> int4_word32 w3 <> int4_word32 w4
 
-{-# INLINEABLE inet #-}
-inet :: G.NetAddr G.IP -> Builder
-inet i =
-  case G.netHost i of
-    G.IPv4 x -> inetAddressFamily <> netLength <> isCidr <> ip4Size <> ip4 x
-    G.IPv6 x -> inet6AddressFamily <> netLength <> isCidr <> ip6Size <> ip6 x
+{-# INLINEABLE ip4range #-}
+ip4range :: G.AddrRange G.IPv4 -> Builder
+ip4range x =
+  case G.addrRangePair x of
+    (addr, mlen) -> inetAddressFamily <> netLength mlen <> isCidr <> ip4Size <> ip4 addr
   where
     netLength =
-      word8 (G.netLength i)
+      word8 . fromIntegral
     isCidr =
       false1
+
+{-# INLINEABLE ip6range #-}
+ip6range :: G.AddrRange G.IPv6 -> Builder
+ip6range x =
+  case G.addrRangePair x of
+    (addr, mlen) -> inet6AddressFamily <> netLength mlen <> isCidr <> ip6Size <> ip6 addr
+  where
+    netLength =
+      word8 . fromIntegral
+    isCidr =
+      false1
+
+{-# INLINEABLE inet #-}
+inet :: G.IPRange -> Builder
+inet (G.IPv4Range x) = ip4range x
+inet (G.IPv6Range x) = ip6range x
 
 {-# NOINLINE inetAddressFamily #-}
 inetAddressFamily :: Builder
