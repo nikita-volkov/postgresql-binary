@@ -126,7 +126,7 @@ test-suite tasty
     , rerebase >=1.20.1.1 && <2
     , tasty >=1.4 && <2
     , tasty-hunit >=0.10 && <0.11
-    , tasty-quickcheck >=0.10 && <0.11
+    , tasty-quickcheck >=0.10 && <0.12
 
 benchmark encoding
   import:         base
