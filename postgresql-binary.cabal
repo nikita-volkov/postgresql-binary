@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               postgresql-binary
-version:            0.14
+version:            0.14.0.1
 synopsis:           Encoders and decoders for the PostgreSQL's binary format
 description:
   An API for dealing with PostgreSQL's binary data format.
@@ -25,7 +25,7 @@ extra-source-files: CHANGELOG.md
 
 source-repository head
   type:     git
-  location: git://github.com/nikita-volkov/postgresql-binary.git
+  location: https://github.com/nikita-volkov/postgresql-binary
 
 common base
   default-language:   Haskell2010
