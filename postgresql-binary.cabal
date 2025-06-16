@@ -120,7 +120,7 @@ test-suite tasty
     , aeson >=2 && <3
     , iproute >=1.4 && <2
     , postgresql-binary
-    , postgresql-libpq >=0.9 && <0.11
+    , postgresql-libpq >=0.9 && <0.12
     , QuickCheck >=2.10 && <3
     , quickcheck-instances >=0.3.22 && <0.4
     , rerebase >=1.20.1.1 && <2
