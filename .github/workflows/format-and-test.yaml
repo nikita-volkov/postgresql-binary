@@ -1,12 +1,30 @@
-name: Compile, test and check the docs
+name: Format and test
 
 on:
+  push:
+    branches:
+      - master
+  pull_request:
   workflow_call: 
 
-jobs:
+concurrency:
+  group: format-and-test
+  cancel-in-progress: true
 
-  test:
-    
+jobs:
+  format:
+    uses: nikita-volkov/haskell-hackage-lib-github-actions-workflows/.github/workflows/format.yaml@v4
+    secrets: inherit
+  
+  check-cabal:
+    uses: nikita-volkov/haskell-hackage-lib-github-actions-workflows/.github/workflows/check-cabal.yaml@v4
+    secrets: inherit
+
+  generate-docs:
+    uses: nikita-volkov/haskell-hackage-lib-github-actions-workflows/.github/workflows/generate-docs.yaml@v4
+    secrets: inherit
+
+  build:
     strategy:
       fail-fast: false
       matrix:
