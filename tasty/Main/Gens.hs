@@ -145,6 +145,10 @@ inet = do
             )
     else IP.IPv4Range <$> (IP.makeAddrRange <$> (IP.toIPv4w <$> arbitrary) <*> choose (0, 32))
 
+macaddr :: Gen (Word8, Word8, Word8, Word8, Word8, Word8)
+macaddr =
+  (,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+
 array3 :: Gen a -> Gen [[[a]]]
 array3 gen =
   do

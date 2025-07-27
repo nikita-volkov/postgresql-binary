@@ -217,6 +217,11 @@ ip6Size :: Builder
 ip6Size =
   word8 16
 
+{-# INLINEABLE macaddr #-}
+macaddr :: (Word8, Word8, Word8, Word8, Word8, Word8) -> Builder
+macaddr (a, b, c, d, e, f) =
+  word8 a <> word8 b <> word8 c <> word8 d <> word8 e <> word8 f
+
 -- * Text
 
 -- |

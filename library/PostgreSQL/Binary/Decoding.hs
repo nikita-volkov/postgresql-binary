@@ -21,6 +21,7 @@ module PostgreSQL.Binary.Decoding
     numeric,
     uuid,
     inet,
+    macaddr,
     json_ast,
     json_bytes,
     jsonb_ast,
@@ -181,6 +182,11 @@ inet = do
           ip <- ip6
           return . IP.IPv6Range $ IP.makeAddrRange ip netmask
     | otherwise -> BinaryParser.failure ("Unknown address family: " <> fromString (show af))
+
+{-# INLINEABLE macaddr #-}
+macaddr :: Value (Word8, Word8, Word8, Word8, Word8, Word8)
+macaddr =
+  (,,,,,) <$> byte <*> byte <*> byte <*> byte <*> byte <*> byte
 
 {-# INLINEABLE json_ast #-}
 json_ast :: Value Aeson.Value
