@@ -24,6 +24,7 @@ module PostgreSQL.Binary.Encoding
     numeric,
     uuid,
     inet,
+    macaddr,
     char_utf8,
     text_strict,
     text_lazy,
@@ -204,6 +205,11 @@ uuid =
 inet :: G.IPRange -> Encoding
 inet =
   B.inet
+
+{-# INLINE macaddr #-}
+macaddr :: (Word8, Word8, Word8, Word8, Word8, Word8) -> Encoding
+macaddr =
+  B.macaddr
 
 {-# INLINE char_utf8 #-}
 char_utf8 :: Char -> Encoding

@@ -138,6 +138,8 @@ binary =
             primitiveRoundtrip "inet" Gens.inet PTI.inet A.inet B.inet,
             select "SELECT '127.0.0.1' :: inet" (const B.inet) (read "127.0.0.1"),
             select "SELECT '::1' :: inet" (const B.inet) (read "::1"),
+            primitiveRoundtrip "macaddr" Gens.macaddr PTI.macaddr A.macaddr B.macaddr,
+            select "SELECT '11:22:33:44:55:66' :: macaddr" (const B.macaddr) (0x11, 0x22, 0x33, 0x44, 0x55, 0x66),
             primitiveRoundtrip "int2_int16" Gens.auto PTI.int2 A.int2_int16 B.int,
             primitiveRoundtrip "int2_word16" Gens.auto PTI.int2 A.int2_word16 B.int,
             primitiveRoundtrip "int4_int32" Gens.auto PTI.int4 A.int4_int32 B.int,
