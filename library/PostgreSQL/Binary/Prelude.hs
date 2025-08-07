@@ -42,7 +42,7 @@ import Data.Functor.Identity as Exports
 import Data.HashMap.Strict as Exports (HashMap)
 import Data.IORef as Exports
 import Data.Int as Exports
-import Data.Ix as Exports
+import Data.Ix as Exports hiding (range)
 import Data.List as Exports hiding (all, and, any, concat, concatMap, elem, find, foldl, foldl', foldl1, foldr, foldr1, isSubsequenceOf, mapAccumL, mapAccumR, maximum, maximumBy, minimum, minimumBy, notElem, or, product, sortOn, sum, uncons)
 import Data.List.NonEmpty as Exports (NonEmpty (..))
 import Data.Map.Strict as Exports (Map)

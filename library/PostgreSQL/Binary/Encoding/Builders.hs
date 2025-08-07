@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as N
 import qualified Data.HashMap.Strict as F
 import qualified Data.IP as G
 import qualified Data.Map.Strict as Q
+import qualified Data.Range.Typed as Range
 import qualified Data.Scientific as D
 import qualified Data.Text.Encoding as J
 import qualified Data.Text.Lazy as L
@@ -463,3 +464,31 @@ hStore_map :: Map Text (Maybe Text) -> Builder
 hStore_map input =
   int4_int (Q.size input)
     <> Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
+
+{-# INLINE range #-}
+range :: (a -> Builder) -> Range.AnyRange a -> Builder
+range builder (Range.AnyRangeFor r) =
+  case r of
+    Range.EmptyRange -> word8 0x01
+    Range.InfiniteRange -> word8 0x18
+    Range.SingletonRange a -> word8 0x06 <> sized (builder a) <> sized (builder a)
+    Range.SpanRange lb rb ->
+      case (lb, rb) of
+        (Range.ExclusiveBound l, Range.ExclusiveBound r) -> word8 0x00 <> sized (builder l) <> sized (builder r)
+        (Range.InclusiveBound l, Range.ExclusiveBound r) -> word8 0x02 <> sized (builder l) <> sized (builder r)
+        (Range.ExclusiveBound l, Range.InclusiveBound r) -> word8 0x04 <> sized (builder l) <> sized (builder r)
+        (Range.InclusiveBound l, Range.InclusiveBound r) -> word8 0x06 <> sized (builder l) <> sized (builder r)
+    Range.LowerBoundRange lb ->
+      case lb of
+        Range.ExclusiveBound l -> word8 0x10 <> sized (builder l)
+        Range.InclusiveBound l -> word8 0x12 <> sized (builder l)
+    Range.UpperBoundRange ub ->
+      case ub of
+        Range.ExclusiveBound u -> word8 0x08 <> sized (builder u)
+        Range.InclusiveBound u -> word8 0x0C <> sized (builder u)
+
+{-# INLINE multirange #-}
+multirange :: (a -> Builder) -> [Range.AnyRange a] -> Builder
+multirange builder ranges =
+  int4_int (fromIntegral (length ranges))
+    <> foldMap (sized . range builder) ranges

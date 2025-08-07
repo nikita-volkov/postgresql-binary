@@ -59,6 +59,26 @@ module PostgreSQL.Binary.Decoding
     hstore,
     enum,
     refine,
+
+    -- ** Range
+    int4range,
+    int8range,
+    numrange,
+    tsrange_int,
+    tsrange_float,
+    tstzrange_int,
+    tstzrange_float,
+    daterange,
+
+    -- ** Multirange
+    int4multirange,
+    int8multirange,
+    nummultirange,
+    tsmultirange_int,
+    tsmultirange_float,
+    tstzmultirange_int,
+    tstzmultirange_float,
+    datemultirange
   )
 where
 
@@ -67,6 +87,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.IP as IP
+import qualified Data.Range.Typed as Range
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
@@ -534,3 +555,152 @@ enum mapping =
 {-# INLINE refine #-}
 refine :: (a -> Either Text b) -> Value a -> Value b
 refine fn m = m >>= (either failure pure . fn)
+
+-- * Range
+
+-- |
+-- One of the range types:
+--
+-- * @int4range@
+-- * @int8range@
+-- * @numrange@
+-- * @tsrange@
+-- * @tstzrange@
+-- * @daterange@
+{-# INLINE range #-}
+range :: Value a -> Value (Range.AnyRange a)
+range decoder =
+  do
+    flags <- byte
+    let emptyRange = testBit flags 0
+        lowerInclusive = testBit flags 1
+        upperInclusive = testBit flags 2
+        lowerInfinite = testBit flags 3
+        upperInfinite = testBit flags 4
+    case (emptyRange, lowerInclusive, upperInclusive, lowerInfinite, upperInfinite) of
+      (True, _, _, _, _) -> pure $ Range.anyRange Range.empty
+      (False, _, _, True, True) -> pure $ Range.anyRange Range.inf
+      (False, _, False, True, False) -> Range.anyRange <$> (Range.ube <$> bound decoder)
+      (False, _, True, True, False) -> Range.anyRange <$> (Range.ubi <$> bound decoder)
+      (False, False, _, False, True) -> Range.anyRange <$> (Range.lbe <$> bound decoder)
+      (False, True, _, False, True) -> Range.anyRange <$> (Range.lbi <$> bound decoder)
+      (False, False, False, False, False) -> Range.anyRange <$> ((Range.*=*) <$> bound decoder <*> bound decoder)
+      (False, False, True, False, False) -> Range.anyRange <$> ((Range.*=+) <$> bound decoder <*> bound decoder)
+      (False, True, False, False, False) -> Range.anyRange <$> ((Range.+=*) <$> bound decoder <*> bound decoder)
+      (False, True, True, False, False) -> Range.anyRange <$> ((Range.+=+) <$> bound decoder <*> bound decoder)
+  where
+    bound = onContent >=> nonNull
+
+-- |
+-- @int4range@
+{-# INLINE int4range #-}
+int4range :: Value (Range.AnyRange Int32)
+int4range = range int
+
+-- |
+-- @int8range@
+{-# INLINE int8range #-}
+int8range :: Value (Range.AnyRange Int64)
+int8range = range int
+
+-- |
+-- @numrange@
+{-# INLINE numrange #-}
+numrange :: Value (Range.AnyRange Scientific)
+numrange = range numeric
+
+-- |
+-- @tsrange@
+{-# INLINE tsrange_int #-}
+tsrange_int :: Value (Range.AnyRange LocalTime)
+tsrange_int = range timestamp_int
+
+-- |
+-- @tsrange@
+{-# INLINE tsrange_float #-}
+tsrange_float :: Value (Range.AnyRange LocalTime)
+tsrange_float = range timestamp_float
+
+-- |
+-- @tstzrange@
+{-# INLINE tstzrange_int #-}
+tstzrange_int :: Value (Range.AnyRange UTCTime)
+tstzrange_int = range timestamptz_int
+
+-- |
+-- @tstzrange@
+{-# INLINE tstzrange_float #-}
+tstzrange_float :: Value (Range.AnyRange UTCTime)
+tstzrange_float = range timestamptz_float
+
+-- |
+-- @daterange@
+{-# INLINE daterange #-}
+daterange :: Value (Range.AnyRange Day)
+daterange = range date
+
+-- * Multirange
+
+-- |
+-- One of the multirange types:
+--
+-- * @int4multirange@
+-- * @int8multirange@
+-- * @nummultirange@
+-- * @tsmultirange@
+-- * @tstzmultirange@
+-- * @datemultirange@
+{-# INLINE multirange #-}
+multirange :: Value a -> Value ([Range.AnyRange a])
+multirange decoder =
+  do
+    rangeCount <- intOfSize 4
+    replicateM rangeCount (onContent (range decoder) >>= nonNull)
+
+-- |
+-- @int4multirange@
+{-# INLINE int4multirange #-}
+int4multirange :: Value ([Range.AnyRange Int32])
+int4multirange = multirange int
+
+-- |
+-- @int8multirange@
+{-# INLINE int8multirange #-}
+int8multirange :: Value ([Range.AnyRange Int64])
+int8multirange = multirange int
+
+-- |
+-- @nummultirange@
+{-# INLINE nummultirange #-}
+nummultirange :: Value ([Range.AnyRange Scientific])
+nummultirange = multirange numeric
+
+-- |
+-- @tsmultirange@
+{-# INLINE tsmultirange_int #-}
+tsmultirange_int :: Value ([Range.AnyRange LocalTime])
+tsmultirange_int = multirange timestamp_int
+
+-- |
+-- @tsmultirange@
+{-# INLINE tsmultirange_float #-}
+tsmultirange_float :: Value ([Range.AnyRange LocalTime])
+tsmultirange_float = multirange timestamp_float
+
+-- |
+-- @tstzmultirange@
+{-# INLINE tstzmultirange_int #-}
+tstzmultirange_int :: Value ([Range.AnyRange UTCTime])
+tstzmultirange_int = multirange timestamptz_int
+
+-- |
+-- @tstzmultirange@
+{-# INLINE tstzmultirange_float #-}
+tstzmultirange_float :: Value ([Range.AnyRange UTCTime])
+tstzmultirange_float = multirange timestamptz_float
+
+-- |
+-- @datemultirange@
+{-# INLINE datemultirange #-}
+datemultirange :: Value ([Range.AnyRange Day])
+datemultirange = multirange date

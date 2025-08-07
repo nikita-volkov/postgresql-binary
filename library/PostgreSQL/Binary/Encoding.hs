@@ -65,6 +65,26 @@ module PostgreSQL.Binary.Encoding
     Composite,
     field,
     nullField,
+
+    -- * Range
+    int4range,
+    int8range,
+    numrange,
+    tsrange_int,
+    tsrange_float,
+    tstzrange_int,
+    tstzrange_float,
+    daterange,
+
+    -- * Multirange
+    int4multirange,
+    int8multirange,
+    nummultirange,
+    tsmultirange_int,
+    tsmultirange_float,
+    tstzmultirange_int,
+    tstzmultirange_float,
+    datemultirange
   )
 where
 
@@ -72,6 +92,7 @@ import qualified ByteString.StrictBuilder as C
 import qualified Data.Aeson as R
 import qualified Data.ByteString.Lazy as N
 import qualified Data.IP as G
+import qualified Data.Range.Typed as Range
 import qualified Data.Text.Lazy as L
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import PostgreSQL.Binary.Prelude hiding (bool, length)
@@ -372,3 +393,71 @@ field oid value =
 nullField :: Word32 -> Composite
 nullField oid =
   Composite 1 (B.int4_word32 oid <> B.null4)
+
+-- * Range
+
+{-# INLINE int4range #-}
+int4range :: Range.AnyRange Int32 -> Encoding
+int4range = B.range B.int4_int32
+
+{-# INLINE int8range #-}
+int8range :: Range.AnyRange Int64 -> Encoding
+int8range = B.range B.int8_int64
+
+{-# INLINE numrange #-}
+numrange :: Range.AnyRange Scientific -> Encoding
+numrange = B.range B.numeric
+
+{-# INLINE tsrange_int #-}
+tsrange_int :: Range.AnyRange LocalTime -> Encoding
+tsrange_int = B.range B.timestamp_int
+
+{-# INLINE tsrange_float #-}
+tsrange_float :: Range.AnyRange TimeOfDay -> Encoding
+tsrange_float = B.range B.time_float
+
+{-# INLINE tstzrange_int #-}
+tstzrange_int :: Range.AnyRange UTCTime -> Encoding
+tstzrange_int = B.range B.timestamptz_int
+
+{-# INLINE tstzrange_float #-}
+tstzrange_float :: Range.AnyRange UTCTime -> Encoding
+tstzrange_float = B.range B.timestamptz_float
+
+{-# INLINE daterange #-}
+daterange :: Range.AnyRange Day -> Encoding
+daterange = B.range B.date
+
+-- * Multirange
+
+{-# INLINE int4multirange #-}
+int4multirange :: [Range.AnyRange Int32] -> Encoding
+int4multirange = B.multirange B.int4_int32
+
+{-# INLINE int8multirange #-}
+int8multirange :: [Range.AnyRange Int64] -> Encoding
+int8multirange = B.multirange B.int8_int64
+
+{-# INLINE nummultirange #-}
+nummultirange :: [Range.AnyRange Scientific] -> Encoding
+nummultirange = B.multirange B.numeric
+
+{-# INLINE tsmultirange_int #-}
+tsmultirange_int :: [Range.AnyRange LocalTime] -> Encoding
+tsmultirange_int = B.multirange B.timestamp_int
+
+{-# INLINE tsmultirange_float #-}
+tsmultirange_float :: [Range.AnyRange TimeOfDay] -> Encoding
+tsmultirange_float = B.multirange B.time_float
+
+{-# INLINE tstzmultirange_int #-}
+tstzmultirange_int :: [Range.AnyRange UTCTime] -> Encoding
+tstzmultirange_int = B.multirange B.timestamptz_int
+
+{-# INLINE tstzmultirange_float #-}
+tstzmultirange_float :: [Range.AnyRange UTCTime] -> Encoding
+tstzmultirange_float = B.multirange B.timestamptz_float
+
+{-# INLINE datemultirange #-}
+datemultirange :: [Range.AnyRange Day] -> Encoding
+datemultirange = B.multirange B.date
