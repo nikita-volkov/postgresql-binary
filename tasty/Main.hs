@@ -8,11 +8,12 @@ import qualified Main.DB as DB
 import qualified Main.Gens as Gens
 import qualified Main.IO as IO
 import qualified Main.PTI as PTI
-import Main.Prelude hiding (isLeft, isRight, select)
+import Main.Prelude hiding (empty, isLeft, isRight, select)
 import qualified Main.Properties as Properties
 import qualified Main.TextEncoder as TextEncoder
 import qualified PostgreSQL.Binary.Decoding as B
 import qualified PostgreSQL.Binary.Encoding as A
+import qualified PostgreSQL.Binary.Range as S
 import Test.Tasty
 import Test.Tasty.HUnit as HUnit
 import Test.Tasty.QuickCheck as QuickCheck
@@ -190,7 +191,171 @@ binary =
                     $ B.dimensionArray replicateM
                     $ B.valueArray
                     $ B.text_strict
-             in arrayRoundtrip (Gens.array3 Gens.text) pti encoder decoder
+             in arrayRoundtrip (Gens.array3 Gens.text) pti encoder decoder,
+            select "select ('[10, 20]' :: int4range)" (const B.int4range) (S.Range (S.Incl 10) (S.Excl 21)),
+            select "select ('[10, 20)' :: int4range)" (const B.int4range) (S.Range (S.Incl 10) (S.Excl 20)),
+            select "select ('(10, 20]' :: int4range)" (const B.int4range) (S.Range (S.Incl 11) (S.Excl 21)),
+            select "select ('(10, 20)' :: int4range)" (const B.int4range) (S.Range (S.Incl 11) (S.Excl 20)),
+            select "select ('[,20]' :: int4range)" (const B.int4range) (S.Range S.Inf (S.Excl 21)),
+            select "select ('[,20)' :: int4range)" (const B.int4range) (S.Range S.Inf (S.Excl 20)),
+            select "select ('[10,]' :: int4range)" (const B.int4range) (S.Range (S.Incl 10) S.Inf),
+            select "select ('(10,]' :: int4range)" (const B.int4range) (S.Range (S.Incl 11) S.Inf),
+            select "select ('(,)' :: int4range)" (const B.int4range) (S.Range S.Inf S.Inf),
+            select "select ('empty' :: int4range)" (const B.int4range) S.Empty,
+            HUnit.testCase "int4range encoder: [10, 20]"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Incl 10) (S.Incl 20)
+                    normalized =
+                      S.Range (S.Incl 10) (S.Excl 21)
+                 in HUnit.assertEqual "" (Right normalized)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: [10, 20)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Incl 10) (S.Excl 20)
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (10, 20]"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Excl 10) (S.Incl 20)
+                    normalized =
+                      S.Range (S.Incl 11) (S.Excl 21)
+                 in HUnit.assertEqual "" (Right normalized)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (10, 20)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Excl 10) (S.Excl 20)
+                    normalized =
+                      S.Range (S.Incl 11) (S.Excl 20)
+                 in HUnit.assertEqual "" (Right normalized)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: [10,)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Incl 10) S.Inf
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (10,)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range (S.Excl 10) S.Inf
+                    normalized =
+                      S.Range (S.Incl 11) S.Inf
+                 in HUnit.assertEqual "" (Right normalized)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (,20]"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range S.Inf (S.Incl 20)
+                    normalized =
+                      S.Range S.Inf (S.Excl 21)
+                 in HUnit.assertEqual "" (Right normalized)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (,20)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range S.Inf (S.Excl 20)
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: empty"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Empty
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int4range encoder: (,)"
+              $ let pti =
+                      PTI.int4range
+                    encoder =
+                      (const A.int4range)
+                    decoder =
+                      (const B.int4range)
+                    value =
+                      S.Range S.Inf S.Inf
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            select "select ('{[10, 20], [30, 40]}' :: int4multirange)" (const $ B.int4multirange) [S.Range (S.Incl 10) (S.Excl 21), S.Range (S.Incl 30) (S.Excl 41)],
+            HUnit.testCase "int4multirange encoder: {[10,20), [30,40)}"
+              $ let pti =
+                      PTI.int4multirange
+                    encoder =
+                      (const A.int4multirange)
+                    decoder =
+                      (const B.int4multirange)
+                    value =
+                      [S.Range (S.Incl 10) (S.Excl 20), S.Range (S.Incl 30) (S.Excl 40)]
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "int8multirange encoder: {[10,20), [30,40)}"
+              $ let pti =
+                      PTI.int8multirange
+                    encoder =
+                      (const A.int8multirange)
+                    decoder =
+                      (const B.int8multirange)
+                    value =
+                      [S.Range (S.Incl 10) (S.Excl 20), S.Range (S.Incl 30) (S.Excl 40)]
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value,
+            HUnit.testCase "nummultirange encoder: {[10,20), [30,40)}"
+              $ let pti =
+                      PTI.nummultirange
+                    encoder =
+                      (const A.nummultirange)
+                    decoder =
+                      (const B.nummultirange)
+                    value =
+                      [S.Range (S.Incl 10) (S.Excl 20), S.Range (S.Incl 30) (S.Excl 40)]
+                 in HUnit.assertEqual "" (Right value)
+                      =<< IO.roundtrip (PTI.oidPQ (PTI.ptiOID pti)) encoder decoder value
           ]
 
 textual :: TestTree

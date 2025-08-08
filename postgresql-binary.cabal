@@ -72,6 +72,7 @@ library
   exposed-modules:
     PostgreSQL.Binary.Decoding
     PostgreSQL.Binary.Encoding
+    PostgreSQL.Binary.Range
 
   other-modules:
     PostgreSQL.Binary.BuilderPrim

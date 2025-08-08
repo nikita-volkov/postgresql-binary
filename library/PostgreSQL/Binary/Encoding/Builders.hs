@@ -19,6 +19,7 @@ import qualified PostgreSQL.Binary.Interval as P
 import qualified PostgreSQL.Binary.Numeric as C
 import PostgreSQL.Binary.Prelude hiding (bool)
 import qualified PostgreSQL.Binary.Prelude as B
+import qualified PostgreSQL.Binary.Range as S
 import qualified PostgreSQL.Binary.Time as O
 
 -- * Helpers
@@ -463,3 +464,24 @@ hStore_map :: Map Text (Maybe Text) -> Builder
 hStore_map input =
   int4_int (Q.size input)
     <> Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
+
+{-# INLINE range #-}
+range :: (a -> Builder) -> S.Range a -> Builder
+range builder r =
+  case r of
+    S.Empty -> word8 0x01
+    S.Range S.Inf S.Inf -> word8 0x18
+    S.Range (S.Excl l) (S.Excl r) -> word8 0x00 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Incl l) (S.Excl r) -> word8 0x02 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Excl l) (S.Incl r) -> word8 0x04 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Incl l) (S.Incl r) -> word8 0x06 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Excl l) S.Inf -> word8 0x10 <> sized (builder l)
+    S.Range (S.Incl l) S.Inf -> word8 0x12 <> sized (builder l)
+    S.Range S.Inf (S.Excl r) -> word8 0x08 <> sized (builder r)
+    S.Range S.Inf (S.Incl r) -> word8 0x0C <> sized (builder r)
+
+{-# INLINE multirange #-}
+multirange :: (a -> Builder) -> S.Multirange a -> Builder
+multirange builder ranges =
+  int4_int (fromIntegral (length ranges))
+    <> foldMap (sized . range builder) ranges

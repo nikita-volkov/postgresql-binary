@@ -65,6 +65,26 @@ module PostgreSQL.Binary.Encoding
     Composite,
     field,
     nullField,
+
+    -- * Range
+    int4range,
+    int8range,
+    numrange,
+    tsrange_int,
+    tsrange_float,
+    tstzrange_int,
+    tstzrange_float,
+    daterange,
+
+    -- * Multirange
+    int4multirange,
+    int8multirange,
+    nummultirange,
+    tsmultirange_int,
+    tsmultirange_float,
+    tstzmultirange_int,
+    tstzmultirange_float,
+    datemultirange,
   )
 where
 
@@ -75,6 +95,7 @@ import qualified Data.IP as G
 import qualified Data.Text.Lazy as L
 import qualified PostgreSQL.Binary.Encoding.Builders as B
 import PostgreSQL.Binary.Prelude hiding (bool, length)
+import qualified PostgreSQL.Binary.Range as S
 
 type Encoding =
   C.Builder
@@ -372,3 +393,71 @@ field oid value =
 nullField :: Word32 -> Composite
 nullField oid =
   Composite 1 (B.int4_word32 oid <> B.null4)
+
+-- * Range
+
+{-# INLINE int4range #-}
+int4range :: S.Range Int32 -> Encoding
+int4range = B.range B.int4_int32
+
+{-# INLINE int8range #-}
+int8range :: S.Range Int64 -> Encoding
+int8range = B.range B.int8_int64
+
+{-# INLINE numrange #-}
+numrange :: S.Range Scientific -> Encoding
+numrange = B.range B.numeric
+
+{-# INLINE tsrange_int #-}
+tsrange_int :: S.Range LocalTime -> Encoding
+tsrange_int = B.range B.timestamp_int
+
+{-# INLINE tsrange_float #-}
+tsrange_float :: S.Range LocalTime -> Encoding
+tsrange_float = B.range B.timestamp_float
+
+{-# INLINE tstzrange_int #-}
+tstzrange_int :: S.Range UTCTime -> Encoding
+tstzrange_int = B.range B.timestamptz_int
+
+{-# INLINE tstzrange_float #-}
+tstzrange_float :: S.Range UTCTime -> Encoding
+tstzrange_float = B.range B.timestamptz_float
+
+{-# INLINE daterange #-}
+daterange :: S.Range Day -> Encoding
+daterange = B.range B.date
+
+-- * Multirange
+
+{-# INLINE int4multirange #-}
+int4multirange :: S.Multirange Int32 -> Encoding
+int4multirange = B.multirange B.int4_int32
+
+{-# INLINE int8multirange #-}
+int8multirange :: S.Multirange Int64 -> Encoding
+int8multirange = B.multirange B.int8_int64
+
+{-# INLINE nummultirange #-}
+nummultirange :: S.Multirange Scientific -> Encoding
+nummultirange = B.multirange B.numeric
+
+{-# INLINE tsmultirange_int #-}
+tsmultirange_int :: S.Multirange LocalTime -> Encoding
+tsmultirange_int = B.multirange B.timestamp_int
+
+{-# INLINE tsmultirange_float #-}
+tsmultirange_float :: S.Multirange LocalTime -> Encoding
+tsmultirange_float = B.multirange B.timestamp_float
+
+{-# INLINE tstzmultirange_int #-}
+tstzmultirange_int :: S.Multirange UTCTime -> Encoding
+tstzmultirange_int = B.multirange B.timestamptz_int
+
+{-# INLINE tstzmultirange_float #-}
+tstzmultirange_float :: S.Multirange UTCTime -> Encoding
+tstzmultirange_float = B.multirange B.timestamptz_float
+
+{-# INLINE datemultirange #-}
+datemultirange :: S.Multirange Day -> Encoding
+datemultirange = B.multirange B.date
