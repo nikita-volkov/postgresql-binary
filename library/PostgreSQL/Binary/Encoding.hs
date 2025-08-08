@@ -413,8 +413,8 @@ tsrange_int :: S.Range LocalTime -> Encoding
 tsrange_int = B.range B.timestamp_int
 
 {-# INLINE tsrange_float #-}
-tsrange_float :: S.Range TimeOfDay -> Encoding
-tsrange_float = B.range B.time_float
+tsrange_float :: S.Range LocalTime -> Encoding
+tsrange_float = B.range B.timestamp_float
 
 {-# INLINE tstzrange_int #-}
 tstzrange_int :: S.Range UTCTime -> Encoding
@@ -447,8 +447,8 @@ tsmultirange_int :: S.Multirange LocalTime -> Encoding
 tsmultirange_int = B.multirange B.timestamp_int
 
 {-# INLINE tsmultirange_float #-}
-tsmultirange_float :: S.Multirange TimeOfDay -> Encoding
-tsmultirange_float = B.multirange B.time_float
+tsmultirange_float :: S.Multirange LocalTime -> Encoding
+tsmultirange_float = B.multirange B.timestamp_float
 
 {-# INLINE tstzmultirange_int #-}
 tstzmultirange_int :: S.Multirange UTCTime -> Encoding
