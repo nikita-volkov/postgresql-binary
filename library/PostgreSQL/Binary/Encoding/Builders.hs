@@ -7,7 +7,6 @@ import qualified Data.ByteString.Lazy as N
 import qualified Data.HashMap.Strict as F
 import qualified Data.IP as G
 import qualified Data.Map.Strict as Q
-import qualified Data.Range.Typed as Range
 import qualified Data.Scientific as D
 import qualified Data.Text.Encoding as J
 import qualified Data.Text.Lazy as L
@@ -20,6 +19,7 @@ import qualified PostgreSQL.Binary.Interval as P
 import qualified PostgreSQL.Binary.Numeric as C
 import PostgreSQL.Binary.Prelude hiding (bool)
 import qualified PostgreSQL.Binary.Prelude as B
+import qualified PostgreSQL.Binary.Range as S
 import qualified PostgreSQL.Binary.Time as O
 
 -- * Helpers
@@ -466,29 +466,22 @@ hStore_map input =
     <> Q.foldlWithKey' (\payload key value -> payload <> hStoreRow key value) mempty input
 
 {-# INLINE range #-}
-range :: (a -> Builder) -> Range.AnyRange a -> Builder
-range builder (Range.AnyRangeFor r) =
+range :: (a -> Builder) -> S.Range a -> Builder
+range builder r =
   case r of
-    Range.EmptyRange -> word8 0x01
-    Range.InfiniteRange -> word8 0x18
-    Range.SingletonRange a -> word8 0x06 <> sized (builder a) <> sized (builder a)
-    Range.SpanRange lb rb ->
-      case (lb, rb) of
-        (Range.ExclusiveBound l, Range.ExclusiveBound r) -> word8 0x00 <> sized (builder l) <> sized (builder r)
-        (Range.InclusiveBound l, Range.ExclusiveBound r) -> word8 0x02 <> sized (builder l) <> sized (builder r)
-        (Range.ExclusiveBound l, Range.InclusiveBound r) -> word8 0x04 <> sized (builder l) <> sized (builder r)
-        (Range.InclusiveBound l, Range.InclusiveBound r) -> word8 0x06 <> sized (builder l) <> sized (builder r)
-    Range.LowerBoundRange lb ->
-      case lb of
-        Range.ExclusiveBound l -> word8 0x10 <> sized (builder l)
-        Range.InclusiveBound l -> word8 0x12 <> sized (builder l)
-    Range.UpperBoundRange ub ->
-      case ub of
-        Range.ExclusiveBound u -> word8 0x08 <> sized (builder u)
-        Range.InclusiveBound u -> word8 0x0C <> sized (builder u)
+    S.Empty -> word8 0x01
+    S.Range S.Inf S.Inf -> word8 0x18
+    S.Range (S.Excl l) (S.Excl r) -> word8 0x00 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Incl l) (S.Excl r) -> word8 0x02 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Excl l) (S.Incl r) -> word8 0x04 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Incl l) (S.Incl r) -> word8 0x06 <> sized (builder l) <> sized (builder r)
+    S.Range (S.Excl l) S.Inf -> word8 0x10 <> sized (builder l)
+    S.Range (S.Incl l) S.Inf -> word8 0x12 <> sized (builder l)
+    S.Range S.Inf (S.Excl r) -> word8 0x08 <> sized (builder r)
+    S.Range S.Inf (S.Incl r) -> word8 0x0C <> sized (builder r)
 
 {-# INLINE multirange #-}
-multirange :: (a -> Builder) -> [Range.AnyRange a] -> Builder
+multirange :: (a -> Builder) -> S.Multirange a -> Builder
 multirange builder ranges =
   int4_int (fromIntegral (length ranges))
     <> foldMap (sized . range builder) ranges

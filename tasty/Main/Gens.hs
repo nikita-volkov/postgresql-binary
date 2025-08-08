@@ -5,7 +5,6 @@ import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IP as IP
-import qualified Data.Range.Typed as Range
 import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
 import qualified Data.UUID as UUID
