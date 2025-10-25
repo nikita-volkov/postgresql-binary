@@ -83,6 +83,7 @@ module PostgreSQL.Binary.Decoding
 where
 
 import BinaryParser
+import Control.Monad.Error.Class
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
@@ -429,26 +430,41 @@ hstore replicateM keyContent valueContent =
 
 -- * Composite
 
-newtype Composite a
-  = Composite (Value a)
-  deriving (Functor, Applicative, Monad, MonadFail)
+data Composite a
+  = Composite
+      -- | Amount of fields.
+      Int
+      -- | Decoder for the fields by the current offset.
+      (Int -> BinaryParser.BinaryParser a)
+  deriving (Functor)
+
+instance Applicative Composite where
+  pure x = Composite 0 (\_ -> pure x)
+  Composite n f <*> Composite m x =
+    Composite (n + m) (\offset -> f offset <*> x (offset + n))
 
 -- |
 -- Unlift a 'Composite' to a value 'Value'.
 {-# INLINE composite #-}
 composite :: Composite a -> Value a
-composite (Composite decoder) =
-  numOfComponents *> decoder
-  where
-    numOfComponents =
-      unitOfSize 4
+composite (Composite expectedFields body) = do
+  actualFields <- intOfSize 4
+  if actualFields /= expectedFields
+    then failure ("Unexpected amount of fields available: " <> fromString (show expectedFields) <> ", expected at least " <> fromString (show (fromIntegral actualFields)))
+    else body 0
 
 -- |
--- Lift a value 'Value' into 'Composite'.
+-- Nullable composite field.
 {-# INLINE nullableValueComposite #-}
 nullableValueComposite :: Value a -> Composite (Maybe a)
 nullableValueComposite valueValue =
-  Composite (skipOid *> onContent valueValue)
+  Composite
+    1
+    ( \fieldIndex ->
+        withError
+          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
+          (skipOid *> onContent valueValue)
+    )
   where
     skipOid =
       unitOfSize 4
@@ -458,10 +474,60 @@ nullableValueComposite valueValue =
 {-# INLINE valueComposite #-}
 valueComposite :: Value a -> Composite a
 valueComposite valueValue =
-  Composite (skipOid *> onContent valueValue >>= maybe (failure "Unexpected NULL") return)
+  Composite
+    1
+    ( \fieldIndex ->
+        withError
+          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
+          (skipOid *> onContent valueValue >>= maybe (failure "Unexpected NULL") return)
+    )
   where
     skipOid =
       unitOfSize 4
+
+-- |
+-- Nullable composite field with a checked type OID.
+{-# INLINE typedNullableValueComposite #-}
+typedNullableValueComposite ::
+  -- | Expected type OID.
+  Word32 ->
+  Value a ->
+  Composite (Maybe a)
+typedNullableValueComposite expectedOid valueParser =
+  Composite
+    1
+    ( \fieldIndex ->
+        withError
+          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
+          ( do
+              actualOid <- intOfSize 4
+              if actualOid /= expectedOid
+                then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
+                else onContent valueParser
+          )
+    )
+
+-- |
+-- Non-nullable composite field with a checked type OID.
+{-# INLINE typedValueComposite #-}
+typedValueComposite ::
+  -- | Expected type OID.
+  Word32 ->
+  Value a ->
+  Composite a
+typedValueComposite expectedOid valueParser =
+  Composite
+    1
+    ( \fieldIndex ->
+        withError
+          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
+          ( do
+              actualOid <- intOfSize 4
+              if actualOid /= expectedOid
+                then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
+                else onContent valueParser >>= maybe (failure "Unexpected NULL") return
+          )
+    )
 
 -- * Array
 

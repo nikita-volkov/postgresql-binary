@@ -1,3 +1,10 @@
+# 0.15
+
+## Breaking Changes
+
+- Made the Composite decoder check for exact field count match
+- Dropped the Monad and MonadFail instances for it
+
 # 0.14
 
 - Moved to "iproute" from "network-ip" for inet datatypes
