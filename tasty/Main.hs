@@ -11,6 +11,7 @@ import qualified Main.PTI as PTI
 import Main.Prelude hiding (empty, isLeft, isRight, select)
 import qualified Main.Properties as Properties
 import qualified Main.TextEncoder as TextEncoder
+import qualified Main.TypedComposite as TypedComposite
 import qualified PostgreSQL.Binary.Decoding as B
 import qualified PostgreSQL.Binary.Encoding as A
 import qualified PostgreSQL.Binary.Range as S
@@ -34,8 +35,9 @@ binary =
             then [primitiveRoundtrip "jsonb" Gens.aeson PTI.jsonb A.jsonb_ast B.jsonb_ast]
             else []
         other =
-          [ testProperty ("Composite roundtrip") $ \value ->
+          [ testProperty "Composite roundtrip" $ \value ->
               Composite.decodingProperty value (Composite.encodeToByteString value),
+            testProperty "Typed composite roundtrip" TypedComposite.roundtrip,
             select "select (234 :: int8)" (const B.int) (234 :: Int32),
             select "select (-234 :: int8)" (const B.int) (-234 :: Int32),
             select "select (0 :: int8)" (const B.int) (0 :: Int32),
