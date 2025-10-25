@@ -20,27 +20,25 @@ instance Arbitrary Person where
       <*> arbitrary
       <*> Gens.maybeOf Gens.text
 
-personOids :: (Word32, Word32, Word32)
-personOids = (25, 23, 25) -- text, int4, text
+nameOid, ageOid, phoneOid :: Word32
+(nameOid, ageOid, phoneOid) = (25, 23, 25) -- text, int4, text
 
 encodePerson :: Person -> Encoding.Encoding
 encodePerson (Person name age maybePhone) =
-  let (nameOid, ageOid, phoneOid) = personOids
-   in Encoding.composite
-        $ Encoding.field nameOid (Encoding.text_strict name)
-        <> Encoding.field ageOid (Encoding.int4_int32 age)
-        <> case maybePhone of
-          Nothing -> Encoding.nullField phoneOid
-          Just phone -> Encoding.field phoneOid (Encoding.text_strict phone)
+  Encoding.composite
+    $ Encoding.field nameOid (Encoding.text_strict name)
+    <> Encoding.field ageOid (Encoding.int4_int32 age)
+    <> case maybePhone of
+      Nothing -> Encoding.nullField phoneOid
+      Just phone -> Encoding.field phoneOid (Encoding.text_strict phone)
 
 decodePerson :: Decoding.Value Person
 decodePerson =
-  let (nameOid, ageOid, phoneOid) = personOids
-   in Decoding.composite
-        $ Person
-        <$> Decoding.valueComposite (Decoding.text_strict)
-        <*> Decoding.valueComposite (Decoding.int)
-        <*> Decoding.nullableValueComposite (Decoding.text_strict)
+  Decoding.composite
+    $ Person
+    <$> Decoding.typedValueComposite nameOid (Decoding.text_strict)
+    <*> Decoding.typedValueComposite ageOid (Decoding.int)
+    <*> Decoding.typedNullableValueComposite phoneOid (Decoding.text_strict)
 
 roundtrip :: Person -> Property
 roundtrip person =

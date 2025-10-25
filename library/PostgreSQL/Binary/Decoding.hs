@@ -54,6 +54,8 @@ module PostgreSQL.Binary.Decoding
     composite,
     valueComposite,
     nullableValueComposite,
+    typedValueComposite,
+    typedNullableValueComposite,
 
     -- ** HStore
     hstore,
