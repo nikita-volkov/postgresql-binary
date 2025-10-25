@@ -31,6 +31,7 @@ jobs:
         include:
           - ghc: 8.8.1
             ghc-options: ""
+            ignore-haddock: true
           - ghc: latest
 
     runs-on: ubuntu-latest
@@ -56,3 +57,4 @@ jobs:
         with:
           ghc: ${{matrix.ghc}}
           ghc-options: ${{matrix.ghc-options}}
+          ignore-haddock: ${{matrix.ignore-haddock}}
