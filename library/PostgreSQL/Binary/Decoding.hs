@@ -457,16 +457,32 @@ composite (Composite expectedFields body) = do
 
 -- |
 -- Nullable composite field.
-{-# INLINE nullableValueComposite #-}
-nullableValueComposite :: Value a -> Composite (Maybe a)
-nullableValueComposite valueValue =
+{-# INLINE baseFieldValueComposite #-}
+baseFieldValueComposite :: BinaryParser a -> Composite a
+baseFieldValueComposite parser =
   Composite
     1
     ( \fieldIndex ->
-        withError
-          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
-          (skipOid *> onContent valueValue)
+        catchError
+          parser
+          ( \err ->
+              throwError
+                ( mconcat
+                    [ "At field ",
+                      fromString (show fieldIndex),
+                      ": ",
+                      err
+                    ]
+                )
+          )
     )
+
+-- |
+-- Nullable composite field.
+{-# INLINE nullableValueComposite #-}
+nullableValueComposite :: Value a -> Composite (Maybe a)
+nullableValueComposite valueValue =
+  baseFieldValueComposite (skipOid *> onContent valueValue)
   where
     skipOid =
       unitOfSize 4
@@ -476,13 +492,8 @@ nullableValueComposite valueValue =
 {-# INLINE valueComposite #-}
 valueComposite :: Value a -> Composite a
 valueComposite valueValue =
-  Composite
-    1
-    ( \fieldIndex ->
-        withError
-          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
-          (skipOid *> onContent valueValue >>= maybe (failure "Unexpected NULL") return)
-    )
+  baseFieldValueComposite
+    (skipOid *> onContent valueValue >>= maybe (failure "Unexpected NULL") return)
   where
     skipOid =
       unitOfSize 4
@@ -496,17 +507,12 @@ typedNullableValueComposite ::
   Value a ->
   Composite (Maybe a)
 typedNullableValueComposite expectedOid valueParser =
-  Composite
-    1
-    ( \fieldIndex ->
-        withError
-          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
-          ( do
-              actualOid <- intOfSize 4
-              if actualOid /= expectedOid
-                then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
-                else onContent valueParser
-          )
+  baseFieldValueComposite
+    ( do
+        actualOid <- intOfSize 4
+        if actualOid /= expectedOid
+          then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
+          else onContent valueParser
     )
 
 -- |
@@ -518,17 +524,12 @@ typedValueComposite ::
   Value a ->
   Composite a
 typedValueComposite expectedOid valueParser =
-  Composite
-    1
-    ( \fieldIndex ->
-        withError
-          (mappend ("At field " <> fromString (show fieldIndex) <> ": "))
-          ( do
-              actualOid <- intOfSize 4
-              if actualOid /= expectedOid
-                then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
-                else onContent valueParser >>= maybe (failure "Unexpected NULL") return
-          )
+  baseFieldValueComposite
+    ( do
+        actualOid <- intOfSize 4
+        if actualOid /= expectedOid
+          then throwError ("Unexpected OID: " <> fromString (show actualOid) <> ", expected " <> fromString (show expectedOid))
+          else onContent valueParser >>= maybe (failure "Unexpected NULL") return
     )
 
 -- * Array
